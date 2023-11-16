@@ -135,8 +135,8 @@ github.com/basgys/goxml2json
 # github.com/beevik/etree v1.1.0
 ## explicit
 github.com/beevik/etree
-# github.com/bitly/go-simplejson v0.5.0
-## explicit
+# github.com/bitly/go-simplejson v0.5.1
+## explicit; go 1.17
 # github.com/coredns/coredns v1.3.0
 ## explicit
 github.com/coredns/coredns/plugin/pkg/log
@@ -569,6 +569,146 @@ gopkg.in/yaml.v2
 # moul.io/http2curl/v2 v2.3.0
 ## explicit; go 1.13
 moul.io/http2curl/v2
+# yunion.io/x/cloudmux v0.0.0-00010101000000-000000000000 => ../cloudmux
+## explicit; go 1.18
+yunion.io/x/cloudmux/pkg/apis
+yunion.io/x/cloudmux/pkg/apis/billing
+yunion.io/x/cloudmux/pkg/apis/cloudid
+yunion.io/x/cloudmux/pkg/apis/compute
+yunion.io/x/cloudmux/pkg/cloudprovider
+yunion.io/x/cloudmux/pkg/cloudprovider/generic
+yunion.io/x/cloudmux/pkg/multicloud
+yunion.io/x/cloudmux/pkg/multicloud/aliyun
+yunion.io/x/cloudmux/pkg/multicloud/aliyun/aliyuncli
+yunion.io/x/cloudmux/pkg/multicloud/aliyun/provider
+yunion.io/x/cloudmux/pkg/multicloud/aliyun/shell
+yunion.io/x/cloudmux/pkg/multicloud/apsara
+yunion.io/x/cloudmux/pkg/multicloud/apsara/apsaracli
+yunion.io/x/cloudmux/pkg/multicloud/apsara/provider
+yunion.io/x/cloudmux/pkg/multicloud/apsara/shell
+yunion.io/x/cloudmux/pkg/multicloud/aws
+yunion.io/x/cloudmux/pkg/multicloud/aws/awscli
+yunion.io/x/cloudmux/pkg/multicloud/aws/provider
+yunion.io/x/cloudmux/pkg/multicloud/aws/shell
+yunion.io/x/cloudmux/pkg/multicloud/azure
+yunion.io/x/cloudmux/pkg/multicloud/azure/azurecli
+yunion.io/x/cloudmux/pkg/multicloud/azure/concurrent
+yunion.io/x/cloudmux/pkg/multicloud/azure/progress
+yunion.io/x/cloudmux/pkg/multicloud/azure/provider
+yunion.io/x/cloudmux/pkg/multicloud/azure/shell
+yunion.io/x/cloudmux/pkg/multicloud/baidu
+yunion.io/x/cloudmux/pkg/multicloud/baidu/baiducli
+yunion.io/x/cloudmux/pkg/multicloud/baidu/provider
+yunion.io/x/cloudmux/pkg/multicloud/baidu/shell
+yunion.io/x/cloudmux/pkg/multicloud/bingocloud
+yunion.io/x/cloudmux/pkg/multicloud/bingocloud/bingocli
+yunion.io/x/cloudmux/pkg/multicloud/bingocloud/provider
+yunion.io/x/cloudmux/pkg/multicloud/bingocloud/shell
+yunion.io/x/cloudmux/pkg/multicloud/cmx
+yunion.io/x/cloudmux/pkg/multicloud/cmx/shell
+yunion.io/x/cloudmux/pkg/multicloud/ctyun
+yunion.io/x/cloudmux/pkg/multicloud/ctyun/ctyuncli
+yunion.io/x/cloudmux/pkg/multicloud/ctyun/provider
+yunion.io/x/cloudmux/pkg/multicloud/ctyun/shell
+yunion.io/x/cloudmux/pkg/multicloud/cucloud
+yunion.io/x/cloudmux/pkg/multicloud/cucloud/cucli
+yunion.io/x/cloudmux/pkg/multicloud/cucloud/provider
+yunion.io/x/cloudmux/pkg/multicloud/cucloud/shell
+yunion.io/x/cloudmux/pkg/multicloud/ecloud
+yunion.io/x/cloudmux/pkg/multicloud/ecloud/ecloudcli
+yunion.io/x/cloudmux/pkg/multicloud/ecloud/provider
+yunion.io/x/cloudmux/pkg/multicloud/ecloud/shell
+yunion.io/x/cloudmux/pkg/multicloud/esxi
+yunion.io/x/cloudmux/pkg/multicloud/esxi/esxicli
+yunion.io/x/cloudmux/pkg/multicloud/esxi/provider
+yunion.io/x/cloudmux/pkg/multicloud/esxi/shell
+yunion.io/x/cloudmux/pkg/multicloud/esxi/vcenter
+yunion.io/x/cloudmux/pkg/multicloud/google
+yunion.io/x/cloudmux/pkg/multicloud/google/googlecli
+yunion.io/x/cloudmux/pkg/multicloud/google/provider
+yunion.io/x/cloudmux/pkg/multicloud/google/shell
+yunion.io/x/cloudmux/pkg/multicloud/hcso
+yunion.io/x/cloudmux/pkg/multicloud/hcso/client
+yunion.io/x/cloudmux/pkg/multicloud/hcso/client/auth
+yunion.io/x/cloudmux/pkg/multicloud/hcso/client/auth/credentials
+yunion.io/x/cloudmux/pkg/multicloud/hcso/client/auth/signers
+yunion.io/x/cloudmux/pkg/multicloud/hcso/client/manager
+yunion.io/x/cloudmux/pkg/multicloud/hcso/client/modules
+yunion.io/x/cloudmux/pkg/multicloud/hcso/client/requests
+yunion.io/x/cloudmux/pkg/multicloud/hcso/client/responses
+yunion.io/x/cloudmux/pkg/multicloud/hcso/hcsocli
+yunion.io/x/cloudmux/pkg/multicloud/hcso/provider
+yunion.io/x/cloudmux/pkg/multicloud/hcso/shell
+yunion.io/x/cloudmux/pkg/multicloud/huawei
+yunion.io/x/cloudmux/pkg/multicloud/huawei/client
+yunion.io/x/cloudmux/pkg/multicloud/huawei/client/auth
+yunion.io/x/cloudmux/pkg/multicloud/huawei/client/auth/credentials
+yunion.io/x/cloudmux/pkg/multicloud/huawei/client/auth/signers
+yunion.io/x/cloudmux/pkg/multicloud/huawei/client/manager
+yunion.io/x/cloudmux/pkg/multicloud/huawei/client/modules
+yunion.io/x/cloudmux/pkg/multicloud/huawei/client/requests
+yunion.io/x/cloudmux/pkg/multicloud/huawei/client/responses
+yunion.io/x/cloudmux/pkg/multicloud/huawei/huaweicli
+yunion.io/x/cloudmux/pkg/multicloud/huawei/obs
+yunion.io/x/cloudmux/pkg/multicloud/huawei/provider
+yunion.io/x/cloudmux/pkg/multicloud/huawei/shell
+yunion.io/x/cloudmux/pkg/multicloud/jdcloud
+yunion.io/x/cloudmux/pkg/multicloud/jdcloud/jdcloudcli
+yunion.io/x/cloudmux/pkg/multicloud/jdcloud/provider
+yunion.io/x/cloudmux/pkg/multicloud/jdcloud/shell
+yunion.io/x/cloudmux/pkg/multicloud/ksyun
+yunion.io/x/cloudmux/pkg/multicloud/ksyun/ksyuncli
+yunion.io/x/cloudmux/pkg/multicloud/ksyun/provider
+yunion.io/x/cloudmux/pkg/multicloud/ksyun/shell
+yunion.io/x/cloudmux/pkg/multicloud/loader
+yunion.io/x/cloudmux/pkg/multicloud/nutanix
+yunion.io/x/cloudmux/pkg/multicloud/nutanix/ncli
+yunion.io/x/cloudmux/pkg/multicloud/nutanix/provider
+yunion.io/x/cloudmux/pkg/multicloud/nutanix/shell
+yunion.io/x/cloudmux/pkg/multicloud/objectstore
+yunion.io/x/cloudmux/pkg/multicloud/objectstore/ceph
+yunion.io/x/cloudmux/pkg/multicloud/objectstore/ceph/provider
+yunion.io/x/cloudmux/pkg/multicloud/objectstore/provider
+yunion.io/x/cloudmux/pkg/multicloud/objectstore/s3cli
+yunion.io/x/cloudmux/pkg/multicloud/objectstore/shell
+yunion.io/x/cloudmux/pkg/multicloud/objectstore/xsky
+yunion.io/x/cloudmux/pkg/multicloud/objectstore/xsky/provider
+yunion.io/x/cloudmux/pkg/multicloud/openstack
+yunion.io/x/cloudmux/pkg/multicloud/openstack/openstackcli
+yunion.io/x/cloudmux/pkg/multicloud/openstack/oscli
+yunion.io/x/cloudmux/pkg/multicloud/openstack/provider
+yunion.io/x/cloudmux/pkg/multicloud/openstack/shell
+yunion.io/x/cloudmux/pkg/multicloud/oracle
+yunion.io/x/cloudmux/pkg/multicloud/oracle/ocli
+yunion.io/x/cloudmux/pkg/multicloud/oracle/provider
+yunion.io/x/cloudmux/pkg/multicloud/oracle/shell
+yunion.io/x/cloudmux/pkg/multicloud/proxmox
+yunion.io/x/cloudmux/pkg/multicloud/proxmox/provider
+yunion.io/x/cloudmux/pkg/multicloud/proxmox/proxmoxcli
+yunion.io/x/cloudmux/pkg/multicloud/proxmox/shell
+yunion.io/x/cloudmux/pkg/multicloud/qcloud
+yunion.io/x/cloudmux/pkg/multicloud/qcloud/provider
+yunion.io/x/cloudmux/pkg/multicloud/qcloud/qcloudcli
+yunion.io/x/cloudmux/pkg/multicloud/qcloud/shell
+yunion.io/x/cloudmux/pkg/multicloud/qingcloud
+yunion.io/x/cloudmux/pkg/multicloud/qingcloud/provider
+yunion.io/x/cloudmux/pkg/multicloud/qingcloud/qingcli
+yunion.io/x/cloudmux/pkg/multicloud/qingcloud/shell
+yunion.io/x/cloudmux/pkg/multicloud/remotefile
+yunion.io/x/cloudmux/pkg/multicloud/remotefile/provider
+yunion.io/x/cloudmux/pkg/multicloud/test
+yunion.io/x/cloudmux/pkg/multicloud/ucloud
+yunion.io/x/cloudmux/pkg/multicloud/ucloud/provider
+yunion.io/x/cloudmux/pkg/multicloud/ucloud/shell
+yunion.io/x/cloudmux/pkg/multicloud/ucloud/ucloudcli
+yunion.io/x/cloudmux/pkg/multicloud/volcengine
+yunion.io/x/cloudmux/pkg/multicloud/volcengine/provider
+yunion.io/x/cloudmux/pkg/multicloud/volcengine/shell
+yunion.io/x/cloudmux/pkg/multicloud/volcengine/volcli
+yunion.io/x/cloudmux/pkg/multicloud/zstack
+yunion.io/x/cloudmux/pkg/multicloud/zstack/provider
+yunion.io/x/cloudmux/pkg/multicloud/zstack/shell
+yunion.io/x/cloudmux/pkg/multicloud/zstack/zstackcli
 # yunion.io/x/jsonutils v1.0.1-0.20230613121553-0f3b41e2ef19
 ## explicit; go 1.18
 yunion.io/x/jsonutils
@@ -620,3 +760,4 @@ yunion.io/x/s3cli
 # yunion.io/x/structarg v0.0.0-20231017124457-df4d5009457c
 ## explicit; go 1.12
 yunion.io/x/structarg
+# yunion.io/x/cloudmux => ../cloudmux

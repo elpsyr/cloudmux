@@ -1,6 +1,8 @@
-module yunion.io/x/cloudmux
+module github.com/elpsyr/cloudmux
 
 go 1.18
+
+replace yunion.io/x/cloudmux => ../cloudmux
 
 require (
 	cloud.google.com/go/storage v1.10.0
@@ -31,6 +33,7 @@ require (
 	golang.org/x/text v0.3.7
 	gopkg.in/fatih/set.v0 v0.2.1
 	moul.io/http2curl/v2 v2.3.0
+	yunion.io/x/cloudmux v0.0.0-00010101000000-000000000000
 	yunion.io/x/jsonutils v1.0.1-0.20230613121553-0f3b41e2ef19
 	yunion.io/x/log v1.0.1-0.20230411060016-feb3f46ab361
 	yunion.io/x/pkg v1.0.1-0.20231101105448-abef64cdc142
@@ -48,7 +51,7 @@ require (
 	github.com/Azure/go-autorest/tracing v0.5.0 // indirect
 	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect
 	github.com/beevik/etree v1.1.0 // indirect
-	github.com/bitly/go-simplejson v0.5.0 // indirect
+	github.com/bitly/go-simplejson v0.5.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/dimchansky/utfbom v1.1.0 // indirect
 	github.com/dnaeon/go-vcr v1.2.0 // indirect

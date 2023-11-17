@@ -47,7 +47,8 @@ type SInstanceType struct {
 	InstancePpsRx        int     // 内网入方向网络收发包能力。单位：pps。
 	InstancePpsTx        int     // 内网出方向网络收发包能力。单位：pps。
 	// cfel implement
-	CpuArchitecture             string  //CPU架构，可能值： X86。 ARM。
+	Zone                        cloudprovider.ICloudZone
+	CpuArchitecture             string  // CPU架构，可能值： X86。 ARM。
 	CpuSpeedFrequency           float64 // CPU基频，单位GHz。
 	CpuTurboFrequency           float64 // CPU睿频，单位GHz。
 	DiskQuantity                int     // 支持挂载的云盘数量上限。
@@ -68,9 +69,49 @@ type SInstanceType struct {
 	QueuePairNumber             int     // 单块弹性RDMA网卡（ERI）的QP（QueuePair）队列数上限。
 	InitialCredit               int     // 突发性能实例t5、t6的初始vCPU积分值。
 	NetworkCardQuantity         int     // 实例规格支持的物理网卡数量。
+	PostpaidStatus              string
+	PrepaidStatus               string
 }
 
+// SAvailableResource 某 Region 下的可用资源
+// implement by cfel
+type SAvailableResource struct {
+	AvailableZones struct {
+		AvailableZone []struct {
+			Status             string `json:"Status"`
+			StatusCategory     string `json:"StatusCategory"`
+			ZoneID             string `json:"ZoneId"`
+			AvailableResources struct {
+				AvailableResource []struct {
+					Type               string `json:"Type"`
+					SupportedResources struct {
+						SupportedResource []struct {
+							Status         string `json:"Status"`
+							StatusCategory string `json:"StatusCategory"`
+							Value          string `json:"Value"`
+						} `json:"SupportedResource"`
+					} `json:"SupportedResources"`
+				} `json:"AvailableResource"`
+			} `json:"AvailableResources"`
+			RegionID string `json:"RegionId"`
+		} `json:"AvailableZone"`
+	} `json:"AvailableZones"`
+}
+
+// GetZone implement by cfel
+// 获取 SInstanceType 所属 zone
+func (self *SInstanceType) GetZone() cloudprovider.ICloudZone {
+	if self.Zone != nil {
+		return self.Zone
+	}
+	return nil
+}
+
+// GetInstanceTypes 获取云服务器ECS提供的所有实例规格的信息（server sku）
+// SInstanceType (server sku) 所属层级 ： region->zone->sku
+// implement by cfel
 func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
+	// 0. 获取 region 层级下所有 InstanceTypes
 	params := make(map[string]string)
 	params["RegionId"] = self.RegionId
 
@@ -86,7 +127,61 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 		log.Errorf("Unmarshal instance type details fail %s", err)
 		return nil, err
 	}
+	// 0. instanceTypes列表 转存map[SInstanceType.InstanceTypeId] SInstanceType
+	instanceTypeMap := make(map[string]SInstanceType, 0)
+	for _, instanceType := range instanceTypes {
+		instanceTypeMap[instanceType.InstanceTypeId] = instanceType
+	}
+	// 1. 获取 region->zone 层级下 可用资源 DescribeAvailableResource
+	availableResource, err := self.GetAvailableResource()
+	if err != nil {
+		log.Errorf("GetAvailableResource fail %s", err)
+		return nil, err
+	}
+	// 2. 处理获得 关联zone的 []SInstanceType
+	// 为 availableResource zone下的 InstanceTypes 创建 SInstanceType
+	zonesInstanceType := make([]SInstanceType, 0)
+	for _, zone := range availableResource.AvailableZones.AvailableZone {
+		zoneById, err := self.GetIZoneById(zone.ZoneID)
+		if err != nil {
+			log.Errorf("GetIZoneById fail %s", err)
+			return nil, err
+		}
+		for _, resources := range zone.AvailableResources.AvailableResource {
+			for _, resource := range resources.SupportedResources.SupportedResource {
+				_instanceType := instanceTypeMap[resource.Value]
+				_instanceType.Zone = zoneById
+				_instanceType.PrepaidStatus = resource.Status
+				zonesInstanceType = append(zonesInstanceType, _instanceType)
+			}
+
+		}
+	}
 	return instanceTypes, nil
+}
+
+// GetAvailableResource 查询某一可用区的资源列表。
+// AvailableResource 所属层级 ： region->zone-> AvailableResource
+// implement by cfel
+func (self *SRegion) GetAvailableResource() (*SAvailableResource, error) {
+	// 0. 获取 region 层级下所有 InstanceTypes
+	params := make(map[string]string)
+	params["RegionId"] = self.RegionId
+	params["DestinationResource"] = "InstanceType"
+
+	body, err := self.ecsRequest("DescribeAvailableResource", params)
+	if err != nil {
+		log.Errorf("GetAvailableResource fail %s", err)
+		return nil, err
+	}
+
+	availableResources := new(SAvailableResource)
+	err = body.Unmarshal(&availableResources, "AvailableZones")
+	if err != nil {
+		log.Errorf("Unmarshal available resources details fail %s", err)
+		return nil, err
+	}
+	return availableResources, nil
 }
 
 func (self *SInstanceType) memoryMB() int {
@@ -130,7 +225,7 @@ func (self *SInstanceType) GetInstanceTypeFamily() string {
 }
 
 func (self *SInstanceType) GetInstanceTypeCategory() string {
-	return self.GetName()
+	return self.InstanceCategory
 }
 
 func (self *SInstanceType) GetPrepaidStatus() string {
@@ -142,7 +237,7 @@ func (self *SInstanceType) GetPostpaidStatus() string {
 }
 
 func (self *SInstanceType) GetCpuArch() string {
-	return ""
+	return self.CpuArchitecture
 }
 
 func (self *SInstanceType) GetCpuCoreCount() int {

@@ -43,6 +43,11 @@ type SFlavor struct {
 	Vcpus        int
 }
 
+// GetZone implement by cfel
+func (self *SFlavor) GetZone() cloudprovider.ICloudZone {
+	return nil
+}
+
 func (region *SRegion) GetFlavors() ([]SFlavor, error) {
 	resource := "/flavors/detail"
 	flavors := []SFlavor{}

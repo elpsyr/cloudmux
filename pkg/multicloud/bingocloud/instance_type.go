@@ -43,6 +43,11 @@ type SInstanceType struct {
 	Description  string
 }
 
+// GetZone implement by cfel
+func (self *SInstanceType) GetZone() cloudprovider.ICloudZone {
+	return nil
+}
+
 func (insType *SInstanceType) GetCreatedAt() time.Time {
 	return time.Time{}
 }

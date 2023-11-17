@@ -43,6 +43,11 @@ type SInstanceOffering struct {
 	ZStackTime
 }
 
+// GetZone implement by cfel
+func (self *SInstanceOffering) GetZone() cloudprovider.ICloudZone {
+	return nil
+}
+
 func (region *SRegion) GetInstanceOffering(offerId string) (*SInstanceOffering, error) {
 	offer := &SInstanceOffering{region: region}
 	return offer, region.client.getResource("instance-offerings", offerId, offer)

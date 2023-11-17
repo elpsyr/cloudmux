@@ -30,22 +30,44 @@ import (
 type SInstanceType struct {
 	multicloud.SInstanceBase
 	AliyunTags
-	BaselineCredit       int
-	CpuCoreCount         int
-	MemorySize           float32
-	EniQuantity          int // 实例规格支持网卡数量
-	GPUAmount            int
-	GPUSpec              string
-	InstanceTypeFamily   string
-	InstanceFamilyLevel  string
-	InstanceTypeId       string
-	LocalStorageCategory string
-	LocalStorageAmount   int
-	LocalStorageCapacity int64
-	InstanceBandwidthRx  int
-	InstanceBandwidthTx  int
-	InstancePpsRx        int
-	InstancePpsTx        int
+	BaselineCredit       int     // 突发性能实例t5、t6的基准vCPU计算性能（所有vCPU之和）。
+	CpuCoreCount         int     // vCPU内核数目。
+	MemorySize           float32 // 内存大小。单位：GiB。
+	EniQuantity          int     // 支持挂载的弹性网卡上限。
+	GPUAmount            int     // GPU数量。
+	GPUSpec              string  // GPU类型。
+	InstanceTypeFamily   string  // 实例规格族。
+	InstanceFamilyLevel  string  // 实例规格族级别。可能值：EntryLevel：入门级（共享型）。 EnterpriseLevel：企业级。  CreditEntryLevel：积分入门级。更多信息，请参见突发性能实例。
+	InstanceTypeId       string  // 实例规格ID。 示例值: ecs.g6.large
+	LocalStorageCategory string  // 本地盘类型  local_hdd_pro：实例规格族d1ne和d1搭载的SATA HDD本地盘。 local_ssd_pro：实例规格族i2、i2g、i1、ga1和gn5等搭载的NVMe SSD本地盘。
+	LocalStorageAmount   int     // 实例挂载的本地盘的数量。
+	LocalStorageCapacity int64   // 实例挂载的本地盘的单盘容量。单位：GiB。
+	InstanceBandwidthRx  int     // 最大内网入方向带宽限制。单位：kbit/s
+	InstanceBandwidthTx  int     // 最大内网出方向带宽限制。单位：kbit/s
+	InstancePpsRx        int     // 内网入方向网络收发包能力。单位：pps。
+	InstancePpsTx        int     // 内网出方向网络收发包能力。单位：pps。
+	// cfel implement
+	CpuArchitecture             string  //CPU架构，可能值： X86。 ARM。
+	CpuSpeedFrequency           float64 // CPU基频，单位GHz。
+	CpuTurboFrequency           float64 // CPU睿频，单位GHz。
+	DiskQuantity                int     // 支持挂载的云盘数量上限。
+	EniIpv6AddressQuantity      int     // 单块弹性网卡的IPv6地址上限。
+	MaximumQueueNumberPerEni    int     // 单块弹性网卡最大队列数。包括主网卡及辅助网卡支持的队列数。
+	EniPrivateIpAddressQuantity int     // 单块弹性网卡的IPv4地址上限。
+	EniTotalQuantity            int     // 支持挂载的所有网卡（包括主网卡、弹性网卡、中继网卡等）上限。
+	EniTrunkSupported           bool    // 实例规格所挂载的网卡是否支持中继。
+	EriQuantity                 int     // 弹性RDMA网卡（ERI）数量。
+	InstanceCategory            string  // 实例规格分类。
+	NetworkEncryptionSupport    bool    // 实例是否支持VPC网络流量加密
+	NvmeSupport                 string  // 实例规格所挂载的云盘是否支持NVMe。可能值：required：支持。表示云盘以NVMe的方式挂载。 unsupported：不支持。表示云盘不以NVMe的方式挂载。
+	PhysicalProcessorModel      string  // 处理器型号。示例值: Intel Xeon(Ice Lake) Platinum 8369B
+	PrimaryEniQueueNumber       int     // 主网卡默认队列数。
+	SecondaryEniQueueNumber     int     // 辅助弹性网卡默认队列数。
+	TotalEniQueueQuantity       int     // 实例规格允许修改的弹性网卡队列数总配额。
+	GPUMemorySize               float64 // 规格对应的单块GPU显存。单位：GiB。
+	QueuePairNumber             int     // 单块弹性RDMA网卡（ERI）的QP（QueuePair）队列数上限。
+	InitialCredit               int     // 突发性能实例t5、t6的初始vCPU积分值。
+	NetworkCardQuantity         int     // 实例规格支持的物理网卡数量。
 }
 
 func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {

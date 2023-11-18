@@ -184,7 +184,7 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 
 		}
 	}
-	return instanceTypes, nil
+	return zonesInstanceType, nil
 }
 
 // GetAvailableResource 查询某一可用区的资源列表。

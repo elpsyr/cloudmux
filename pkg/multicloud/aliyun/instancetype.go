@@ -74,6 +74,11 @@ type SInstanceType struct {
 	PrepaidStatus               string
 }
 
+const (
+	AliyunResourceAvailable = "Available"
+	AliyunResourceSoldOut   = "SoldOut"
+)
+
 // SAvailableResource 某 Region 下的可用资源
 // implement by cfel
 type SAvailableResource struct {
@@ -257,11 +262,21 @@ func (self *SInstanceType) GetInstanceTypeCategory() string {
 }
 
 func (self *SInstanceType) GetPrepaidStatus() string {
+	if self.PrepaidStatus == AliyunResourceAvailable {
+		return api.SkuStatusAvailable
+	} else if self.PrepaidStatus == AliyunResourceSoldOut {
+		return api.SkuStatusSoldout
+	}
 	return api.SkuStatusSoldout
 }
 
 func (self *SInstanceType) GetPostpaidStatus() string {
-	return api.SkuStatusAvailable
+	if self.PostpaidStatus == AliyunResourceAvailable {
+		return api.SkuStatusAvailable
+	} else if self.PostpaidStatus == AliyunResourceSoldOut {
+		return api.SkuStatusSoldout
+	}
+	return api.SkuStatusSoldout
 }
 
 func (self *SInstanceType) GetCpuArch() string {

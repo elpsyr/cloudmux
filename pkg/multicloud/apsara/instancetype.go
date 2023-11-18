@@ -47,9 +47,9 @@ type SInstanceType struct {
 	InstancePpsTx        int
 }
 
-// GetZone implement by cfel
-func (self *SInstanceType) GetZone() cloudprovider.ICloudZone {
-	return nil
+// GetZoneID implement by cfel
+func (self *SInstanceType) GetZoneID() string {
+	return ""
 }
 
 func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {

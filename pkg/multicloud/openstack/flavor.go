@@ -43,9 +43,9 @@ type SFlavor struct {
 	Vcpus        int
 }
 
-// GetZone implement by cfel
-func (self *SFlavor) GetZone() cloudprovider.ICloudZone {
-	return nil
+// GetZoneID implement by cfel
+func (self *SFlavor) GetZoneID() string {
+	return ""
 }
 
 func (region *SRegion) GetFlavors() ([]SFlavor, error) {

@@ -17,7 +17,6 @@ package cloudprovider
 import (
 	"context"
 	"time"
-	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/jsonutils"
 	"yunion.io/x/pkg/errors"
 	"yunion.io/x/pkg/tristate"
@@ -849,7 +848,7 @@ type ICloudLoadbalancerAcl interface {
 
 type ICloudSku interface {
 	ICloudResource
-	GetZone() cloudprovider.ICloudZone // define by cfel
+	GetZoneID() string // define by cfel
 
 	GetInstanceTypeFamily() string
 	GetInstanceTypeCategory() string

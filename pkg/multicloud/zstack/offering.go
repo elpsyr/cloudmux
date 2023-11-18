@@ -44,8 +44,8 @@ type SInstanceOffering struct {
 }
 
 // GetZone implement by cfel
-func (self *SInstanceOffering) GetZone() cloudprovider.ICloudZone {
-	return nil
+func (offering *SInstanceOffering) GetZoneID() string {
+	return ""
 }
 
 func (region *SRegion) GetInstanceOffering(offerId string) (*SInstanceOffering, error) {

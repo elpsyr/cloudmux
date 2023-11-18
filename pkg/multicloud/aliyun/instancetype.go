@@ -47,7 +47,8 @@ type SInstanceType struct {
 	InstancePpsRx        int     // 内网入方向网络收发包能力。单位：pps。
 	InstancePpsTx        int     // 内网出方向网络收发包能力。单位：pps。
 	// cfel implement
-	Zone                        cloudprovider.ICloudZone
+	//Zone                        cloudprovider.ICloudZone
+	ZoneID                      string
 	CpuArchitecture             string  // CPU架构，可能值： X86。 ARM。
 	CpuSpeedFrequency           float64 // CPU基频，单位GHz。
 	CpuTurboFrequency           float64 // CPU睿频，单位GHz。
@@ -98,13 +99,13 @@ type SAvailableResource struct {
 	} `json:"AvailableZones"`
 }
 
-// GetZone implement by cfel
+// GetZoneID implement by cfel
 // 获取 SInstanceType 所属 zone
-func (self *SInstanceType) GetZone() cloudprovider.ICloudZone {
-	if self.Zone != nil {
-		return self.Zone
-	}
-	return nil
+func (self *SInstanceType) GetZoneID() string {
+	//if self.Zone != nil {
+	//	return self.Zone
+	//}
+	return self.ZoneID
 }
 
 // GetInstanceTypes 获取云服务器ECS提供的所有实例规格的信息（server sku）
@@ -160,7 +161,7 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 	// 为 availableResource zone下的 InstanceTypes 创建 SInstanceType
 	zonesInstanceType := make([]SInstanceType, 0)
 	for _, zone := range postPaidAvailableResource.AvailableZones.AvailableZone {
-		zoneById, err := self.GetIZoneById(zone.ZoneID)
+		//zoneById, err := self.GetIZoneById(zone.ZoneID)
 		if err != nil {
 			log.Errorf("GetIZoneById fail %s", err)
 			return nil, err
@@ -169,7 +170,7 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 			for _, resource := range resources.SupportedResources.SupportedResource {
 				_instanceType, ok := instanceTypeMap[resource.Value]
 				if ok {
-					_instanceType.Zone = zoneById
+					_instanceType.ZoneID = zone.ZoneID
 					_instanceType.PostpaidStatus = resource.Status
 
 					// set PrepaidStatus

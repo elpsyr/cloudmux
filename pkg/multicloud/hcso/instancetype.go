@@ -17,8 +17,6 @@ package hcso
 import (
 	"strconv"
 	"strings"
-	"yunion.io/x/cloudmux/pkg/cloudprovider"
-
 	"yunion.io/x/cloudmux/pkg/apis"
 	"yunion.io/x/cloudmux/pkg/multicloud"
 )
@@ -118,8 +116,8 @@ func getFlavorLocalCategory(family string) string {
 }
 
 // GetZone implement by cfel
-func (self *SInstanceType) GetZone() cloudprovider.ICloudZone {
-	return nil
+func (self *SInstanceType) GetZoneID() string {
+	return ""
 }
 
 func (self *SInstanceType) GetId() string {

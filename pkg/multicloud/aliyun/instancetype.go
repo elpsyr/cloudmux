@@ -204,7 +204,7 @@ func (self *SRegion) GetAvailableResource(InstanceChargeType string) (*SAvailabl
 	}
 
 	availableResources := new(SAvailableResource)
-	err = body.Unmarshal(&availableResources, "AvailableZones")
+	err = body.Unmarshal(&availableResources)
 	if err != nil {
 		log.Errorf("Unmarshal available resources details fail %s", err)
 		return nil, err

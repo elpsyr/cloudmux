@@ -141,13 +141,13 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 	// 1. 获取 region->zone 层级下 可用资源 DescribeAvailableResource
 
 	// 1.1 PostPaid
-	postPaidAvailableResource, err := self.GetAvailableResource("PostPaid")
+	postPaidAvailableResource, err := self.GetAvailableResource("PostPaid", "", "", false)
 	if err != nil {
 		log.Errorf("GetAvailableResource PostPaid fail %s", err)
 		return nil, err
 	}
 	// 1.2 PrePaid
-	prePaidAvailableResource, err := self.GetAvailableResource("PrePaid")
+	prePaidAvailableResource, err := self.GetAvailableResource("PrePaid", "", "", false)
 	if err != nil {
 		log.Errorf("GetAvailableResource PrePaid fail %s", err)
 		return nil, err
@@ -195,12 +195,22 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 // GetAvailableResource 查询某一可用区的资源列表。
 // AvailableResource 所属层级 ： region->zone-> AvailableResource
 // implement by cfel
-func (self *SRegion) GetAvailableResource(InstanceChargeType string) (*SAvailableResource, error) {
+func (self *SRegion) GetAvailableResource(InstanceChargeType, ZoneID, InstanceType string, spot bool) (*SAvailableResource, error) {
 	// 0. 获取 region 层级下所有 InstanceTypes
 	params := make(map[string]string)
 	params["RegionId"] = self.RegionId
 	params["DestinationResource"] = "InstanceType"
 	params["InstanceChargeType"] = InstanceChargeType
+	if InstanceType != "" {
+		params["InstanceType"] = InstanceType
+	}
+	if ZoneID != "" {
+		params["ZoneId"] = ZoneID
+	}
+	if spot {
+		params["InstanceChargeType"] = "PostPaid"
+		params["SpotStrategy"] = "SpotAsPriceGo"
+	}
 
 	body, err := self.ecsRequest("DescribeAvailableResource", params)
 	if err != nil {

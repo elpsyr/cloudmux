@@ -35,6 +35,9 @@ import (
 	"yunion.io/x/cloudmux/pkg/multicloud"
 )
 
+// Verify that *SInstanceType implements ICloudSkuPrice
+var _ cloudprovider.ICloudSkuPrice = (*SRegion)(nil)
+
 type SRegion struct {
 	multicloud.SRegion
 
@@ -306,7 +309,7 @@ func (self *SRegion) _lbRequest(client *sdk.Client, apiName string, domain strin
 	return jsonRequest(client, domain, ALIYUN_API_VERSION_LB, apiName, params, self.client.debug)
 }
 
-/////////////////////////////////////////////////////////////////////////////
+// ///////////////////////////////////////////////////////////////////////////
 func (self *SRegion) GetId() string {
 	return self.RegionId
 }
@@ -1240,4 +1243,165 @@ func (self *SRegion) GetIVMs() ([]cloudprovider.ICloudVM, error) {
 		ret = append(ret, &instances[i])
 	}
 	return ret, nil
+}
+
+const (
+	PREPAID      = "Prepaid"      // 包年包月
+	POSTPAID     = "PostPaid"     // 按量付费
+	SPOTPOSTPAID = "SpotPostPaid" // 抢占
+)
+
+// SInstancePrice DescribePrice 接口返回
+type SInstancePrice struct {
+	RequestID string `json:"RequestId"`
+	PriceInfo struct {
+		Price struct {
+			OriginalPrice             int     `json:"OriginalPrice"`
+			ReservedInstanceHourPrice int     `json:"ReservedInstanceHourPrice"`
+			DiscountPrice             float64 `json:"DiscountPrice"`
+			Currency                  string  `json:"Currency"`
+			TradePrice                float64 `json:"TradePrice"`
+		} `json:"Price"`
+		Rules struct {
+			Rule []struct {
+				Description string `json:"Description"`
+				RuleID      int    `json:"RuleId"`
+			} `json:"Rule"`
+		} `json:"Rules"`
+	} `json:"PriceInfo"`
+}
+
+// GetDescribePrice 查询云服务器ECS资源的最新价格。
+// implement by cfel
+func (self *SRegion) GetDescribePrice(zoneID, InstanceType, paidType string) (*SInstancePrice, error) {
+
+	params := make(map[string]string)
+	params["RegionId"] = self.RegionId
+	params["ResourceType"] = "instance" // 目标资源的类型
+	params["InstanceType"] = InstanceType
+	switch paidType {
+	case POSTPAID:
+	case PREPAID:
+		params["Period"] = "1"
+		params["PriceUnit"] = "Month"
+	case SPOTPOSTPAID:
+		params["SpotStrategy"] = "SpotAsPriceGo" // 系统自动出价，最高按量付费价格。
+		params["ZoneId"] = zoneID                // 抢占式实例不同可用区价格可能不同，查询抢占式实例价格时，建议传入ZoneId查询指定可用区的抢占式实例价格。
+	default:
+	}
+
+	body, err := self.ecsRequest("DescribePrice", params)
+	if err != nil {
+		log.Errorf("DescribePrice fail %s", err)
+		return nil, err
+	}
+
+	instancePrice := new(SInstancePrice)
+	err = body.Unmarshal(&instancePrice)
+	if err != nil {
+		log.Errorf("Unmarshal available resources details fail %s", err)
+		return nil, err
+	}
+
+	return instancePrice, nil
+}
+
+// implement cloudprovider.ICloudSkuPrice
+
+func (self *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) float64 {
+	price, err := self.GetDescribePrice(zoneID, instanceType, SPOTPOSTPAID)
+	if err != nil {
+		return 0
+	}
+	return price.PriceInfo.Price.TradePrice
+
+}
+
+func (self *SRegion) GetPostPaidPrice(zoneID, instanceType string) float64 {
+	price, err := self.GetDescribePrice(zoneID, instanceType, POSTPAID)
+	if err != nil {
+		return 0
+	}
+	return price.PriceInfo.Price.TradePrice
+}
+
+func (self *SRegion) GetPrePaidPrice(zoneID, instanceType string) float64 {
+	price, err := self.GetDescribePrice(zoneID, instanceType, PREPAID)
+	if err != nil {
+		return 0
+	}
+	return price.PriceInfo.Price.TradePrice
+}
+
+func (self *SRegion) GetSpotPostPaidStatus(zoneID, instanceType string) string {
+	resource, err := self.GetAvailableResource("PostPaid", zoneID, instanceType, true)
+	if err != nil {
+		return ""
+	}
+	availableZone := resource.AvailableZones.AvailableZone
+	if availableZone != nil && len(availableZone) > 0 {
+		availableResource := availableZone[0].AvailableResources.AvailableResource
+		if availableResource != nil && len(availableResource) > 0 {
+			supportedResource := availableResource[0].SupportedResources.SupportedResource
+			if supportedResource != nil && len(supportedResource) > 0 {
+				status := supportedResource[0].Status
+				if status == AliyunResourceAvailable {
+					return api.SkuStatusAvailable
+				} else if status == AliyunResourceSoldOut {
+					return api.SkuStatusSoldout
+				}
+				return api.SkuStatusSoldout
+			}
+		}
+	}
+	return api.SkuStatusSoldout
+
+}
+
+func (self *SRegion) GetPostPaidStatus(zoneID, instanceType string) string {
+	resource, err := self.GetAvailableResource("PostPaid", zoneID, instanceType, false)
+	if err != nil {
+		return ""
+	}
+	availableZone := resource.AvailableZones.AvailableZone
+	if availableZone != nil && len(availableZone) > 0 {
+		availableResource := availableZone[0].AvailableResources.AvailableResource
+		if availableResource != nil && len(availableResource) > 0 {
+			supportedResource := availableResource[0].SupportedResources.SupportedResource
+			if supportedResource != nil && len(supportedResource) > 0 {
+				status := supportedResource[0].Status
+				if status == AliyunResourceAvailable {
+					return api.SkuStatusAvailable
+				} else if status == AliyunResourceSoldOut {
+					return api.SkuStatusSoldout
+				}
+				return api.SkuStatusSoldout
+			}
+		}
+	}
+	return api.SkuStatusSoldout
+}
+
+func (self *SRegion) GetPrePaidStatus(zoneID, instanceType string) string {
+	resource, err := self.GetAvailableResource("PrePaid", zoneID, instanceType, false)
+	if err != nil {
+		return ""
+	}
+	availableZone := resource.AvailableZones.AvailableZone
+	if availableZone != nil && len(availableZone) > 0 {
+		availableResource := availableZone[0].AvailableResources.AvailableResource
+		if availableResource != nil && len(availableResource) > 0 {
+			supportedResource := availableResource[0].SupportedResources.SupportedResource
+			if supportedResource != nil && len(supportedResource) > 0 {
+				status := supportedResource[0].Status
+				if status == AliyunResourceAvailable {
+					return api.SkuStatusAvailable
+				} else if status == AliyunResourceSoldOut {
+					return api.SkuStatusSoldout
+				}
+				return api.SkuStatusSoldout
+			}
+		}
+	}
+	return api.SkuStatusSoldout
 }

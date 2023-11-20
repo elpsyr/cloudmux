@@ -888,13 +888,13 @@ type ICloudSku interface {
 // ICloudSkuPrice sku价格接口
 // define by cfel
 type ICloudSkuPrice interface {
-	GetSpotPostPaidPrice(zoneID, instanceType string) float64 //  抢占付费 价格
-	GetPostPaidPrice(zoneID, instanceType string) float64     //  按量付费 价格
-	GetPrePaidPrice(zoneID, instanceType string) float64      //  包年包月 价格
+	GetSpotPostPaidPrice(zoneID, instanceType string) (float64, error) //  抢占付费 价格
+	GetPostPaidPrice(zoneID, instanceType string) (float64, error)     //  按量付费 价格
+	GetPrePaidPrice(zoneID, instanceType string) (float64, error)      //  包年包月 价格
 
-	GetSpotPostPaidStatus(zoneID, instanceType string) string //  抢占付费 售卖状态
-	GetPostPaidStatus(zoneID, instanceType string) string     //  按量付费 售卖状态
-	GetPrePaidStatus(zoneID, instanceType string) string      //  包年包月 售卖状态
+	GetSpotPostPaidStatus(zoneID, instanceType string) (string, error) //  抢占付费 售卖状态
+	GetPostPaidStatus(zoneID, instanceType string) (string, error)     //  按量付费 售卖状态
+	GetPrePaidStatus(zoneID, instanceType string) (string, error)      //  包年包月 售卖状态
 }
 
 type ICloudProject interface {

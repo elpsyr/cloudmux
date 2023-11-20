@@ -1308,35 +1308,35 @@ func (self *SRegion) GetDescribePrice(zoneID, InstanceType, paidType string) (*S
 
 // implement cloudprovider.ICloudSkuPrice
 
-func (self *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) float64 {
+func (self *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) (float64, error) {
 	price, err := self.GetDescribePrice(zoneID, instanceType, SPOTPOSTPAID)
 	if err != nil {
-		return 0
+		return 0, err
 	}
-	return price.PriceInfo.Price.TradePrice
+	return price.PriceInfo.Price.TradePrice, nil
 
 }
 
-func (self *SRegion) GetPostPaidPrice(zoneID, instanceType string) float64 {
+func (self *SRegion) GetPostPaidPrice(zoneID, instanceType string) (float64, error) {
 	price, err := self.GetDescribePrice(zoneID, instanceType, POSTPAID)
 	if err != nil {
-		return 0
+		return 0, err
 	}
-	return price.PriceInfo.Price.TradePrice
+	return price.PriceInfo.Price.TradePrice, nil
 }
 
-func (self *SRegion) GetPrePaidPrice(zoneID, instanceType string) float64 {
+func (self *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, error) {
 	price, err := self.GetDescribePrice(zoneID, instanceType, PREPAID)
 	if err != nil {
-		return 0
+		return 0, err
 	}
-	return price.PriceInfo.Price.TradePrice
+	return price.PriceInfo.Price.TradePrice, nil
 }
 
-func (self *SRegion) GetSpotPostPaidStatus(zoneID, instanceType string) string {
+func (self *SRegion) GetSpotPostPaidStatus(zoneID, instanceType string) (string, error) {
 	resource, err := self.GetAvailableResource("PostPaid", zoneID, instanceType, true)
 	if err != nil {
-		return ""
+		return "", err
 	}
 	availableZone := resource.AvailableZones.AvailableZone
 	if availableZone != nil && len(availableZone) > 0 {
@@ -1346,22 +1346,22 @@ func (self *SRegion) GetSpotPostPaidStatus(zoneID, instanceType string) string {
 			if supportedResource != nil && len(supportedResource) > 0 {
 				status := supportedResource[0].Status
 				if status == AliyunResourceAvailable {
-					return api.SkuStatusAvailable
+					return api.SkuStatusAvailable, nil
 				} else if status == AliyunResourceSoldOut {
-					return api.SkuStatusSoldout
+					return api.SkuStatusSoldout, nil
 				}
-				return api.SkuStatusSoldout
+				return api.SkuStatusSoldout, nil
 			}
 		}
 	}
-	return api.SkuStatusSoldout
+	return api.SkuStatusSoldout, nil
 
 }
 
-func (self *SRegion) GetPostPaidStatus(zoneID, instanceType string) string {
+func (self *SRegion) GetPostPaidStatus(zoneID, instanceType string) (string, error) {
 	resource, err := self.GetAvailableResource("PostPaid", zoneID, instanceType, false)
 	if err != nil {
-		return ""
+		return "", err
 	}
 	availableZone := resource.AvailableZones.AvailableZone
 	if availableZone != nil && len(availableZone) > 0 {
@@ -1371,21 +1371,21 @@ func (self *SRegion) GetPostPaidStatus(zoneID, instanceType string) string {
 			if supportedResource != nil && len(supportedResource) > 0 {
 				status := supportedResource[0].Status
 				if status == AliyunResourceAvailable {
-					return api.SkuStatusAvailable
+					return api.SkuStatusAvailable, nil
 				} else if status == AliyunResourceSoldOut {
-					return api.SkuStatusSoldout
+					return api.SkuStatusSoldout, nil
 				}
-				return api.SkuStatusSoldout
+				return api.SkuStatusSoldout, nil
 			}
 		}
 	}
-	return api.SkuStatusSoldout
+	return api.SkuStatusSoldout, nil
 }
 
-func (self *SRegion) GetPrePaidStatus(zoneID, instanceType string) string {
+func (self *SRegion) GetPrePaidStatus(zoneID, instanceType string) (string, error) {
 	resource, err := self.GetAvailableResource("PrePaid", zoneID, instanceType, false)
 	if err != nil {
-		return ""
+		return "", err
 	}
 	availableZone := resource.AvailableZones.AvailableZone
 	if availableZone != nil && len(availableZone) > 0 {
@@ -1395,13 +1395,13 @@ func (self *SRegion) GetPrePaidStatus(zoneID, instanceType string) string {
 			if supportedResource != nil && len(supportedResource) > 0 {
 				status := supportedResource[0].Status
 				if status == AliyunResourceAvailable {
-					return api.SkuStatusAvailable
+					return api.SkuStatusAvailable, nil
 				} else if status == AliyunResourceSoldOut {
-					return api.SkuStatusSoldout
+					return api.SkuStatusSoldout, nil
 				}
-				return api.SkuStatusSoldout
+				return api.SkuStatusSoldout, nil
 			}
 		}
 	}
-	return api.SkuStatusSoldout
+	return api.SkuStatusSoldout, nil
 }

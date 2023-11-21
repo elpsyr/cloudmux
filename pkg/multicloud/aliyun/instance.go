@@ -446,7 +446,7 @@ func (self *SInstance) RebootVM(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return cloudprovider.WaitStatus(self, api.VM_READY, 10*time.Second, 300*time.Second) // 5mintues
+	return cloudprovider.WaitStatus(self, api.VM_RUNNING, 10*time.Second, 300*time.Second) // 5mintues
 }
 
 func (self *SInstance) GetVNCInfo(input *cloudprovider.ServerVncInput) (*cloudprovider.ServerVncOutput, error) {
@@ -831,7 +831,7 @@ func (self *SRegion) RebootVM(instanceId string) error {
 		return err
 	}
 	if status != InstanceStatusRunning {
-		log.Errorf("StartVM: vm status is %s expect %s", status, InstanceStatusRunning)
+		log.Errorf("RebootVM: vm status is %s expect %s", status, InstanceStatusRunning)
 		return cloudprovider.ErrInvalidStatus
 	}
 	return self.doRebootVM(instanceId)

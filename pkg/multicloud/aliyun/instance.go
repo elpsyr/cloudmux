@@ -441,6 +441,14 @@ func (self *SInstance) StopVM(ctx context.Context, opts *cloudprovider.ServerSto
 	return cloudprovider.WaitStatus(self, api.VM_READY, 10*time.Second, 300*time.Second) // 5mintues
 }
 
+func (self *SInstance) RebootVM(ctx context.Context) error {
+	err := self.host.zone.region.RebootVM(self.InstanceId)
+	if err != nil {
+		return err
+	}
+	return cloudprovider.WaitStatus(self, api.VM_READY, 10*time.Second, 300*time.Second) // 5mintues
+}
+
 func (self *SInstance) GetVNCInfo(input *cloudprovider.ServerVncInput) (*cloudprovider.ServerVncOutput, error) {
 	url, err := self.host.zone.region.GetInstanceVNCUrl(self.InstanceId)
 	if err != nil {
@@ -749,6 +757,10 @@ func (self *SRegion) doStopVM(instanceId string, isForce, stopCharging bool) err
 	return self.instanceOperation(instanceId, "StopInstance", params)
 }
 
+func (self *SRegion) doRebootVM(instanceId string) error {
+	return self.instanceOperation(instanceId, "RebootInstance", nil)
+}
+
 func (self *SRegion) doDeleteVM(instanceId string) error {
 	params := make(map[string]string)
 	params["TerminateSubscription"] = "true" // terminate expired prepaid instance
@@ -810,6 +822,23 @@ func (self *SRegion) StopVM(instanceId string, isForce, stopCharging bool) error
 	//  return err
 	// }
 	// return self.waitInstanceStatus(instanceId, InstanceStatusStopped, time.Second*10, time.Second*300) // 5 minutes to timeout
+}
+
+func (self *SRegion) RebootVM(instanceId string) error {
+	status, err := self.GetInstanceStatus(instanceId)
+	if err != nil {
+		log.Errorf("Fail to get instance status on StartVM: %s", err)
+		return err
+	}
+	if status != InstanceStatusRunning {
+		log.Errorf("StartVM: vm status is %s expect %s", status, InstanceStatusRunning)
+		return cloudprovider.ErrInvalidStatus
+	}
+	return self.doRebootVM(instanceId)
+	// if err != nil {
+	//	return err
+	// }
+	// return self.waitInstanceStatus(instanceId, InstanceStatusRunning, time.Second*5, time.Second*180) // 3 minutes to timeout
 }
 
 func (self *SRegion) DeleteVM(instanceId string) error {

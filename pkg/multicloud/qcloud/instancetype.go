@@ -15,6 +15,7 @@
 package qcloud
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -409,8 +410,8 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 		//err = body.Unmarshal(&instanceTypes, "InstanceTypeConfigSet")
 
 		allInfo := new(DescribeInstanceConfigInfosUnmarshal)
-		//err = json.Unmarshal([]byte(body.String()), &allInfo)
-		err = body.Unmarshal(&allInfo)
+		err = json.Unmarshal([]byte(body.String()), &allInfo)
+		//err = body.Unmarshal(&allInfo)
 		if err != nil {
 			log.Errorf("Unmarshal instance type details fail %s", err)
 			return nil, err
@@ -459,8 +460,8 @@ func (self *SRegion) GetInstanceTypesPrice(zoneID, instanceType string) (*Descri
 	//err = body.Unmarshal(&instanceTypes, "InstanceTypeConfigSet")
 
 	allInfo := new(DescribeInstanceConfigInfosUnmarshal)
-	//err = json.Unmarshal([]byte(body.String()), &allInfo)
-	err = body.Unmarshal(&allInfo)
+	err = json.Unmarshal([]byte(body.String()), &allInfo)
+	//err = body.Unmarshal(&allInfo)
 	if err != nil {
 		log.Errorf("Unmarshal instance type details fail %s", err)
 		return nil, err

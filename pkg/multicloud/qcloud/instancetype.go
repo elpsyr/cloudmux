@@ -15,6 +15,7 @@
 package qcloud
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
@@ -437,6 +438,41 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 	}
 
 	return instanceTypes, nil
+}
+
+// GetInstanceTypesPrice 获取 instanceType 价格
+func (self *SRegion) GetInstanceTypesPrice(zoneID, instanceType string) (*DescribeInstanceConfigInfosUnmarshal, error) {
+	params := make(map[string]string)
+	params["Region"] = self.Region
+	params["Filters.0.Name"] = "zone"
+	params["Filters.0.Values.0"] = zoneID
+	params["Filters.1.Name"] = "instance-type"
+	params["Filters.1.Values.0"] = instanceType
+
+	//body, err := self.cvmRequest("DescribeInstanceTypeConfigs", params, true)
+	body, err := self.cvmRequest("DescribeUserAvailableInstanceTypes", params, true)
+	if err != nil {
+		log.Errorf("DescribeUserAvailableInstanceTypes fail %s", err)
+		return nil, err
+	}
+
+	//err = body.Unmarshal(&instanceTypes, "InstanceTypeConfigSet")
+
+	allInfo := new(DescribeInstanceConfigInfosUnmarshal)
+	//err = json.Unmarshal([]byte(body.String()), &allInfo)
+	err = body.Unmarshal(&allInfo)
+	if err != nil {
+		log.Errorf("Unmarshal instance type details fail %s", err)
+		return nil, err
+	}
+
+	for _, info := range allInfo.InstanceTypeQuotaSet {
+
+		fmt.Println(info.InstanceChargeType, "-----", info.Price)
+
+	}
+
+	return allInfo, nil
 }
 
 func (self *SInstanceType) memoryMB() int {

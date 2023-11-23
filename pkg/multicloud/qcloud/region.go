@@ -33,6 +33,9 @@ import (
 	"yunion.io/x/cloudmux/pkg/multicloud"
 )
 
+// Verify that *SInstanceType implements ICloudSkuPrice
+var _ cloudprovider.ICloudSkuPrice = (*SRegion)(nil)
+
 type SRegion struct {
 	multicloud.SRegion
 
@@ -1045,4 +1048,72 @@ func (region *SRegion) GetIVMs() ([]cloudprovider.ICloudVM, error) {
 		ivms[i] = &vms[i]
 	}
 	return ivms, nil
+}
+
+// implement cloudprovider.ICloudSkuPrice
+
+func (region *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) (float64, error) {
+	price, err := region.GetInstanceTypesPrice(zoneID, instanceType)
+	if err != nil {
+		return 0, err
+	}
+	// InstanceChargeType :
+	// POSTPAID_BY_HOUR
+	// SPOTPAID
+	// PREPAID
+	for _, instance := range price.InstanceTypeQuotaSet {
+		if instance.InstanceChargeType == "SPOTPAID" {
+			return instance.Price.DiscountPrice, err
+		}
+		continue
+	}
+	return 0, err
+}
+
+func (region *SRegion) GetPostPaidPrice(zoneID, instanceType string) (float64, error) {
+	price, err := region.GetInstanceTypesPrice(zoneID, instanceType)
+	if err != nil {
+		return 0, err
+	}
+	// InstanceChargeType :
+	// POSTPAID_BY_HOUR
+	// SPOTPAID
+	// PREPAID
+	for _, instance := range price.InstanceTypeQuotaSet {
+		if instance.InstanceChargeType == "POSTPAID_BY_HOUR" {
+			return instance.Price.DiscountPrice, err
+		}
+		continue
+	}
+	return 0, err
+}
+
+func (region *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, error) {
+	price, err := region.GetInstanceTypesPrice(zoneID, instanceType)
+	if err != nil {
+		return 0, err
+	}
+	// InstanceChargeType :
+	// POSTPAID_BY_HOUR
+	// SPOTPAID
+	// PREPAID
+	for _, instance := range price.InstanceTypeQuotaSet {
+		if instance.InstanceChargeType == "PREPAID" {
+			return instance.Price.DiscountPrice, err
+		}
+		continue
+	}
+	return 0, err
+}
+
+func (region *SRegion) GetSpotPostPaidStatus(zoneID, instanceType string) (string, error) {
+	return "", nil
+}
+
+func (region *SRegion) GetPostPaidStatus(zoneID, instanceType string) (string, error) {
+	return "", nil
+}
+
+func (region *SRegion) GetPrePaidStatus(zoneID, instanceType string) (string, error) {
+	return "", nil
 }

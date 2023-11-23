@@ -1063,7 +1063,7 @@ func (region *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) (float6
 	// PREPAID
 	for _, instance := range price.InstanceTypeQuotaSet {
 		if instance.InstanceChargeType == "SPOTPAID" {
-			return instance.Price.DiscountPrice, err
+			return instance.Price.UnitPriceDiscount, err
 		}
 		continue
 	}
@@ -1081,7 +1081,7 @@ func (region *SRegion) GetPostPaidPrice(zoneID, instanceType string) (float64, e
 	// PREPAID
 	for _, instance := range price.InstanceTypeQuotaSet {
 		if instance.InstanceChargeType == "POSTPAID_BY_HOUR" {
-			return instance.Price.DiscountPrice, err
+			return instance.Price.UnitPriceDiscount, err
 		}
 		continue
 	}

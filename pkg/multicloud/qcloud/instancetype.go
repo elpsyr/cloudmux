@@ -322,6 +322,8 @@ type DescribeUserAvailableInstanceTypesResp struct {
 func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 	params := make(map[string]string)
 	params["Region"] = self.Region
+	params["Filters.0.Name"] = "zone"
+	params["Filters.0.Values.0"] = "*"
 
 	//body, err := self.cvmRequest("DescribeInstanceTypeConfigs", params, true)
 	body, err := self.cvmRequest("DescribeUserAvailableInstanceTypes", params, true)

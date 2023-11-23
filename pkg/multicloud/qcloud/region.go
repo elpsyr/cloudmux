@@ -1106,14 +1106,74 @@ func (region *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, er
 	return 0, err
 }
 
+//  "SOLD_OUT"  "SELL"
+
 func (region *SRegion) GetSpotPostPaidStatus(zoneID, instanceType string) (string, error) {
-	return "", nil
+	price, err := region.GetInstanceTypesPrice(zoneID, instanceType)
+	if err != nil {
+		return api.SkuStatusSoldout, err
+	}
+
+	for _, instance := range price.InstanceTypeQuotaSet {
+		if instance.InstanceChargeType == "SPOTPAID" {
+			switch instance.Status {
+			case "SOLD_OUT":
+				return api.SkuStatusSoldout, err
+			case "SELL":
+				return api.SkuStatusAvailable, err
+			default:
+				return api.SkuStatusSoldout, err
+			}
+		}
+		continue
+	}
+	return api.SkuStatusSoldout, nil
 }
 
+// GetPostPaidStatus 按量付费是否可购买
+// "POSTPAID_BY_HOUR"
 func (region *SRegion) GetPostPaidStatus(zoneID, instanceType string) (string, error) {
-	return "", nil
+	price, err := region.GetInstanceTypesPrice(zoneID, instanceType)
+	if err != nil {
+		return api.SkuStatusSoldout, err
+	}
+
+	for _, instance := range price.InstanceTypeQuotaSet {
+		if instance.InstanceChargeType == "POSTPAID_BY_HOUR" {
+			switch instance.Status {
+			case "SOLD_OUT":
+				return api.SkuStatusSoldout, err
+			case "SELL":
+				return api.SkuStatusAvailable, err
+			default:
+				return api.SkuStatusSoldout, err
+			}
+		}
+		continue
+	}
+	return api.SkuStatusSoldout, nil
 }
 
+// GetPrePaidStatus 包年包月是否可购买
+// "PREPAID" 单位为 MONTH
 func (region *SRegion) GetPrePaidStatus(zoneID, instanceType string) (string, error) {
-	return "", nil
+	price, err := region.GetInstanceTypesPrice(zoneID, instanceType)
+	if err != nil {
+		return api.SkuStatusSoldout, err
+	}
+
+	for _, instance := range price.InstanceTypeQuotaSet {
+		if instance.InstanceChargeType == "PREPAID" {
+			switch instance.Status {
+			case "SOLD_OUT":
+				return api.SkuStatusSoldout, err
+			case "SELL":
+				return api.SkuStatusAvailable, err
+			default:
+				return api.SkuStatusSoldout, err
+			}
+		}
+		continue
+	}
+	return api.SkuStatusSoldout, nil
 }

@@ -323,43 +323,47 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 	params := make(map[string]string)
 	params["Region"] = self.Region
 	params["Filters.0.Name"] = "zone"
-	params["Filters.0.Values.0"] = "*"
-
-	//body, err := self.cvmRequest("DescribeInstanceTypeConfigs", params, true)
-	body, err := self.cvmRequest("DescribeUserAvailableInstanceTypes", params, true)
-	if err != nil {
-		log.Errorf("DescribeUserAvailableInstanceTypes fail %s", err)
-		return nil, err
-	}
-
 	instanceTypes := make([]SInstanceType, 0)
-	//err = body.Unmarshal(&instanceTypes, "InstanceTypeConfigSet")
 
-	allInfo := new(DescribeUserAvailableInstanceTypesResp)
-	err = body.Unmarshal(&allInfo)
-	if err != nil {
-		log.Errorf("Unmarshal instance type details fail %s", err)
-		return nil, err
-	}
+	for _, izone := range self.izones {
 
-	for _, info := range allInfo.Data.Data.Response.InstanceTypeQuotaSet {
+		params["Filters.0.Values.0"] = izone.GetId()
 
-		instanceType := SInstanceType{
-			Zone:              info.Zone,
-			InstanceType:      info.InstanceType,
-			TypeName:          info.TypeName,
-			InstanceFamily:    info.InstanceFamily,
-			GPU:               info.Gpu,
-			CPU:               info.CPU,
-			Memory:            info.Memory,
-			CbsSupport:        "TRUE",
-			InstanceTypeState: info.Status,
+		//body, err := self.cvmRequest("DescribeInstanceTypeConfigs", params, true)
+		body, err := self.cvmRequest("DescribeUserAvailableInstanceTypes", params, true)
+		if err != nil {
+			log.Errorf("DescribeUserAvailableInstanceTypes fail %s", err)
+			return nil, err
 		}
-		if info.GpuCount != 0 {
-			instanceType.GPUDesc = info.Externals.GPUDesc
-		}
-		instanceTypes = append(instanceTypes, instanceType)
 
+		//err = body.Unmarshal(&instanceTypes, "InstanceTypeConfigSet")
+
+		allInfo := new(DescribeUserAvailableInstanceTypesResp)
+		err = body.Unmarshal(&allInfo)
+		if err != nil {
+			log.Errorf("Unmarshal instance type details fail %s", err)
+			return nil, err
+		}
+
+		for _, info := range allInfo.Data.Data.Response.InstanceTypeQuotaSet {
+
+			instanceType := SInstanceType{
+				Zone:              info.Zone,
+				InstanceType:      info.InstanceType,
+				TypeName:          info.TypeName,
+				InstanceFamily:    info.InstanceFamily,
+				GPU:               info.Gpu,
+				CPU:               info.CPU,
+				Memory:            info.Memory,
+				CbsSupport:        "TRUE",
+				InstanceTypeState: info.Status,
+			}
+			if info.GpuCount != 0 {
+				instanceType.GPUDesc = info.Externals.GPUDesc
+			}
+			instanceTypes = append(instanceTypes, instanceType)
+
+		}
 	}
 
 	return instanceTypes, nil

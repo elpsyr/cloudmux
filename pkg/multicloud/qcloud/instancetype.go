@@ -15,6 +15,7 @@
 package qcloud
 
 import (
+	"strconv"
 	"time"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/log"
@@ -39,6 +40,11 @@ type SInstanceType struct {
 	Memory            int    //	内存容量，单位：GB。
 	CbsSupport        string //	是否支持云硬盘。取值范围：TRUE：表示支持云硬盘；FALSE：表示不支持云硬盘。
 	InstanceTypeState string //	机型状态。取值范围：AVAILABLE：表示机型可用；UNAVAILABLE：表示机型不可用。
+	// more infomation
+	TypeName string
+	CPUType  string
+	GPUDesc  string
+	GpuCount int // GPU 数量
 }
 
 func (self *SInstanceType) GetId() string {
@@ -46,7 +52,7 @@ func (self *SInstanceType) GetId() string {
 }
 
 func (self *SInstanceType) GetName() string {
-	return self.InstanceType
+	return self.TypeName
 }
 
 func (self *SInstanceType) GetGlobalId() string {
@@ -159,7 +165,7 @@ func (self *SInstanceType) GetDataDiskMaxCount() int {
 }
 
 func (self *SInstanceType) GetNicType() string {
-	return ""
+	return "vpc"
 }
 
 func (self *SInstanceType) GetNicMaxCount() int {
@@ -167,15 +173,15 @@ func (self *SInstanceType) GetNicMaxCount() int {
 }
 
 func (self *SInstanceType) GetGpuAttachable() bool {
-	return false
+	return self.GpuCount != 0
 }
 
 func (self *SInstanceType) GetGpuSpec() string {
-	return ""
+	return self.GPUDesc
 }
 
 func (self *SInstanceType) GetGpuCount() string {
-	return ""
+	return strconv.Itoa(self.GpuCount)
 }
 
 func (self *SInstanceType) GetGpuMaxCount() int {
@@ -186,23 +192,174 @@ func (self *SInstanceType) Delete() error {
 	return nil
 }
 
+// DescribeInstanceConfigInfosResp 是
+// DescribeInstanceConfigInfos 接口的返回格式
+type DescribeInstanceConfigInfosResp struct {
+	Data struct {
+		Response struct {
+			InstanceConfigInfos []struct {
+				Type             string `json:"type"`
+				TypeName         string `json:"typeName"`
+				Order            int    `json:"order"`
+				InstanceFamilies []struct {
+					InstanceFamily string `json:"instanceFamily"`
+					TypeName       string `json:"TypeName"`
+					Order          int    `json:"order"`
+					InstanceTypes  []struct {
+						InstanceType string  `json:"InstanceType"`
+						CPU          int     `json:"Cpu"`
+						Memory       int     `json:"Memory"`
+						Gpu          int     `json:"Gpu"`
+						Fpga         int     `json:"Fpga"`
+						StorageBlock int     `json:"StorageBlock"`
+						NetworkCard  int     `json:"NetworkCard"`
+						MaxBandwidth float64 `json:"MaxBandwidth"`
+						Frequency    string  `json:"Frequency"`
+						CPUModelName string  `json:"CpuModelName"`
+						Pps          int     `json:"Pps"`
+						Remark       string  `json:"Remark"`
+						Externals    struct {
+							UnsupportNetworks   []string `json:"UnsupportNetworks"`
+							ForceAcrossNodeFlag bool     `json:"forceAcrossNodeFlag"`
+							GpuAttr             struct {
+								Type string
+							} `json:"GpuAttr"`
+							GPUDesc string
+						} `json:"Externals,omitempty"`
+					} `json:"instanceTypes"`
+					Architecture string `json:"Architecture"`
+				} `json:"instanceFamilies"`
+			} `json:"InstanceConfigInfos"`
+			RequestID string `json:"RequestId"`
+		} `json:"Response"`
+	} `json:"data"`
+	Code int `json:"code"`
+}
+
+// DescribeUserAvailableInstanceTypesResp
+// DescribeUserAvailableInstanceTypes 请求的返回结构体
+type DescribeUserAvailableInstanceTypesResp struct {
+	Code int `json:"code"`
+	Data struct {
+		Code         int `json:"code"`
+		CgwerrorCode int `json:"cgwerrorCode"`
+		Data         struct {
+			Response struct {
+				InstanceTypeQuotaSet []struct {
+					Zone               string `json:"Zone"`
+					InstanceType       string `json:"InstanceType"`
+					InstanceChargeType string `json:"InstanceChargeType"`
+					NetworkCard        int    `json:"NetworkCard"`
+					Externals          struct {
+						GpuAttr struct {
+							Type string `json:"Type"`
+						} `json:"GpuAttr"`
+						GPUDesc                 string `json:"GPUDesc"`
+						InquiryWithEntireServer string `json:"InquiryWithEntireServer"`
+						ExtraSpecs              struct {
+							ForceAcrossNodeFlag bool `json:"forceAcrossNodeFlag"`
+						} `json:"extra_specs"`
+						UnsupportNetworks []string `json:"UnsupportNetworks"`
+						StorageBlockAttr  struct {
+							Type    string `json:"Type"`
+							MinSize int    `json:"MinSize"`
+							MaxSize int    `json:"MaxSize"`
+						} `json:"StorageBlockAttr"`
+						RequireNetworkFeatures        []string `json:"RequireNetworkFeatures"`
+						UnsupportNetworkFeature       []string `json:"UnsupportNetworkFeature"`
+						UnsupportLoginSettingsFeature []string `json:"UnsupportLoginSettingsFeature"`
+						RdmaNicCount                  int      `json:"RdmaNicCount"`
+						Hypervisor                    string   `json:"Hypervisor"`
+						HypervisorSpec                []string `json:"HypervisorSpec"`
+						RequiredEnhancedService       struct {
+							MonitorService struct {
+								Enabled string `json:"Enabled"`
+							} `json:"MonitorService"`
+						} `json:"RequiredEnhancedService"`
+					} `json:"Externals,omitempty"`
+					CPU                int           `json:"Cpu"`
+					Memory             int           `json:"Memory"`
+					InstanceFamily     string        `json:"InstanceFamily"`
+					Architecture       string        `json:"Architecture"`
+					TypeName           string        `json:"TypeName"`
+					LocalDiskTypeList  []interface{} `json:"LocalDiskTypeList"`
+					Status             string        `json:"Status"`
+					SoldOutReason      string        `json:"SoldOutReason"`
+					StorageBlockAmount int           `json:"StorageBlockAmount"`
+					InstanceBandwidth  float64       `json:"InstanceBandwidth"`
+					InstancePps        int           `json:"InstancePps"`
+					CPUType            string        `json:"CpuType"`
+					Frequency          string        `json:"Frequency"`
+					Gpu                int           `json:"Gpu"`
+					GpuCount           int           `json:"GpuCount"`
+					Fpga               int           `json:"Fpga"`
+					Remark             string        `json:"Remark"`
+					ExtraProperty      struct {
+					} `json:"ExtraProperty"`
+					Disable      string `json:"Disable"`
+					DeviceClass  string `json:"DeviceClass"`
+					StorageBlock int    `json:"StorageBlock"`
+					Price        struct {
+						OriginalPrice int `json:"OriginalPrice"`
+						DiscountPrice int `json:"DiscountPrice"`
+						Discount      int `json:"Discount"`
+					} `json:"Price"`
+				} `json:"InstanceTypeQuotaSet"`
+				RequestID string `json:"RequestId"`
+			} `json:"Response"`
+		} `json:"data"`
+	} `json:"data"`
+	Mccode int `json:"mccode"`
+	ErrObj struct {
+	} `json:"errObj"`
+	ReqID string `json:"reqId"`
+	SeqID string `json:"seqId"`
+}
+
+// GetInstanceTypes 获取 instanceType 信息
+// 原调用 DescribeInstanceTypeConfigs 获取基础信息
+// 现调用 DescribeUserAvailableInstanceTypes 获取详细信息
 func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 	params := make(map[string]string)
 	params["Region"] = self.Region
 
 	//body, err := self.cvmRequest("DescribeInstanceTypeConfigs", params, true)
-	body, err := self.cvmRequest("DescribeInstanceConfigInfos", params, true)
+	body, err := self.cvmRequest("DescribeUserAvailableInstanceTypes", params, true)
 	if err != nil {
-		log.Errorf("DescribeInstanceTypeConfigs fail %s", err)
+		log.Errorf("DescribeUserAvailableInstanceTypes fail %s", err)
 		return nil, err
 	}
 
 	instanceTypes := make([]SInstanceType, 0)
-	err = body.Unmarshal(&instanceTypes, "InstanceTypeConfigSet")
+	//err = body.Unmarshal(&instanceTypes, "InstanceTypeConfigSet")
+
+	allInfo := new(DescribeUserAvailableInstanceTypesResp)
+	err = body.Unmarshal(&allInfo)
 	if err != nil {
 		log.Errorf("Unmarshal instance type details fail %s", err)
 		return nil, err
 	}
+
+	for _, info := range allInfo.Data.Data.Response.InstanceTypeQuotaSet {
+
+		instanceType := SInstanceType{
+			Zone:              info.Zone,
+			InstanceType:      info.InstanceType,
+			TypeName:          info.TypeName,
+			InstanceFamily:    info.InstanceFamily,
+			GPU:               info.Gpu,
+			CPU:               info.CPU,
+			Memory:            info.Memory,
+			CbsSupport:        "TRUE",
+			InstanceTypeState: info.Status,
+		}
+		if info.GpuCount != 0 {
+			instanceType.GPUDesc = info.Externals.GPUDesc
+		}
+		instanceTypes = append(instanceTypes, instanceType)
+
+	}
+
 	return instanceTypes, nil
 }
 

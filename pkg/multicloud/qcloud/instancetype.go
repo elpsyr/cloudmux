@@ -373,9 +373,9 @@ type DescribeInstanceConfigInfosUnmarshal struct {
 		DeviceClass  string `json:"DeviceClass"`
 		StorageBlock int    `json:"StorageBlock"`
 		Price        struct {
-			OriginalPrice int `json:"OriginalPrice"`
-			DiscountPrice int `json:"DiscountPrice"`
-			Discount      int `json:"Discount"`
+			OriginalPrice float64 `json:"OriginalPrice"`
+			DiscountPrice float64 `json:"DiscountPrice"`
+			Discount      float64 `json:"Discount"`
 		} `json:"Price"`
 	} `json:"InstanceTypeQuotaSet"`
 	RequestID string `json:"RequestId"`

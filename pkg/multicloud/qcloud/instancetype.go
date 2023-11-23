@@ -87,11 +87,11 @@ func (self *SInstanceType) SetTags(tags map[string]string, replace bool) error {
 }
 
 func (self *SInstanceType) GetZoneID() string {
-	return ""
+	return self.Zone
 }
 
 func (self *SInstanceType) GetInstanceTypeFamily() string {
-	return ""
+	return self.InstanceFamily
 }
 
 func (self *SInstanceType) GetInstanceTypeCategory() string {
@@ -190,7 +190,8 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 	params := make(map[string]string)
 	params["Region"] = self.Region
 
-	body, err := self.cvmRequest("DescribeInstanceTypeConfigs", params, true)
+	//body, err := self.cvmRequest("DescribeInstanceTypeConfigs", params, true)
+	body, err := self.cvmRequest("DescribeInstanceConfigInfos", params, true)
 	if err != nil {
 		log.Errorf("DescribeInstanceTypeConfigs fail %s", err)
 		return nil, err

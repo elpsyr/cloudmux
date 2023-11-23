@@ -325,7 +325,12 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 	params["Filters.0.Name"] = "zone"
 	instanceTypes := make([]SInstanceType, 0)
 
-	for _, izone := range self.izones {
+	zones, err := self.GetIZones()
+	if err != nil {
+		log.Errorf("GetInstanceTypes GetIZones fail %s", err)
+		return nil, err
+	}
+	for _, izone := range zones {
 
 		params["Filters.0.Values.0"] = izone.GetId()
 

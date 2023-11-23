@@ -316,6 +316,70 @@ type DescribeUserAvailableInstanceTypesResp struct {
 	SeqID string `json:"seqId"`
 }
 
+type DescribeInstanceConfigInfosUnmarshal struct {
+	InstanceTypeQuotaSet []struct {
+		Zone               string `json:"Zone"`
+		InstanceType       string `json:"InstanceType"`
+		InstanceChargeType string `json:"InstanceChargeType"`
+		NetworkCard        int    `json:"NetworkCard"`
+		Externals          struct {
+			GpuAttr struct {
+				Type string `json:"Type"`
+			} `json:"GpuAttr"`
+			GPUDesc                 string `json:"GPUDesc"`
+			InquiryWithEntireServer string `json:"InquiryWithEntireServer"`
+			ExtraSpecs              struct {
+				ForceAcrossNodeFlag bool `json:"forceAcrossNodeFlag"`
+			} `json:"extra_specs"`
+			UnsupportNetworks []string `json:"UnsupportNetworks"`
+			StorageBlockAttr  struct {
+				Type    string `json:"Type"`
+				MinSize int    `json:"MinSize"`
+				MaxSize int    `json:"MaxSize"`
+			} `json:"StorageBlockAttr"`
+			RequireNetworkFeatures        []string `json:"RequireNetworkFeatures"`
+			UnsupportNetworkFeature       []string `json:"UnsupportNetworkFeature"`
+			UnsupportLoginSettingsFeature []string `json:"UnsupportLoginSettingsFeature"`
+			RdmaNicCount                  int      `json:"RdmaNicCount"`
+			Hypervisor                    string   `json:"Hypervisor"`
+			HypervisorSpec                []string `json:"HypervisorSpec"`
+			RequiredEnhancedService       struct {
+				MonitorService struct {
+					Enabled string `json:"Enabled"`
+				} `json:"MonitorService"`
+			} `json:"RequiredEnhancedService"`
+		} `json:"Externals,omitempty"`
+		CPU                int           `json:"Cpu"`
+		Memory             int           `json:"Memory"`
+		InstanceFamily     string        `json:"InstanceFamily"`
+		Architecture       string        `json:"Architecture"`
+		TypeName           string        `json:"TypeName"`
+		LocalDiskTypeList  []interface{} `json:"LocalDiskTypeList"`
+		Status             string        `json:"Status"`
+		SoldOutReason      string        `json:"SoldOutReason"`
+		StorageBlockAmount int           `json:"StorageBlockAmount"`
+		InstanceBandwidth  float64       `json:"InstanceBandwidth"`
+		InstancePps        int           `json:"InstancePps"`
+		CPUType            string        `json:"CpuType"`
+		Frequency          string        `json:"Frequency"`
+		Gpu                int           `json:"Gpu"`
+		GpuCount           int           `json:"GpuCount"`
+		Fpga               int           `json:"Fpga"`
+		Remark             string        `json:"Remark"`
+		ExtraProperty      struct {
+		} `json:"ExtraProperty"`
+		Disable      string `json:"Disable"`
+		DeviceClass  string `json:"DeviceClass"`
+		StorageBlock int    `json:"StorageBlock"`
+		Price        struct {
+			OriginalPrice int `json:"OriginalPrice"`
+			DiscountPrice int `json:"DiscountPrice"`
+			Discount      int `json:"Discount"`
+		} `json:"Price"`
+	} `json:"InstanceTypeQuotaSet"`
+	RequestID string `json:"RequestId"`
+}
+
 // GetInstanceTypes 获取 instanceType 信息
 // 原调用 DescribeInstanceTypeConfigs 获取基础信息
 // 现调用 DescribeUserAvailableInstanceTypes 获取详细信息
@@ -343,14 +407,14 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 
 		//err = body.Unmarshal(&instanceTypes, "InstanceTypeConfigSet")
 
-		allInfo := new(DescribeUserAvailableInstanceTypesResp)
+		allInfo := new(DescribeInstanceConfigInfosUnmarshal)
 		err = body.Unmarshal(&allInfo)
 		if err != nil {
 			log.Errorf("Unmarshal instance type details fail %s", err)
 			return nil, err
 		}
 
-		for _, info := range allInfo.Data.Data.Response.InstanceTypeQuotaSet {
+		for _, info := range allInfo.InstanceTypeQuotaSet {
 
 			instanceType := SInstanceType{
 				Zone:              info.Zone,

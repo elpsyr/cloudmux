@@ -1052,17 +1052,23 @@ func (region *SRegion) GetIVMs() ([]cloudprovider.ICloudVM, error) {
 
 // implement cloudprovider.ICloudSkuPrice
 
+const (
+	PrePaid        = "PREPAID"          // 预付费
+	PostPaidByHour = "POSTPAID_BY_HOUR" // 按量付费
+	SpotPaid       = "SPOTPAID"         // 抢占付费
+
+	StatusSoldOut = "SOLD_OUT"
+	StatusSell    = "SELL"
+)
+
+// GetSpotPostPaidPrice 获取 zone 下 对应 instanceType 抢占付费价格
 func (region *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) (float64, error) {
 	price, err := region.GetInstanceTypesPrice(zoneID, instanceType)
 	if err != nil {
 		return 0, err
 	}
-	// InstanceChargeType :
-	// POSTPAID_BY_HOUR
-	// SPOTPAID
-	// PREPAID
 	for _, instance := range price.InstanceTypeQuotaSet {
-		if instance.InstanceChargeType == "SPOTPAID" {
+		if instance.InstanceChargeType == SpotPaid {
 			return instance.Price.UnitPriceDiscount, err
 		}
 		continue
@@ -1075,12 +1081,8 @@ func (region *SRegion) GetPostPaidPrice(zoneID, instanceType string) (float64, e
 	if err != nil {
 		return 0, err
 	}
-	// InstanceChargeType :
-	// POSTPAID_BY_HOUR
-	// SPOTPAID
-	// PREPAID
 	for _, instance := range price.InstanceTypeQuotaSet {
-		if instance.InstanceChargeType == "POSTPAID_BY_HOUR" {
+		if instance.InstanceChargeType == PostPaidByHour {
 			return instance.Price.UnitPriceDiscount, err
 		}
 		continue
@@ -1093,12 +1095,8 @@ func (region *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, er
 	if err != nil {
 		return 0, err
 	}
-	// InstanceChargeType :
-	// POSTPAID_BY_HOUR
-	// SPOTPAID
-	// PREPAID
 	for _, instance := range price.InstanceTypeQuotaSet {
-		if instance.InstanceChargeType == "PREPAID" {
+		if instance.InstanceChargeType == PrePaid {
 			return instance.Price.DiscountPrice, err
 		}
 		continue
@@ -1106,8 +1104,8 @@ func (region *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, er
 	return 0, err
 }
 
-//  "SOLD_OUT"  "SELL"
-
+// GetSpotPostPaidStatus 抢占付费是否可购买
+// "SPOTPAID"
 func (region *SRegion) GetSpotPostPaidStatus(zoneID, instanceType string) (string, error) {
 	price, err := region.GetInstanceTypesPrice(zoneID, instanceType)
 	if err != nil {
@@ -1115,11 +1113,11 @@ func (region *SRegion) GetSpotPostPaidStatus(zoneID, instanceType string) (strin
 	}
 
 	for _, instance := range price.InstanceTypeQuotaSet {
-		if instance.InstanceChargeType == "SPOTPAID" {
+		if instance.InstanceChargeType == SpotPaid {
 			switch instance.Status {
-			case "SOLD_OUT":
+			case StatusSoldOut:
 				return api.SkuStatusSoldout, err
-			case "SELL":
+			case StatusSell:
 				return api.SkuStatusAvailable, err
 			default:
 				return api.SkuStatusSoldout, err
@@ -1139,11 +1137,11 @@ func (region *SRegion) GetPostPaidStatus(zoneID, instanceType string) (string, e
 	}
 
 	for _, instance := range price.InstanceTypeQuotaSet {
-		if instance.InstanceChargeType == "POSTPAID_BY_HOUR" {
+		if instance.InstanceChargeType == PostPaidByHour {
 			switch instance.Status {
-			case "SOLD_OUT":
+			case StatusSoldOut:
 				return api.SkuStatusSoldout, err
-			case "SELL":
+			case StatusSell:
 				return api.SkuStatusAvailable, err
 			default:
 				return api.SkuStatusSoldout, err
@@ -1163,11 +1161,11 @@ func (region *SRegion) GetPrePaidStatus(zoneID, instanceType string) (string, er
 	}
 
 	for _, instance := range price.InstanceTypeQuotaSet {
-		if instance.InstanceChargeType == "PREPAID" {
+		if instance.InstanceChargeType == PrePaid {
 			switch instance.Status {
-			case "SOLD_OUT":
+			case StatusSoldOut:
 				return api.SkuStatusSoldout, err
-			case "SELL":
+			case StatusSell:
 				return api.SkuStatusAvailable, err
 			default:
 				return api.SkuStatusSoldout, err

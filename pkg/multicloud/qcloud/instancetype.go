@@ -16,7 +16,6 @@ package qcloud
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"time"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
@@ -444,6 +443,7 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 }
 
 // GetInstanceTypesPrice 获取 instanceType 价格
+// 获取 zone 下对应 instance-type 的 规格以及价格信息
 func (self *SRegion) GetInstanceTypesPrice(zoneID, instanceType string) (*DescribeInstanceConfigInfosUnmarshal, error) {
 	params := make(map[string]string)
 	params["Region"] = self.Region
@@ -462,17 +462,11 @@ func (self *SRegion) GetInstanceTypesPrice(zoneID, instanceType string) (*Descri
 	//err = body.Unmarshal(&instanceTypes, "InstanceTypeConfigSet")
 
 	allInfo := new(DescribeInstanceConfigInfosUnmarshal)
-	err = json.Unmarshal([]byte(body.String()), &allInfo)
-	//err = body.Unmarshal(&allInfo)
+	//err = json.Unmarshal([]byte(body.String()), &allInfo)
+	err = body.Unmarshal(&allInfo)
 	if err != nil {
 		log.Errorf("Unmarshal instance type details fail %s", err)
 		return nil, err
-	}
-
-	for _, info := range allInfo.InstanceTypeQuotaSet {
-
-		fmt.Println(info.InstanceChargeType, "-----", info.Price)
-
 	}
 
 	return allInfo, nil

@@ -33,19 +33,19 @@ import (
 var _ cloudprovider.ICloudSku = (*SInstanceType)(nil)
 
 type SInstanceType struct {
-	Zone              string //	可用区。
-	InstanceType      string //	实例机型。
-	InstanceFamily    string //	实例机型系列。
-	GPU               int    //	GPU核数，单位：核。
-	CPU               int    //	CPU核数，单位：核。
-	Memory            int    //	内存容量，单位：GB。
-	CbsSupport        string //	是否支持云硬盘。取值范围：TRUE：表示支持云硬盘；FALSE：表示不支持云硬盘。
-	InstanceTypeState string //	机型状态。取值范围：AVAILABLE：表示机型可用；UNAVAILABLE：表示机型不可用。
+	Zone              string  //	可用区。
+	InstanceType      string  //	实例机型。
+	InstanceFamily    string  //	实例机型系列。
+	GPU               float64 //	GPU核数，单位：核。
+	CPU               float64 //	CPU核数，单位：核。
+	Memory            int     //	内存容量，单位：GB。
+	CbsSupport        string  //	是否支持云硬盘。取值范围：TRUE：表示支持云硬盘；FALSE：表示不支持云硬盘。
+	InstanceTypeState string  //	机型状态。取值范围：AVAILABLE：表示机型可用；UNAVAILABLE：表示机型不可用。
 	// more infomation
 	TypeName string
-	CPUType  string
+	CPUType  float64
 	GPUDesc  string
-	GpuCount int // GPU 数量
+	GpuCount float64 // GPU 数量
 }
 
 func (self *SInstanceType) GetId() string {
@@ -118,7 +118,7 @@ func (self *SInstanceType) GetCpuArch() string {
 }
 
 func (self *SInstanceType) GetCpuCoreCount() int {
-	return self.CPU
+	return int(self.CPU)
 }
 
 func (self *SInstanceType) GetMemorySizeMB() int {
@@ -182,7 +182,8 @@ func (self *SInstanceType) GetGpuSpec() string {
 }
 
 func (self *SInstanceType) GetGpuCount() string {
-	return strconv.Itoa(self.GpuCount)
+	//return strconv.Itoa(self.GpuCount)
+	return strconv.FormatFloat(self.GpuCount, 'f', -1, 64)
 }
 
 func (self *SInstanceType) GetGpuMaxCount() int {
@@ -208,9 +209,9 @@ type DescribeInstanceConfigInfosResp struct {
 					Order          int    `json:"order"`
 					InstanceTypes  []struct {
 						InstanceType string  `json:"InstanceType"`
-						CPU          int     `json:"Cpu"`
+						CPU          float64 `json:"Cpu"`
 						Memory       int     `json:"Memory"`
-						Gpu          int     `json:"Gpu"`
+						Gpu          float64 `json:"Gpu"`
 						Fpga         int     `json:"Fpga"`
 						StorageBlock int     `json:"StorageBlock"`
 						NetworkCard  int     `json:"NetworkCard"`
@@ -350,7 +351,7 @@ type DescribeInstanceConfigInfosUnmarshal struct {
 				} `json:"MonitorService"`
 			} `json:"RequiredEnhancedService"`
 		} `json:"Externals,omitempty"`
-		CPU                int           `json:"Cpu"`
+		CPU                float64       `json:"Cpu"`
 		Memory             int           `json:"Memory"`
 		InstanceFamily     string        `json:"InstanceFamily"`
 		Architecture       string        `json:"Architecture"`
@@ -363,8 +364,8 @@ type DescribeInstanceConfigInfosUnmarshal struct {
 		InstancePps        int           `json:"InstancePps"`
 		CPUType            string        `json:"CpuType"`
 		Frequency          string        `json:"Frequency"`
-		Gpu                int           `json:"Gpu"`
-		GpuCount           int           `json:"GpuCount"`
+		Gpu                float64       `json:"Gpu"`
+		GpuCount           float64       `json:"GpuCount"`
 		Fpga               int           `json:"Fpga"`
 		Remark             string        `json:"Remark"`
 		ExtraProperty      struct {
@@ -435,9 +436,22 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 				InstanceTypeState: info.Status,
 				GPUDesc:           info.Externals.GPUDesc,
 			}
-			//if info.GpuCount != 0 {
-			//	instanceType.GPUDesc = info.Externals.GPUDesc
-			//}
+			// 判断使用有 GPU
+			if info.GpuCount != 0 {
+				// 普通类型从 Externals.GPUDesc 取数据
+				if info.Externals.GPUDesc != "" {
+					instanceType.GPUDesc = info.Externals.GPUDesc
+				} else {
+					// 目前 baremetal 类型主机 GPU 存储在 Remark 字段
+					instanceType.GPUDesc = info.Remark
+				}
+
+				// todo:
+				// 裁剪数据：
+				// 1 * NVIDIA V100
+				// 8 颗 NVIDIA V100
+
+			}
 			if ok := isStore[info.Zone+info.InstanceType]; !ok {
 				instanceTypes = append(instanceTypes, instanceType)
 				isStore[info.Zone+info.InstanceType] = true

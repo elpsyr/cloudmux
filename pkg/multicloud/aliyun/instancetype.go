@@ -350,7 +350,7 @@ func (self *SInstanceType) GetNicMaxCount() int {
 }
 
 func (self *SInstanceType) GetGpuAttachable() bool {
-	return false
+	return self.GPUAmount != 0
 }
 
 func (self *SInstanceType) GetGpuSpec() string {

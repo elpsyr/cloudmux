@@ -66,7 +66,7 @@ func (self *SInstanceType) GetCreatedAt() time.Time {
 }
 
 func (self *SInstanceType) GetDescription() string {
-	return ""
+	return self.TypeName
 }
 
 func (self *SInstanceType) GetStatus() string {
@@ -418,6 +418,8 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 			return nil, err
 		}
 
+		isStore := make(map[string]bool)
+
 		for _, info := range allInfo.InstanceTypeQuotaSet {
 
 			instanceType := SInstanceType{
@@ -426,15 +428,20 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 				TypeName:          info.TypeName,
 				InstanceFamily:    info.InstanceFamily,
 				GPU:               info.Gpu,
+				GpuCount:          info.GpuCount,
 				CPU:               info.CPU,
 				Memory:            info.Memory,
 				CbsSupport:        "TRUE",
 				InstanceTypeState: info.Status,
+				GPUDesc:           info.Externals.GPUDesc,
 			}
-			if info.GpuCount != 0 {
-				instanceType.GPUDesc = info.Externals.GPUDesc
+			//if info.GpuCount != 0 {
+			//	instanceType.GPUDesc = info.Externals.GPUDesc
+			//}
+			if ok := isStore[info.Zone+info.InstanceType]; !ok {
+				instanceTypes = append(instanceTypes, instanceType)
+				isStore[info.Zone+info.InstanceType] = true
 			}
-			instanceTypes = append(instanceTypes, instanceType)
 
 		}
 	}

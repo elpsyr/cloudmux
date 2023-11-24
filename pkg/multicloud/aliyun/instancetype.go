@@ -364,3 +364,7 @@ func (self *SInstanceType) GetGpuCount() string {
 func (self *SInstanceType) GetGpuMaxCount() int {
 	return 0
 }
+
+func (self *SInstanceType) GetGPUMemorySizeMB() int {
+	return int(self.GPUMemorySize * 1024)
+}

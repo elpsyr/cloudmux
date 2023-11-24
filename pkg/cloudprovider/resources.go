@@ -892,6 +892,12 @@ type ICloudSku interface {
 	Delete() error
 }
 
+// ICloudSkuUltra 进阶的cloud sku 数据接口
+// define by cfel
+type ICloudSkuUltra interface {
+	GetGPUMemorySizeMB() int // GPU 显存
+}
+
 // ICloudSkuPrice sku价格接口
 // define by cfel
 type ICloudSkuPrice interface {

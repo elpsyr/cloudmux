@@ -16,6 +16,7 @@ package qcloud
 
 import (
 	"encoding/json"
+	"regexp"
 	"strconv"
 	"time"
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
@@ -455,6 +456,15 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 				// 裁剪数据：
 				// 1 * NVIDIA V100
 				// 8 颗 NVIDIA V100
+
+				// 定义正则表达式，匹配 * 或者 颗 前后的空格
+				re := regexp.MustCompile(`\s*[*颗]\s*`)
+
+				// 使用正则表达式分割字符串
+				parts := re.Split(instanceType.GPUDesc, -1)
+
+				// 输出提取出的数据（目标数据在切片的最后一个元素）
+				instanceType.GPUDesc = parts[len(parts)-1]
 
 			}
 			if ok := isStore[info.Zone+info.InstanceType]; !ok {

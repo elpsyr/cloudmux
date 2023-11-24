@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"strconv"
 	"time"
+	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/log"
 	"yunion.io/x/pkg/errors"
@@ -399,7 +400,11 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 		return nil, err
 	}
 	for _, izone := range zones {
-
+		// 判断是否是可用 zone
+		if izone.GetStatus() != api.ZONE_ENABLE {
+			// 该区域不可用
+			continue
+		}
 		params["Filters.0.Values.0"] = izone.GetId()
 
 		//body, err := self.cvmRequest("DescribeInstanceTypeConfigs", params, true)

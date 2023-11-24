@@ -412,7 +412,9 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 		body, err := self.cvmRequest("DescribeUserAvailableInstanceTypes", params, true)
 		if err != nil {
 			log.Errorf("DescribeUserAvailableInstanceTypes fail %s", err)
-			return nil, err
+			continue
+			// 目前 可用 zone 数据不一定真实
+			//return nil, err
 		}
 
 		//err = body.Unmarshal(&instanceTypes, "InstanceTypeConfigSet")

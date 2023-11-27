@@ -354,7 +354,12 @@ func (self *SInstanceType) GetGpuAttachable() bool {
 }
 
 func (self *SInstanceType) GetGpuSpec() string {
-	return self.GPUSpec
+	// 解决部分机型  "GPUSpec": "0"
+	if self.GPUAmount != 0 {
+		return self.GPUSpec
+	} else {
+		return ""
+	}
 }
 
 func (self *SInstanceType) GetGpuCount() string {

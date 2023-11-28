@@ -895,6 +895,7 @@ type ICloudSku interface {
 // ICloudSkuUltra 进阶的cloud sku 数据接口
 // define by cfel
 type ICloudSkuUltra interface {
+	GetIsBareMetal() bool    // 获取是否为裸金属
 	GetGPUMemorySizeMB() int // GPU 显存
 }
 

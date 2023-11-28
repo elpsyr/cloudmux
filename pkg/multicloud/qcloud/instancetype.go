@@ -44,10 +44,11 @@ type SInstanceType struct {
 	CbsSupport        string  //	是否支持云硬盘。取值范围：TRUE：表示支持云硬盘；FALSE：表示不支持云硬盘。
 	InstanceTypeState string  //	机型状态。取值范围：AVAILABLE：表示机型可用；UNAVAILABLE：表示机型不可用。
 	// more infomation
-	TypeName string
-	CPUType  float64
-	GPUDesc  string
-	GpuCount float64 // GPU 数量
+	TypeName   string
+	CPUType    float64
+	GPUDesc    string
+	GpuCount   float64 // GPU 数量
+	Hypervisor string  // 用于判断是否为裸金属
 }
 
 func (self *SInstanceType) GetId() string {
@@ -194,6 +195,15 @@ func (self *SInstanceType) GetGpuMaxCount() int {
 
 func (self *SInstanceType) Delete() error {
 	return nil
+}
+
+func (self *SInstanceType) GetGPUMemorySizeMB() int {
+	return 0
+}
+
+func (self *SInstanceType) GetIsBareMetal() bool {
+	// Qcloud 的裸金属规格定义在 Externals:{ "Hypervisor": "baremetal" }
+	return self.Hypervisor == "baremetal"
 }
 
 // DescribeInstanceConfigInfosResp 是
@@ -443,6 +453,7 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 				CbsSupport:        "TRUE",
 				InstanceTypeState: info.Status,
 				GPUDesc:           info.Externals.GPUDesc,
+				Hypervisor:        info.Externals.Hypervisor,
 			}
 			// 判断使用有 GPU
 			if info.GpuCount != 0 {

@@ -373,3 +373,9 @@ func (self *SInstanceType) GetGpuMaxCount() int {
 func (self *SInstanceType) GetGPUMemorySizeMB() int {
 	return int(self.GPUMemorySize * 1024)
 }
+
+func (self *SInstanceType) GetIsBareMetal() bool {
+	// aliyun 的裸金属规格定义在 InstanceCategory
+	// https://api.aliyun.com/api/Ecs/2014-05-26/DescribeInstanceTypes
+	return self.InstanceCategory == "ECS Bare Metal"
+}

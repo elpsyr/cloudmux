@@ -45,4 +45,31 @@ func init() {
 		return nil
 	})
 
+	shellutils.R(&SkuListOptions{}, "sku-list-all", "List all intance types", func(cli *aws.SRegion, args *SkuListOptions) error {
+		skus, err := cli.DescribeInstanceTypesAll()
+		if err != nil {
+			return err
+		}
+		printList(skus, 0, 0, 0, []string{})
+		return nil
+	})
+
+	shellutils.R(&SkuListOptions{}, "sku-offering-list-all", "List all intance types offering", func(cli *aws.SRegion, args *SkuListOptions) error {
+		skus, err := cli.DescribeInstanceTypeOfferingsAll()
+		if err != nil {
+			return err
+		}
+		printList(skus, 0, 0, 0, []string{})
+		return nil
+	})
+
+	// 获取带 zone的sku 列表
+	shellutils.R(&SkuListOptions{}, "zone-offering-sku-list", "List all intance types offering", func(cli *aws.SRegion, args *SkuListOptions) error {
+		skus, err := cli.GetISkus()
+		if err != nil {
+			return err
+		}
+		printList(skus, 0, 0, 0, []string{})
+		return nil
+	})
 }

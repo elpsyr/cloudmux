@@ -596,7 +596,8 @@ func (self *SRegion) GetRegionZoneInstanceType() ([]Sku, error) {
 		return nil, errors.Wrapf(err, "DescribeInstanceTypesAll")
 	}
 	for _, instanceType := range instanceTypesAll {
-		existMap[instanceType.InstanceType] = &instanceType
+		_instanceType := instanceType
+		existMap[instanceType.InstanceType] = &_instanceType
 	}
 
 	skus := make([]Sku, 0)
@@ -607,7 +608,7 @@ func (self *SRegion) GetRegionZoneInstanceType() ([]Sku, error) {
 	for _, offering := range offerings {
 		sku, ok := existMap[offering.InstanceType]
 		if ok {
-			sku.ZoneId = offering.LocationType
+			sku.ZoneId = offering.Location
 			skus = append(skus, *sku)
 		}
 	}

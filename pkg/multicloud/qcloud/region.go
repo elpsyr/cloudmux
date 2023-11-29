@@ -1073,6 +1073,13 @@ func (region *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) (float6
 		}
 		continue
 	}
+	// 如果没有抢占价格，则以按量付费作为价格展示
+	for _, instance := range price.InstanceTypeQuotaSet {
+		if instance.InstanceChargeType == PostPaidByHour {
+			return instance.Price.UnitPriceDiscount, err
+		}
+		continue
+	}
 	return 0, err
 }
 

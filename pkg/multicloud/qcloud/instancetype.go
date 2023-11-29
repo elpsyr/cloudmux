@@ -250,86 +250,6 @@ type DescribeInstanceConfigInfosResp struct {
 	Code int `json:"code"`
 }
 
-// DescribeUserAvailableInstanceTypesResp
-// DescribeUserAvailableInstanceTypes 请求的返回结构体
-type DescribeUserAvailableInstanceTypesResp struct {
-	Code int `json:"code"`
-	Data struct {
-		Code         int `json:"code"`
-		CgwerrorCode int `json:"cgwerrorCode"`
-		Data         struct {
-			Response struct {
-				InstanceTypeQuotaSet []struct {
-					Zone               string `json:"Zone"`
-					InstanceType       string `json:"InstanceType"`
-					InstanceChargeType string `json:"InstanceChargeType"`
-					NetworkCard        int    `json:"NetworkCard"`
-					Externals          struct {
-						GpuAttr struct {
-							Type string `json:"Type"`
-						} `json:"GpuAttr"`
-						GPUDesc                 string `json:"GPUDesc"`
-						InquiryWithEntireServer string `json:"InquiryWithEntireServer"`
-						ExtraSpecs              struct {
-							ForceAcrossNodeFlag bool `json:"forceAcrossNodeFlag"`
-						} `json:"extra_specs"`
-						UnsupportNetworks []string `json:"UnsupportNetworks"`
-						StorageBlockAttr  struct {
-							Type    string `json:"Type"`
-							MinSize int    `json:"MinSize"`
-							MaxSize int    `json:"MaxSize"`
-						} `json:"StorageBlockAttr"`
-						RequireNetworkFeatures        []string `json:"RequireNetworkFeatures"`
-						UnsupportNetworkFeature       []string `json:"UnsupportNetworkFeature"`
-						UnsupportLoginSettingsFeature []string `json:"UnsupportLoginSettingsFeature"`
-						RdmaNicCount                  int      `json:"RdmaNicCount"`
-						Hypervisor                    string   `json:"Hypervisor"`
-						HypervisorSpec                []string `json:"HypervisorSpec"`
-						RequiredEnhancedService       struct {
-							MonitorService struct {
-								Enabled string `json:"Enabled"`
-							} `json:"MonitorService"`
-						} `json:"RequiredEnhancedService"`
-					} `json:"Externals,omitempty"`
-					CPU                int           `json:"Cpu"`
-					Memory             int           `json:"Memory"`
-					InstanceFamily     string        `json:"InstanceFamily"`
-					Architecture       string        `json:"Architecture"`
-					TypeName           string        `json:"TypeName"`
-					LocalDiskTypeList  []interface{} `json:"LocalDiskTypeList"`
-					Status             string        `json:"Status"`
-					SoldOutReason      string        `json:"SoldOutReason"`
-					StorageBlockAmount int           `json:"StorageBlockAmount"`
-					InstanceBandwidth  float64       `json:"InstanceBandwidth"`
-					InstancePps        int           `json:"InstancePps"`
-					CPUType            string        `json:"CpuType"`
-					Frequency          string        `json:"Frequency"`
-					Gpu                int           `json:"Gpu"`
-					GpuCount           int           `json:"GpuCount"`
-					Fpga               int           `json:"Fpga"`
-					Remark             string        `json:"Remark"`
-					ExtraProperty      struct {
-					} `json:"ExtraProperty"`
-					Disable      string `json:"Disable"`
-					DeviceClass  string `json:"DeviceClass"`
-					StorageBlock int    `json:"StorageBlock"`
-					Price        struct {
-						OriginalPrice int `json:"OriginalPrice"`
-						DiscountPrice int `json:"DiscountPrice"`
-						Discount      int `json:"Discount"`
-					} `json:"Price"`
-				} `json:"InstanceTypeQuotaSet"`
-				RequestID string `json:"RequestId"`
-			} `json:"Response"`
-		} `json:"data"`
-	} `json:"data"`
-	Mccode int `json:"mccode"`
-	ErrObj struct {
-	} `json:"errObj"`
-	ReqID string `json:"reqId"`
-	SeqID string `json:"seqId"`
-}
-
 type DescribeInstanceConfigInfosUnmarshal struct {
 	InstanceTypeQuotaSet []struct {
 		Zone               string `json:"Zone"`
@@ -363,23 +283,23 @@ type DescribeInstanceConfigInfosUnmarshal struct {
 				} `json:"MonitorService"`
 			} `json:"RequiredEnhancedService"`
 		} `json:"Externals,omitempty"`
-		CPU                float64       `json:"Cpu"`
-		Memory             int           `json:"Memory"`
-		InstanceFamily     string        `json:"InstanceFamily"`
-		Architecture       string        `json:"Architecture"`
-		TypeName           string        `json:"TypeName"`
-		LocalDiskTypeList  []interface{} `json:"LocalDiskTypeList"`
-		Status             string        `json:"Status"`
-		SoldOutReason      string        `json:"SoldOutReason"`
-		StorageBlockAmount int           `json:"StorageBlockAmount"`
-		InstanceBandwidth  float64       `json:"InstanceBandwidth"`
-		InstancePps        int           `json:"InstancePps"`
-		CPUType            string        `json:"CpuType"`
-		Frequency          string        `json:"Frequency"`
-		Gpu                float64       `json:"Gpu"`
-		GpuCount           float64       `json:"GpuCount"`
-		Fpga               int           `json:"Fpga"`
-		Remark             string        `json:"Remark"`
+		CPU                float64          `json:"Cpu"`
+		Memory             int              `json:"Memory"`
+		InstanceFamily     string           `json:"InstanceFamily"`
+		Architecture       string           `json:"Architecture"`
+		TypeName           string           `json:"TypeName"`
+		LocalDiskTypeList  []SLocalDiskType `json:"LocalDiskTypeList"`
+		Status             string           `json:"Status"`
+		SoldOutReason      string           `json:"SoldOutReason"`
+		StorageBlockAmount int              `json:"StorageBlockAmount"`
+		InstanceBandwidth  float64          `json:"InstanceBandwidth"`
+		InstancePps        int              `json:"InstancePps"`
+		CPUType            string           `json:"CpuType"`
+		Frequency          string           `json:"Frequency"`
+		Gpu                float64          `json:"Gpu"`
+		GpuCount           float64          `json:"GpuCount"`
+		Fpga               int              `json:"Fpga"`
+		Remark             string           `json:"Remark"`
 		ExtraProperty      struct {
 		} `json:"ExtraProperty"`
 		Disable      string `json:"Disable"`

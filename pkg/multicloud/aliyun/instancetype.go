@@ -16,6 +16,8 @@ package aliyun
 
 import (
 	"strconv"
+	"strings"
+	"unicode"
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/cloudmux/pkg/multicloud"
@@ -356,10 +358,35 @@ func (self *SInstanceType) GetGpuAttachable() bool {
 func (self *SInstanceType) GetGpuSpec() string {
 	// 解决部分机型  "GPUSpec": "0"
 	if self.GPUAmount != 0 {
-		return self.GPUSpec
+		return processGPUSpec(self.GPUSpec)
 	} else {
 		return ""
 	}
+}
+
+// processGPUSpec
+// 例如 ："NVIDIA A10*1"
+func processGPUSpec(input string) string {
+	// 判断字符串是否为空
+	if input == "" {
+		return input
+	}
+
+	// 判断字符串的第一个字符是否是字母
+	firstChar := rune(input[0])
+	if unicode.IsLetter(firstChar) {
+		// 判断字符串中是否包含 "*"
+		if index := strings.Index(input, "*"); index != -1 {
+			// 判断"*"后是否有斜杠"/"
+			if slashIndex := strings.Index(input[index:], "/"); slashIndex == -1 {
+				// 如果没有斜杠"/"，则去除"*"后的内容
+				return strings.TrimSpace(input[:index])
+			}
+		}
+	}
+
+	// 如果不符合条件，直接返回原始字符串
+	return input
 }
 
 func (self *SInstanceType) GetGpuCount() string {

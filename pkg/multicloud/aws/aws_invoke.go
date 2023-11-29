@@ -90,13 +90,6 @@ func jsonInvoke(cli *client.Client, apiName, path string, params map[string]inte
 			break
 		}
 	}
-	// 部分 Get开头的接口需要以 POST 请求发送
-	switch apiName {
-	case "GetProducts":
-		method = "POST"
-	default:
-	}
-
 	if strings.HasPrefix(apiName, "Delete") {
 		method = "DELETE"
 	}

@@ -151,6 +151,9 @@ const (
 	CDN_SERVICE_ID   = "CloudFront"
 )
 
+// Verify that *SInstanceType implements ICloudSkuPrice
+var _ cloudprovider.ICloudSkuPrice = (*SRegion)(nil)
+
 type SRegion struct {
 	multicloud.SRegion
 
@@ -246,7 +249,7 @@ func (self *SRegion) eksRequest(apiName, path string, params map[string]interfac
 	return self.client.invoke(self.RegionId, EKS_SERVICE_NAME, EKS_SERVICE_ID, "2017-11-01", apiName, path, params, retval, true)
 }
 
-/////////////////////////////////////////////////////////////////////////////
+// ///////////////////////////////////////////////////////////////////////////
 func (self *SRegion) GetZones(id string) ([]SZone, error) {
 	params := map[string]string{
 		"Filter.1.Name":    "region-name",

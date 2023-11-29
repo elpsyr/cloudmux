@@ -72,4 +72,42 @@ func init() {
 		printList(skus, 0, 0, 0, []string{})
 		return nil
 	})
+
+	// 获取 instanceType 价格
+	shellutils.R(&SkuListOptions{}, "zone-instance-price", "get price", func(cli *aws.SRegion, args *SkuListOptions) error {
+		skus, err := cli.GetPrePaidPrice("", "c6i.16xlarge")
+		if err != nil {
+			return err
+		}
+		printList(skus, 0, 0, 0, []string{})
+		return nil
+	})
+
+	// 获取 instanceType 价格
+	shellutils.R(&SkuListOptions{}, "zone-instance-available", "", func(cli *aws.SRegion, args *SkuListOptions) error {
+		//_, skus, err := cli.DescribeInstanceTypeAvailable("", "a1.large", "us-east-1a") // no
+		_, err := cli.DescribeInstanceTypeAvailable("t4g.large", "us-east-1b")
+		_, err = cli.DescribeInstanceTypeAvailable("t4g.large", "us-east-1c")
+		_, err = cli.DescribeInstanceTypeAvailable("t4g.large", "us-east-1d")
+		_, err = cli.DescribeInstanceTypeAvailable("t4g.large", "us-east-1e")
+		_, err = cli.DescribeInstanceTypeAvailable("t4g.large", "us-east-1f")
+		_, err = cli.DescribeInstanceTypeAvailable("t4g.large", "us-west-1a")
+		_, err = cli.DescribeInstanceTypeAvailable("t4g.large", "us-west-1c")
+		if err != nil {
+			return err
+		}
+		//printList(skus, 0, 0, 0, []string{})
+		return nil
+	})
+
+	// 获取 instanceType spot 价格
+	shellutils.R(&SkuListOptions{}, "zone-instance-spot-price", "", func(cli *aws.SRegion, args *SkuListOptions) error {
+		_, err := cli.DescribeSpotPriceHistory("us-west-1c", "m2.xlarge")
+
+		if err != nil {
+			return err
+		}
+		//printList(skus, 0, 0, 0, []string{})
+		return nil
+	})
 }

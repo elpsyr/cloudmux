@@ -1292,8 +1292,21 @@ func (self *SRegion) GetDescribePrice(zoneID, InstanceType, paidType string) (*S
 
 	body, err := self.ecsRequest("DescribePrice", params)
 	if err != nil {
-		log.Errorf("DescribePrice fail %s", err)
-		return nil, err
+		// import "github.com/pkg/errors"
+		// errUnwrap := gerrors.Unwrap(err)
+		// log.Errorf("Unwrap err %s", errUnwrap)
+		if e, ok := errors.Cause(err).(*alierr.ServerError); ok && e.ErrorCode() == "InvalidSystemDiskCategory.ValueNotSupported" {
+			params["SystemDisk.Category"] = "cloud_essd"
+			body, err = self.ecsRequest("DescribePrice", params)
+			if err != nil {
+				log.Errorf("DescribePrice fail %s", err)
+				return nil, err
+			}
+		} else {
+			log.Errorf("DescribePrice fail %s", err)
+			return nil, err
+		}
+
 	}
 
 	instancePrice := new(SInstancePrice)

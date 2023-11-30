@@ -46,4 +46,16 @@ func init() {
 		printList(instanceTypes, 0, 0, 0, []string{})
 		return nil
 	})
+
+	// 获取 instanceType spot 价格
+	shellutils.R(&InstanceTypeListOptions{}, "zone-instance-spot-price", "", func(cli *aliyun.SRegion, args *InstanceTypeListOptions) error {
+		cli.RegionId = "us-east-1"
+		_, err := cli.GetDescribePrice("us-east-1a", "ecs.gn7i-c32g1.32xlarge", "SPOTPOSTPAID")
+
+		if err != nil {
+			return err
+		}
+		//printList(skus, 0, 0, 0, []string{})
+		return nil
+	})
 }

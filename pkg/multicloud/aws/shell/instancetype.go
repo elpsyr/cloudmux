@@ -84,6 +84,16 @@ func init() {
 	})
 
 	// 获取 instanceType 价格
+	shellutils.R(&SkuListOptions{}, "instance-post-paid-price", "get price", func(cli *aws.SRegion, args *SkuListOptions) error {
+		skus, err := cli.GetPostPaidPrice("", "m7a.48xlarge")
+		if err != nil {
+			return err
+		}
+		printList(skus, 0, 0, 0, []string{})
+		return nil
+	})
+
+	// 获取 instanceType 价格
 	shellutils.R(&SkuListOptions{}, "zone-instance-available", "", func(cli *aws.SRegion, args *SkuListOptions) error {
 		//_, skus, err := cli.DescribeInstanceTypeAvailable("", "a1.large", "us-east-1a") // no
 		_, err := cli.DescribeInstanceTypeAvailable("t4g.large", "us-east-1b")

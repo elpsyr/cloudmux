@@ -736,7 +736,7 @@ func (self *SRegion) GetInstanceTypePrice(instanceType string) (*SInstanceType, 
 	if len(ret) > 0 {
 		return &ret[0], nil
 	} else {
-		return nil, nil
+		return nil, errors.Errorf("No Result")
 	}
 }
 

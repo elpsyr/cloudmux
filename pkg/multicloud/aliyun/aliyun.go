@@ -284,6 +284,7 @@ func _jsonRequest(client *sdk.Client, domain string, version string, apiName str
 	req.Domain = domain
 	req.Version = version
 	req.ApiName = apiName
+	req.ReadTimeout = time.Second * 30
 	if params != nil {
 		for k, v := range params {
 			req.QueryParams[k] = v

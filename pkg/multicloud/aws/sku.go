@@ -792,7 +792,7 @@ func (self *SRegion) DescribeSpotPriceHistory(zone, instanceType string) ([]*Spo
 func (self *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) (float64, error) {
 	spotPriceHistory, err := self.DescribeSpotPriceHistory(zoneID, instanceType)
 	if err != nil {
-		return 0, err
+		return -1, err
 	}
 	if len(spotPriceHistory) > 0 {
 		newSpotPrice, err := strconv.ParseFloat(spotPriceHistory[0].SpotPrice, 64)
@@ -801,13 +801,13 @@ func (self *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) (float64,
 		}
 		return newSpotPrice, nil
 	}
-	return 0, nil
+	return -1, nil
 }
 
 func (self *SRegion) GetPostPaidPrice(zoneID, instanceType string) (float64, error) {
 	price, err := self.GetInstanceTypePrice(instanceType)
 	if err != nil {
-		return 0, errors.Wrapf(err, "GetInstanceTypePrice")
+		return -1, errors.Wrapf(err, "GetInstanceTypePrice")
 	}
 	var value float64
 	for _, term := range price.Terms.OnDemand {
@@ -832,7 +832,7 @@ Partial Upfront (部分预付费)： 这是一种折中的选择，您需要在�
 func (self *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, error) {
 	price, err := self.GetInstanceTypePrice(instanceType)
 	if err != nil {
-		return 0, errors.Wrapf(err, "GetInstanceTypePrice")
+		return -1, errors.Wrapf(err, "GetInstanceTypePrice")
 	}
 	var value float64
 

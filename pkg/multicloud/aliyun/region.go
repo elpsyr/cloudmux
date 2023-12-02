@@ -1295,13 +1295,23 @@ func (self *SRegion) GetDescribePrice(zoneID, InstanceType, paidType string) (*S
 		// import "github.com/pkg/errors"
 		// errUnwrap := gerrors.Unwrap(err)
 		// log.Errorf("Unwrap err %s", errUnwrap)
-		if e, ok := errors.Cause(err).(*alierr.ServerError); ok && e.ErrorCode() == "InvalidSystemDiskCategory.ValueNotSupported" {
-			params["SystemDisk.Category"] = "cloud_essd"
-			body, err = self.ecsRequest("DescribePrice", params)
-			if err != nil {
-				log.Errorf("DescribePrice fail %s", err)
-				return nil, err
+		if e, ok := errors.Cause(err).(*alierr.ServerError); ok {
+			switch e.ErrorCode() {
+			case "InvalidSystemDiskCategory.ValueNotSupported":
+				params["SystemDisk.Category"] = "cloud_essd"
+				body, err = self.ecsRequest("DescribePrice", params)
+				if err != nil {
+					log.Errorf("DescribePrice fail %s", err)
+					return nil, err
+				}
+			case "PriceNotFound", "InvalidInstanceType.ValueNotSupported":
+				// 部分 region 下查询 instanceType 出现 PriceNotFound ，返回空数据
+				// 部分 instanceType 可按量付费无法包年包月
+				price := new(SInstancePrice)
+				price.PriceInfo.Price.TradePrice = -1
+				return price, nil
 			}
+
 		} else {
 			log.Errorf("DescribePrice fail %s", err)
 			return nil, err

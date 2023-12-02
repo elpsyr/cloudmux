@@ -58,4 +58,18 @@ func init() {
 		//printList(skus, 0, 0, 0, []string{})
 		return nil
 	})
+
+	// 获取 instanceType spot 价格
+	// --region cn-wuhan-lr   --access-key xxx  --secret xxx  zone-instance-post-price
+	shellutils.R(&InstanceTypeListOptions{}, "zone-instance-post-price", "", func(cli *aliyun.SRegion, args *InstanceTypeListOptions) error {
+		cli.RegionId = "cn-wuhan-lr"
+		//_, err := cli.GetDescribePrice("cn-wuhan-lr", "ecs.r7.2xlarge", "PostPaid")
+		_, err := cli.GetDescribePrice("cn-wuhan-lr", "ecs.t1.small", "PostPaid")
+
+		if err != nil {
+			return err
+		}
+		//printList(skus, 0, 0, 0, []string{})
+		return nil
+	})
 }

@@ -851,13 +851,15 @@ func (self *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, erro
 }
 
 func (self *SRegion) GetSpotPostPaidStatus(zoneID, instanceType string) (string, error) {
-	available, err := self.DescribeInstanceTypeAvailable(instanceType, zoneID)
+	spotPriceHistory, err := self.DescribeSpotPriceHistory(zoneID, instanceType)
+
 	if err != nil {
-		return api.SkuStatusSoldout, errors.Wrapf(err, "DescribeInstanceTypeAvailable")
+		return api.SkuStatusSoldout, errors.Wrapf(err, "DescribeSpotPriceHistory")
 	}
-	if available {
+	if len(spotPriceHistory) > 0 {
 		return api.SkuStatusAvailable, nil
 	}
+
 	return api.SkuStatusSoldout, nil
 }
 

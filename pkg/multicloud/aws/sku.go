@@ -17,7 +17,9 @@ package aws
 import (
 	"fmt"
 	"math"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 
@@ -187,7 +189,11 @@ type Sku struct {
 
 	// cfel 新增字段
 
+	// 地域
 	ZoneId string
+	// 实例系列 ,根据实例名称规则获取 (https://docs.aws.amazon.com/zh_cn/AWSEC2/latest/UserGuide/instance-types.html)
+	InstanceFamily   string
+	InstanceCategory string
 
 	// Indicates whether Amazon CloudWatch action based recovery is supported.
 	AutoRecoverySupported bool `xml:"autoRecoverySupported"`
@@ -255,9 +261,9 @@ type Sku struct {
 	//// Describes the placement group settings for the instance type.
 	//PlacementGroupInfo *PlacementGroupInfo `locationName:"placementGroupInfo" type:"structure"`
 	//
-	//// Describes the processor.
-	//ProcessorInfo *ProcessorInfo `locationName:"processorInfo" type:"structure"`
-	//
+	// Describes the processor.
+	ProcessorInfo ProcessorInfo `xml:"processorInfo" type:"structure"`
+
 	//// Describes the Amazon EBS settings for the instance type.
 	//EbsInfo *EbsInfo `locationName:"ebsInfo" type:"structure"`
 	//// Describes the FPGA accelerator settings for the instance type.
@@ -316,11 +322,11 @@ func (s Sku) GetZoneID() string {
 }
 
 func (s Sku) GetInstanceTypeFamily() string {
-	return ""
+	return s.InstanceFamily
 }
 
 func (s Sku) GetInstanceTypeCategory() string {
-	return ""
+	return s.InstanceCategory
 }
 
 func (s Sku) GetPrepaidStatus() string {
@@ -332,7 +338,7 @@ func (s Sku) GetPostpaidStatus() string {
 }
 
 func (s Sku) GetCpuArch() string {
-	return ""
+	return strings.Join(s.ProcessorInfo.SupportedArchitectures, ",")
 }
 
 func (s Sku) GetCpuCoreCount() int {
@@ -458,6 +464,21 @@ type VCpuInfo struct {
 	// contains filtered or unexported fields
 }
 
+type ProcessorInfo struct {
+
+	// The architectures supported by the instance type.
+	SupportedArchitectures []string `xml:"supportedArchitectures>item" locationNameList:"item" type:"list" enum:"ArchitectureType"`
+
+	// Indicates whether the instance type supports AMD SEV-SNP. If the request
+	// returns amd-sev-snp, AMD SEV-SNP is supported. Otherwise, it is not supported.
+	// For more information, see AMD SEV-SNP (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/sev-snp.html).
+	SupportedFeatures []string `xml:"supportedFeatures>item" locationNameList:"item" type:"list" enum:"SupportedAdditionalProcessorFeature"`
+
+	// The speed of the processor, in GHz.
+	SustainedClockSpeedInGhz float64 `xml:"sustainedClockSpeedInGhz" type:"double"`
+	// contains filtered or unexported fields
+}
+
 type InstanceStorageInfo struct {
 
 	// Describes the disks that are available for the instance type.
@@ -503,7 +524,76 @@ func (self *SRegion) DescribeInstanceTypes(arch string, nextToken string) ([]Sku
 	if err != nil {
 		return nil, "", err
 	}
-	return ret.InstanceTypeSet, ret.NextToken, nil
+
+	// 获取 InstanceFamilies
+	skus := make([]Sku, 0)
+	for _, instanceType := range ret.InstanceTypeSet {
+		instanceType.InstanceCategory = getInstanceCategory(instanceType.InstanceType)
+		instanceType.InstanceFamily = getInstanceFamily(instanceType.InstanceType)
+		skus = append(skus, instanceType)
+	}
+	return skus, ret.NextToken, nil
+}
+
+// getInstanceCategory 根据 instanceType 命名规则获取 instanceFamilies
+// 具体规则详见: (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html)
+func getInstanceCategory(instanceType string) string {
+	re := regexp.MustCompile(`^([a-zA-Z]+)`)
+	match := re.FindStringSubmatch(instanceType)
+
+	if len(match) > 1 {
+		switch match[1] {
+		case "c":
+			return "Compute optimized"
+		case "d":
+			return "Dense storage"
+		case "f":
+			return "FPGA"
+		case "g":
+			return "Graphics intensive"
+		case "hpc":
+			return "High performance computing"
+		case "i":
+			return "Storage optimized"
+		case "im":
+			return "Storage optimized with a one to four ratio of vCPU to memory"
+		case "is":
+			return "Storage optimized with a one to six ratio of vCPU to memory"
+		case "inf":
+			return "AWS Inferentia"
+		case "m":
+			return "General purpose"
+		case "mac":
+			return "macOS"
+		case "p":
+			return "GPU accelerated"
+		case "r":
+			return "Memory optimized"
+		case "t":
+			return "Burstable performance"
+		case "trn":
+			return "AWS Trainium"
+		case "u":
+			return "High memory"
+		case "vt":
+			return "Video transcoding"
+		case "x":
+			return "Memory intensive"
+		default:
+			return match[1]
+		}
+	}
+	return ""
+}
+
+func getInstanceFamily(instanceType string) string {
+	re := regexp.MustCompile(`^([^.]*)`)
+	match := re.FindStringSubmatch(instanceType)
+
+	if len(match) > 1 {
+		return match[1]
+	}
+	return ""
 }
 
 // DescribeInstanceTypesAll 获取某一个 region 下所有 InstanceTypes
@@ -521,12 +611,6 @@ func (self *SRegion) DescribeInstanceTypesAll() ([]Sku, error) {
 		}
 		nextToken = _nextToken
 	}
-
-	//for i, sku := range ret {
-	//	if sku.GpuInfo.Gpus != nil {
-	//		fmt.Println(i, sku)
-	//	}
-	//}
 	return ret, nil
 }
 

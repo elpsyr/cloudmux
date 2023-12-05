@@ -256,7 +256,7 @@ func (S SInstanceType) GetGpuMaxCount() int {
 	if S.OSExtraSpecs.QuotaGpu != "" {
 
 		// 原始字符串
-		sourceString := S.OSExtraSpecs.PciPassthroughGpuSpecs
+		sourceString := S.OSExtraSpecs.PciPassthroughAlias
 		// 匹配正则表达式
 		re := regexp.MustCompile(S.OSExtraSpecs.QuotaGpu + `:(\d+)`)
 		// 查找匹配项

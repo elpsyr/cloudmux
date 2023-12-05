@@ -26,6 +26,7 @@ import (
 // InstanceBandwidthRx":26214400,"InstanceBandwidthTx":26214400,"InstancePpsRx":4500000,"InstancePpsTx":4500000
 
 type SInstanceType struct {
+	SCfelInstanceType
 	Zone              string //	可用区。
 	InstanceType      string //	实例机型。
 	InstanceFamily    string //	实例机型系列。

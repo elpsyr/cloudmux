@@ -34,4 +34,31 @@ func init() {
 		printList(instanceTypes, 0, 0, 0, []string{})
 		return nil
 	})
+
+	type InstanceTypeGetOptions struct {
+		Zone string `help:"Test in zone"`
+	}
+	// yunion.io/x/cloudmux/cmd/huaweicli --access-key xxx  --secret xxx  subaccount-list
+	// yunion.io/x/cloudmux/cmd/huaweicli --region cn-east-3 --project projectId --access-key xxx  --secret xxx   instance-types
+	shellutils.R(&InstanceTypeGetOptions{Zone: "cn-east-3a"}, "instance-types", "Get all instance types", func(cli *huawei.SRegion, args *InstanceTypeGetOptions) error {
+		instanceTypes, e := cli.GetInstanceTypes(args.Zone)
+		if e != nil {
+			return e
+		}
+		printList(instanceTypes, 0, 0, 0, []string{})
+		return nil
+	})
+
+	type InstanceTypeRegionGetOptions struct {
+	}
+	// yunion.io/x/cloudmux/cmd/huaweicli --access-key xxx  --secret xxx  subaccount-list
+	// yunion.io/x/cloudmux/cmd/huaweicli --region cn-east-3 --project projectId --access-key xxx  --secret xxx   region-instance-types
+	shellutils.R(&InstanceTypeRegionGetOptions{}, "region-instance-types", "Get region all instance types", func(cli *huawei.SRegion, args *InstanceTypeRegionGetOptions) error {
+		instanceTypes, e := cli.GetRegionInstanceTypes()
+		if e != nil {
+			return e
+		}
+		printList(instanceTypes, 0, 0, 0, []string{})
+		return nil
+	})
 }

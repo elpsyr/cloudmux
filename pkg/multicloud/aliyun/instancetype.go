@@ -398,7 +398,8 @@ func (self *SInstanceType) GetGpuMaxCount() int {
 }
 
 func (self *SInstanceType) GetGPUMemorySizeMB() int {
-	return int(self.GPUMemorySize * 1024)
+	// GPUMemorySize 为单卡显存，需要与 GPUAmount 相乘得到总显存
+	return int(self.GPUMemorySize * 1024 * float64(self.GPUAmount))
 }
 
 func (self *SInstanceType) GetIsBareMetal() bool {

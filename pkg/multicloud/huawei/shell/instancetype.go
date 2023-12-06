@@ -79,6 +79,7 @@ func init() {
 
 	type InstanceTypePrice struct {
 	}
+	// 查询实例规格 按量付费价格
 	// yunion.io/x/cloudmux/cmd/huaweicli --access-key xxx  --secret xxx  subaccount-list
 	// yunion.io/x/cloudmux/cmd/huaweicli --region cn-east-3 --project projectId --access-key xxx  --secret xxx   region-instance-types
 	shellutils.R(&InstanceTypePrice{}, "instance-type-post-price", "Get instance type price", func(cli *huawei.SRegion, args *InstanceTypePrice) error {

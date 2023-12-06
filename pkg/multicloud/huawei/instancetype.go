@@ -75,6 +75,7 @@ type OSExtraSpecs struct {
 	QuotaGpu                       string `json:"quota:gpu"`                           // GPU显卡名称。
 	QuotaVifMaxNum                 string `json:"quota:vif_max_num"`                   // 云服务器最多支持绑定的弹性网卡个数。
 	QuotaSubNetworkInterfaceMaxNum string `json:"quota:sub_network_interface_max_num"` // 云服务器最多支持绑定的辅助弹性网卡个数。
+	InfoAscendName                 string `json:"info:ascend:name"`                    // 云服务器最多支持绑定的辅助弹性网卡个数。
 }
 
 func (S SInstanceType) GetIsBareMetal() bool {
@@ -82,6 +83,12 @@ func (S SInstanceType) GetIsBareMetal() bool {
 }
 
 func (S SInstanceType) GetGPUMemorySizeMB() int {
+
+	//  N卡信息记录在 InfoGpuName
+	//  HUAWEI卡记录在了 InfoAscendName
+	if S.OSExtraSpecs.InfoAscendName != "" {
+		S.OSExtraSpecs.InfoGpuName = S.OSExtraSpecs.InfoAscendName
+	}
 
 	memInfo := ""
 	// 以斜杠为分隔符进行分割
@@ -256,6 +263,12 @@ func (S SInstanceType) GetGpuAttachable() bool {
 }
 
 func (S SInstanceType) GetGpuSpec() string {
+
+	//  N卡信息记录在 InfoGpuName
+	//  HUAWEI卡记录在了 InfoAscendName
+	if S.OSExtraSpecs.InfoAscendName != "" {
+		S.OSExtraSpecs.InfoGpuName = S.OSExtraSpecs.InfoAscendName
+	}
 	// 定义正则表达式
 	// 匹配了第一个 * 后面的任意字符，直到遇到第一个 /。匹配的结果是正则表达式的第一个捕获组 .*?，即 NVIDIA P100。 \s* 用于匹配可能存在的空格。
 	re := regexp.MustCompile(`\*\s*(.*?)\s*/`)
@@ -282,6 +295,12 @@ func (S SInstanceType) GetGpuCount() string {
 	// 现改为从 InfoGpuName 获取相关参数，以下为情况枚举：
 	// 		1 * NVIDIA P100 / 1 * 16G
 	// 		1 * NVIDIA M60-2Q / 2G
+
+	//  N卡信息记录在 InfoGpuName
+	//  HUAWEI卡记录在了 InfoAscendName
+	if S.OSExtraSpecs.InfoAscendName != "" {
+		S.OSExtraSpecs.InfoGpuName = S.OSExtraSpecs.InfoAscendName
+	}
 
 	count := strings.Count(S.OSExtraSpecs.InfoGpuName, "*")
 	switch count {
@@ -329,6 +348,12 @@ func (S SInstanceType) GetGpuMaxCount() int {
 	// 现改为从 InfoGpuName 获取相关参数，以下为情况枚举：
 	// 		1 * NVIDIA P100 / 1 * 16G
 	// 		1 * NVIDIA M60-2Q / 2G
+
+	//  N卡信息记录在 InfoGpuName
+	//  HUAWEI卡记录在了 InfoAscendName
+	if S.OSExtraSpecs.InfoAscendName != "" {
+		S.OSExtraSpecs.InfoGpuName = S.OSExtraSpecs.InfoAscendName
+	}
 
 	count := strings.Count(S.OSExtraSpecs.InfoGpuName, "*")
 	switch count {
@@ -430,11 +455,8 @@ func (self *SRegion) GetRegionInstanceTypes() ([]SInstanceType, error) {
 		for _, instanceType := range zoneInstanceTypes {
 			instanceType.ZoneID = zone.GetId()
 			sInstanceTypes = append(sInstanceTypes, instanceType)
-			if instanceType.Name == "g1.xlarge.4" {
-				fmt.Println("123")
-			}
-			if instanceType.OSExtraSpecs.InfoGpuName != "" {
-				fmt.Println("123")
+			if instanceType.OSExtraSpecs.QuotaGpu != "" {
+				fmt.Println("")
 			}
 		}
 	}

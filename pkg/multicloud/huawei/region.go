@@ -122,12 +122,31 @@ func (self *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, erro
 	if err != nil {
 		return -1, err
 	}
-	getString, err := resp.GetString("official_website_amount")
-	f, err := strconv.ParseFloat(getString, 64)
+	l := new(ListRateOnPeriodDetailResp)
+	err = resp.Unmarshal(l)
 	if err != nil {
-		return 0, err
+		return -1, err
 	}
-	return f, nil
+	return l.OfficialWebsiteRatingResult.OfficialWebsiteAmount, nil
+}
+
+type ListRateOnPeriodDetailResp struct {
+	OfficialWebsiteRatingResult struct {
+		OfficialWebsiteAmount            float64     `json:"official_website_amount"`
+		InstallmentOfficialWebsiteAmount interface{} `json:"installment_official_website_amount"`
+		InstallmentPeriodType            interface{} `json:"installment_period_type"`
+		MeasureID                        int         `json:"measure_id"`
+		ProductRatingResults             []struct {
+			ID                               string      `json:"id"`
+			ProductID                        string      `json:"product_id"`
+			OfficialWebsiteAmount            float64     `json:"official_website_amount"`
+			MeasureID                        int         `json:"measure_id"`
+			InstallmentOfficialWebsiteAmount interface{} `json:"installment_official_website_amount"`
+			InstallmentPeriodType            interface{} `json:"installment_period_type"`
+		} `json:"product_rating_results"`
+	} `json:"official_website_rating_result"`
+	OptionalDiscountRatingResults []interface{} `json:"optional_discount_rating_results"`
+	Currency                      string        `json:"currency"`
 }
 
 // 查询规格资源是否可购买/资源是否售罄

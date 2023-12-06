@@ -91,4 +91,13 @@ func init() {
 		printList(instanceTypes, 0, 0, 0, []string{})
 		return nil
 	})
+
+	shellutils.R(&InstanceTypePrice{}, "instance-type-pre-price", "Get instance type price", func(cli *huawei.SRegion, args *InstanceTypePrice) error {
+		instanceTypes, e := cli.GetPrePaidPrice("cn-east-3a", "ac7.12xlarge.2")
+		if e != nil {
+			return e
+		}
+		printList(instanceTypes, 0, 0, 0, []string{})
+		return nil
+	})
 }

@@ -87,6 +87,16 @@ func (S SInstanceType) GetGPUMemorySizeMB() int {
 	//  N卡信息记录在 InfoGpuName
 	//  HUAWEI卡记录在了 InfoAscendName
 	if S.OSExtraSpecs.InfoAscendName != "" {
+		// 匹配没有以/进行分割的情况
+		count := strings.Count(S.OSExtraSpecs.InfoAscendName, "/")
+		if count == 0 {
+			if strings.Contains(S.OSExtraSpecs.InfoAscendName, "HUAWEI Ascend 310") {
+				S.OSExtraSpecs.InfoAscendName = S.OSExtraSpecs.InfoAscendName + "/ 8G"
+			} else {
+				return 0
+			}
+
+		}
 		S.OSExtraSpecs.InfoGpuName = S.OSExtraSpecs.InfoAscendName
 	}
 
@@ -267,6 +277,12 @@ func (S SInstanceType) GetGpuSpec() string {
 	//  N卡信息记录在 InfoGpuName
 	//  HUAWEI卡记录在了 InfoAscendName
 	if S.OSExtraSpecs.InfoAscendName != "" {
+		// 匹配没有以/进行分割的情况
+		count := strings.Count(S.OSExtraSpecs.InfoAscendName, "/")
+		if count == 0 {
+			S.OSExtraSpecs.InfoAscendName = S.OSExtraSpecs.InfoAscendName + "/"
+		}
+
 		S.OSExtraSpecs.InfoGpuName = S.OSExtraSpecs.InfoAscendName
 	}
 	// 定义正则表达式
@@ -299,6 +315,11 @@ func (S SInstanceType) GetGpuCount() string {
 	//  N卡信息记录在 InfoGpuName
 	//  HUAWEI卡记录在了 InfoAscendName
 	if S.OSExtraSpecs.InfoAscendName != "" {
+		// 匹配没有以/进行分割的情况
+		count := strings.Count(S.OSExtraSpecs.InfoAscendName, "/")
+		if count == 0 {
+			S.OSExtraSpecs.InfoAscendName = S.OSExtraSpecs.InfoAscendName + "/"
+		}
 		S.OSExtraSpecs.InfoGpuName = S.OSExtraSpecs.InfoAscendName
 	}
 
@@ -455,7 +476,7 @@ func (self *SRegion) GetRegionInstanceTypes() ([]SInstanceType, error) {
 		for _, instanceType := range zoneInstanceTypes {
 			instanceType.ZoneID = zone.GetId()
 			sInstanceTypes = append(sInstanceTypes, instanceType)
-			if instanceType.OSExtraSpecs.QuotaGpu != "" {
+			if instanceType.OSExtraSpecs.InfoAscendName != "" {
 				fmt.Println("")
 			}
 		}

@@ -15,8 +15,10 @@
 package huawei
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
@@ -80,6 +82,40 @@ func (S SInstanceType) GetIsBareMetal() bool {
 }
 
 func (S SInstanceType) GetGPUMemorySizeMB() int {
+
+	memInfo := ""
+	// 以斜杠为分隔符进行分割
+	parts := strings.Split(S.OSExtraSpecs.InfoGpuName, "/")
+
+	// 获取斜杠后面的字符，去除首尾空格
+	if len(parts) > 1 {
+		memInfo = strings.TrimSpace(parts[1])
+	} else {
+		return 0
+	}
+
+	// 定义更严格的正则表达式
+	re := regexp.MustCompile(`(\d+)G`)
+
+	// 在字符串中查找匹配项
+	match := re.FindStringSubmatch(memInfo)
+
+	// 输出匹配结果
+	if len(match) > 1 {
+		atoi, err := strconv.Atoi(match[1])
+		if err != nil {
+			return 0
+		}
+		gpuCount := S.GetGpuCount()
+		gpuCountInt, err := strconv.Atoi(gpuCount)
+		if err != nil {
+			return 0
+		}
+
+		return atoi * gpuCountInt * 1024
+	} else {
+		return 0
+	}
 	return 0
 }
 
@@ -220,65 +256,121 @@ func (S SInstanceType) GetGpuAttachable() bool {
 }
 
 func (S SInstanceType) GetGpuSpec() string {
-	return S.OSExtraSpecs.QuotaGpu
+	// 定义正则表达式
+	// 匹配了第一个 * 后面的任意字符，直到遇到第一个 /。匹配的结果是正则表达式的第一个捕获组 .*?，即 NVIDIA P100。 \s* 用于匹配可能存在的空格。
+	re := regexp.MustCompile(`\*\s*(.*?)\s*/`)
+
+	// 在字符串中查找匹配项
+	match := re.FindStringSubmatch(S.OSExtraSpecs.InfoGpuName)
+
+	// 输出匹配的结果
+	if len(match) > 1 {
+		return match[1]
+	} else {
+		return S.OSExtraSpecs.InfoGpuName
+	}
 }
 
 func (S SInstanceType) GetGpuCount() string {
 
-	// pci_passthrough:alias
-	// PCI直通设备信息，格式为PCI设备名称:数量。多个设备信息以逗号隔开。
-	// 例如nvidia-a30:1，表示携带一张A30的GPU。
+	// 即使有 GPU 挂载 S.OSExtraSpecs.QuotaGpu 字段也不一定有值
+	// 原方案从 pci_passthrough:alias 获取数量：
+	// 		PCI直通设备信息，格式为PCI设备名称:数量。多个设备信息以逗号隔开。
+	// 		例如nvidia-a30:1，表示携带一张A30的GPU。
+	// 但是无法满足 S.OSExtraSpecs.QuotaGpu 为空时， PciPassthroughGpuSpecs 为 m60_2q:virt:1 的情况
 
-	if S.OSExtraSpecs.QuotaGpu != "" {
+	// 现改为从 InfoGpuName 获取相关参数，以下为情况枚举：
+	// 		1 * NVIDIA P100 / 1 * 16G
+	// 		1 * NVIDIA M60-2Q / 2G
 
-		// 原始字符串
-		sourceString := S.OSExtraSpecs.PciPassthroughAlias
-		// 匹配正则表达式
-		re := regexp.MustCompile(S.OSExtraSpecs.QuotaGpu + `:(\d+)`)
+	count := strings.Count(S.OSExtraSpecs.InfoGpuName, "*")
+	switch count {
+	case 1:
+		// 定义正则表达式模式
+		pattern := `(\d+)\s*\*`
+		// 编译正则表达式
+		regexpPattern := regexp.MustCompile(pattern)
 		// 查找匹配项
-		matches := re.FindStringSubmatch(sourceString)
-
-		// 如果找到匹配项
+		matches := regexpPattern.FindStringSubmatch(S.OSExtraSpecs.InfoGpuName)
+		// 提取匹配的数字
 		if len(matches) > 1 {
-			// 提取冒号后的数字部分
-			numberPart := matches[1]
-			return numberPart
+			firstNumber := matches[1]
+			return firstNumber
 		} else {
-			// 未找到匹配项
 			return "0"
 		}
-
+	case 2:
+		// 定义正则表达式模式
+		pattern := `^([0-9]+)\s*\*`
+		// 编译正则表达式
+		regexpPattern := regexp.MustCompile(pattern)
+		// 查找匹配项
+		matches := regexpPattern.FindStringSubmatch(S.OSExtraSpecs.InfoGpuName)
+		// 提取匹配的数字
+		if len(matches) > 1 {
+			firstNumber := matches[1]
+			return firstNumber
+		} else {
+			return "0"
+		}
+	default:
+		return "0"
 	}
-	return "0"
 }
 
 func (S SInstanceType) GetGpuMaxCount() int {
 
-	if S.OSExtraSpecs.QuotaGpu != "" {
+	// 即使有 GPU 挂载 S.OSExtraSpecs.QuotaGpu 字段也不一定有值
+	// 原方案从 pci_passthrough:alias 获取数量：
+	// 		PCI直通设备信息，格式为PCI设备名称:数量。多个设备信息以逗号隔开。
+	// 		例如nvidia-a30:1，表示携带一张A30的GPU。
+	// 但是无法满足 S.OSExtraSpecs.QuotaGpu 为空时， PciPassthroughGpuSpecs 为 m60_2q:virt:1 的情况
 
-		// 原始字符串
-		sourceString := S.OSExtraSpecs.PciPassthroughAlias
-		// 匹配正则表达式
-		re := regexp.MustCompile(S.OSExtraSpecs.QuotaGpu + `:(\d+)`)
+	// 现改为从 InfoGpuName 获取相关参数，以下为情况枚举：
+	// 		1 * NVIDIA P100 / 1 * 16G
+	// 		1 * NVIDIA M60-2Q / 2G
+
+	count := strings.Count(S.OSExtraSpecs.InfoGpuName, "*")
+	switch count {
+	case 1:
+		// 定义正则表达式模式
+		pattern := `(\d+)\s*\*`
+		// 编译正则表达式
+		regexpPattern := regexp.MustCompile(pattern)
 		// 查找匹配项
-		matches := re.FindStringSubmatch(sourceString)
-
-		// 如果找到匹配项
+		matches := regexpPattern.FindStringSubmatch(S.OSExtraSpecs.InfoGpuName)
+		// 提取匹配的数字
 		if len(matches) > 1 {
-			// 提取冒号后的数字部分
-			numberPart := matches[1]
-			atoi, err := strconv.Atoi(numberPart)
+			firstNumber := matches[1]
+			atoi, err := strconv.Atoi(firstNumber)
 			if err != nil {
 				return 0
 			}
 			return atoi
 		} else {
-			// 未找到匹配项
 			return 0
 		}
-
+	case 2:
+		// 定义正则表达式模式
+		pattern := `^([0-9]+)\s*\*`
+		// 编译正则表达式
+		regexpPattern := regexp.MustCompile(pattern)
+		// 查找匹配项
+		matches := regexpPattern.FindStringSubmatch(S.OSExtraSpecs.InfoGpuName)
+		// 提取匹配的数字
+		if len(matches) > 1 {
+			firstNumber := matches[1]
+			atoi, err := strconv.Atoi(firstNumber)
+			if err != nil {
+				return 0
+			}
+			return atoi
+		} else {
+			return 0
+		}
+	default:
+		return 0
 	}
-	return 0
 }
 
 func (S SInstanceType) Delete() error {
@@ -338,6 +430,12 @@ func (self *SRegion) GetRegionInstanceTypes() ([]SInstanceType, error) {
 		for _, instanceType := range zoneInstanceTypes {
 			instanceType.ZoneID = zone.GetId()
 			sInstanceTypes = append(sInstanceTypes, instanceType)
+			if instanceType.Name == "g1.xlarge.4" {
+				fmt.Println("123")
+			}
+			if instanceType.OSExtraSpecs.InfoGpuName != "" {
+				fmt.Println("123")
+			}
 		}
 	}
 

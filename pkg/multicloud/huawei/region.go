@@ -88,9 +88,7 @@ func (self *SRegion) GetPostPaidPrice(zoneID, instanceType string) (float64, err
 		}},
 	}
 
-	self.ecsClient.Bills.ProjectId = ""
-
-	resp, err := self.ecsClient.Bills.PerformAction2("on-demand-resources", "", jsonutils.Marshal(params), "")
+	resp, err := self.ecsClient.Bills.PerformActionWithoutProject("on-demand-resources", "", jsonutils.Marshal(params), "")
 	if err != nil {
 		return -1, err
 	}
@@ -120,9 +118,7 @@ func (self *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, erro
 		}},
 	}
 
-	self.ecsClient.Bills.ProjectId = ""
-
-	resp, err := self.ecsClient.Bills.PerformAction2("period-resources/subscribe-rate", "", jsonutils.Marshal(params), "")
+	resp, err := self.ecsClient.Bills.PerformActionWithoutProject("period-resources/subscribe-rate", "", jsonutils.Marshal(params), "")
 	if err != nil {
 		return -1, err
 	}

@@ -284,6 +284,27 @@ func (self *SResourceManager) PerformAction2(action string, id string, params js
 	return self._do(request, responseKey)
 }
 
+// PerformActionWithoutProject
+// 在请求路径中不添加 project id
+func (self *SResourceManager) PerformActionWithoutProject(action string, id string, params jsonutils.JSONObject, responseKey string) (jsonutils.JSONObject, error) {
+	// 使用new关键字创建新的SResourceManager实例
+	resourceManager := new(SResourceManager)
+	// 复制新实例的值，而不是原始实例的值
+	*resourceManager = *self
+	// 使用新实例的指针创建sResourceManager
+	sResourceManager := resourceManager
+
+	sResourceManager.ProjectId = ""
+
+	request := sResourceManager.newRequest("POST", id, action, nil)
+	request.SetContent([]byte(getContent(params)))
+	if len(resourceManager.DomainId) > 0 {
+		request.AddHeaderParam("X-Domain-Id", resourceManager.DomainId)
+	}
+
+	return resourceManager._do(request, responseKey)
+}
+
 func (self *SResourceManager) SetVersion(v string) {
 	self.version = v
 }

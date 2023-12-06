@@ -202,6 +202,7 @@ func (self *Client) initManagers() {
 		self.Users = modules.NewUserManager(self.cfg)
 		self.Interface = modules.NewInterfaceManager(self.cfg)
 		self.Jobs = modules.NewJobManager(self.cfg)
+		self.Balances = modules.NewBalanceManager(self.cfg)
 		self.Credentials = modules.NewCredentialManager(self.cfg)
 		self.Port = modules.NewPortManager(self.cfg)
 		self.Flavors = modules.NewFlavorManager(self.cfg)

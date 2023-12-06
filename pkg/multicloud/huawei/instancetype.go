@@ -18,6 +18,7 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/pkg/errors"
 )
@@ -353,4 +354,55 @@ func (self *SRegion) GetISkus() ([]cloudprovider.ICloudSku, error) {
 		ret = append(ret, &skus[i])
 	}
 	return ret, nil
+}
+
+// GetInstanceTypeStatus
+// 某个AZ没有在cond:operation:az参数中配置时默认使用此参数的取值。不配置或无此参数时等同于“normal”。取值范围：
+//
+// normal：正常商用
+// abandon：下线（即不显示）
+// sellout：售罄
+// obt：公测
+// obt_sellout：公测售罄
+// promotion：推荐(等同 normal，也是商用 )
+func (self *SRegion) GetInstanceTypeStatus(zoneId, instanceTypeName string) (string, error) {
+	skus, err := self.fetchInstanceTypes(zoneId)
+	if err != nil {
+		return "", errors.Wrapf(err, "fetchInstanceTypes")
+	}
+	ret := make([]SInstanceType, 0)
+	for _, sku := range skus {
+		if sku.Name == instanceTypeName {
+			ret = append(ret, sku)
+			break
+		}
+	}
+	if len(ret) > 0 {
+
+		var retSkuStatus string
+		// like: cn-east-3a(normal),cn-east-3c(sellout),cn-east-3d(normal)
+		az := ret[0].OSExtraSpecs.CondOperationAz
+
+		// like: abandon
+		status := ret[0].OSExtraSpecs.CondOperationStatus
+		// 定义正则表达式
+		re := regexp.MustCompile(zoneId + `\(([^)]+)\)`)
+		// 在字符串中查找匹配项
+		match := re.FindStringSubmatch(az)
+		if len(match) >= 2 {
+			retSkuStatus = match[1]
+		} else {
+			retSkuStatus = status
+		}
+		switch retSkuStatus {
+		case "normal", "obt", "promotion":
+			return api.SkuStatusAvailable, nil
+		case "abandon", "sellout", "obt_sellout":
+			return api.SkuStatusSoldout, nil
+		default:
+			return api.SkuStatusSoldout, nil
+		}
+	}
+	// 没有查询到对应 zone instanceType
+	return api.SkuStatusSoldout, nil
 }

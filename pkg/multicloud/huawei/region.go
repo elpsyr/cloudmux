@@ -17,6 +17,7 @@ package huawei
 import (
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -36,6 +37,9 @@ type Locales struct {
 	ZhCN string `json:"zh-cn"`
 }
 
+// Verify that *SInstanceType implements ICloudSkuPrice
+var _ cloudprovider.ICloudSkuPrice = (*SRegion)(nil)
+
 // https://support.huaweicloud.com/api-iam/zh-cn_topic_0067148043.html
 type SRegion struct {
 	multicloud.SRegion
@@ -54,6 +58,97 @@ type SRegion struct {
 	ivpcs  []cloudprovider.ICloudVpc
 
 	storageCache *SStoragecache
+}
+
+func (self *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) (float64, error) {
+	// huawei 暂不支持 spot 价格 api 查询
+	return -1, nil
+}
+
+// 创建ECS高频场景示例
+// docs (https://support.huaweicloud.com/api-ecs/ecs_04_0007.html#ecs_04_0007__section413314335610)
+
+// GetPostPaidPrice 查询按需产品价格
+// https://support.huaweicloud.com/api-oce/bcloud_01001.html
+func (self *SRegion) GetPostPaidPrice(zoneID, instanceType string) (float64, error) {
+
+	params := map[string]interface{}{
+		"project_id": self.ecsClient.Bills.ProjectId,
+		"product_infos": []interface{}{map[string]interface{}{
+			"id":                 time.Now().String(),
+			"cloud_service_type": "hws.service.type.ec2",
+			"resource_type":      "hws.resource.type.vm",
+			"resource_spec":      instanceType + ".linux",
+			"region":             self.ID,
+			"available_zone":     zoneID,
+			"usage_factor":       "Duration",
+			"usage_value":        1,
+			"usage_measure_id":   4,
+			"subscription_num":   1,
+		}},
+	}
+
+	self.ecsClient.Bills.ProjectId = ""
+
+	resp, err := self.ecsClient.Bills.PerformAction2("on-demand-resources", "", jsonutils.Marshal(params), "")
+	if err != nil {
+		return -1, err
+	}
+	getString, err := resp.GetString("amount")
+	f, err := strconv.ParseFloat(getString, 64)
+	if err != nil {
+		return 0, err
+	}
+	return f, nil
+}
+
+// GetPrePaidPrice 查询包年/包月产品价格
+// https://support.huaweicloud.com/api-oce/bcloud_01002.html
+func (self *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, error) {
+	params := map[string]interface{}{
+		"project_id": self.ecsClient.Bills.ProjectId,
+		"product_infos": []interface{}{map[string]interface{}{
+			"id":                 time.Now().String(),
+			"cloud_service_type": "hws.service.type.ec2",
+			"resource_type":      "hws.resource.type.vm",
+			"resource_spec":      instanceType + ".linux",
+			"region":             self.ID,
+			"available_zone":     zoneID,
+			"period_type":        2, // 订购包年/包月产品的周期类型。 0:天2:月3:年4:小时
+			"period_num":         1, // 订购包年/包月产品的周期数。
+			"subscription_num":   1, // 订购包年/包月产品的数量。
+		}},
+	}
+
+	self.ecsClient.Bills.ProjectId = ""
+
+	resp, err := self.ecsClient.Bills.PerformAction2("period-resources/subscribe-rate", "", jsonutils.Marshal(params), "")
+	if err != nil {
+		return -1, err
+	}
+	getString, err := resp.GetString("official_website_amount")
+	f, err := strconv.ParseFloat(getString, 64)
+	if err != nil {
+		return 0, err
+	}
+	return f, nil
+}
+
+// 查询规格资源是否可购买/资源是否售罄
+// https://support.huaweicloud.com/api-ecs/ecs_04_0007.html#ecs_04_0007__section413314335610
+
+func (self *SRegion) GetSpotPostPaidStatus(zoneID, instanceType string) (string, error) {
+	// TODO 查询规格销售策略
+	// https://support.huaweicloud.com/api-ecs/ecs_02_0403.html
+	return self.GetInstanceTypeStatus(zoneID, instanceType)
+}
+
+func (self *SRegion) GetPostPaidStatus(zoneID, instanceType string) (string, error) {
+	return self.GetInstanceTypeStatus(zoneID, instanceType)
+}
+
+func (self *SRegion) GetPrePaidStatus(zoneID, instanceType string) (string, error) {
+	return self.GetInstanceTypeStatus(zoneID, instanceType)
 }
 
 func (self *SRegion) GetClient() *SHuaweiClient {

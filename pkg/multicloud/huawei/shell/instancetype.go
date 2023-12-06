@@ -61,4 +61,34 @@ func init() {
 		printList(instanceTypes, 0, 0, 0, []string{})
 		return nil
 	})
+
+	type InstanceTypeStatus struct {
+	}
+	// yunion.io/x/cloudmux/cmd/huaweicli --access-key xxx  --secret xxx  subaccount-list
+	// yunion.io/x/cloudmux/cmd/huaweicli --region cn-east-3 --project projectId --access-key xxx  --secret xxx   region-instance-types
+	shellutils.R(&InstanceTypeStatus{}, "instance-type-status", "Get instance type status", func(cli *huawei.SRegion, args *InstanceTypeStatus) error {
+		instanceTypes, e := cli.GetInstanceTypeStatus("cn-east-3a", "ac7.12xlarge.2")
+		instanceTypes, e = cli.GetInstanceTypeStatus("cn-east-3c", "ac7.12xlarge.2")
+		instanceTypes, e = cli.GetInstanceTypeStatus("cn-east-3d", "ac7.12xlarge.2")
+		if e != nil {
+			return e
+		}
+		printList(instanceTypes, 0, 0, 0, []string{})
+		return nil
+	})
+
+	type InstanceTypePrice struct {
+	}
+	// yunion.io/x/cloudmux/cmd/huaweicli --access-key xxx  --secret xxx  subaccount-list
+	// yunion.io/x/cloudmux/cmd/huaweicli --region cn-east-3 --project projectId --access-key xxx  --secret xxx   region-instance-types
+	shellutils.R(&InstanceTypePrice{}, "instance-type-post-price", "Get instance type price", func(cli *huawei.SRegion, args *InstanceTypePrice) error {
+		//instanceTypes, e := cli.GetPostPaidPrice("cn-east-3a", "ac7.12xlarge.2")
+		//instanceTypes, e := cli.GetPostPaidPrice("cn-east-3c", "ac7.12xlarge.2")
+		instanceTypes, e := cli.GetPostPaidPrice("cn-east-3c", "ac7.12xlarge.2")
+		if e != nil {
+			return e
+		}
+		printList(instanceTypes, 0, 0, 0, []string{})
+		return nil
+	})
 }

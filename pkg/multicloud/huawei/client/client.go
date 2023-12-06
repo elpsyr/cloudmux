@@ -25,8 +25,8 @@ import (
 type Client struct {
 	cfg *SClientConfig
 	// 标记初始化状态
-	init bool
-
+	init                 bool
+	Bills                *modules.SBillManager
 	Balances             *modules.SBalanceManager
 	Credentials          *modules.SCredentialManager
 	Disks                *modules.SDiskManager
@@ -108,6 +108,7 @@ func (self *SClientConfig) GetDebug() bool {
 }
 
 func (self *Client) SetHttpClient(httpClient *http.Client) {
+	self.Bills.SetHttpClient(httpClient)
 	self.Credentials.SetHttpClient(httpClient)
 	self.Servers.SetHttpClient(httpClient)
 	self.ServersV2.SetHttpClient(httpClient)
@@ -180,6 +181,7 @@ func (self *Client) InitWithAccessKey(endpoint, regionId, domainId, projectId, a
 
 func (self *Client) initManagers() {
 	if !self.init {
+		self.Bills = modules.NewBillManager(self.cfg)
 		self.Servers = modules.NewServerManager(self.cfg)
 		self.ServersV2 = modules.NewServerV2Manager(self.cfg)
 		self.NovaServers = modules.NewNovaServerManager(self.cfg)

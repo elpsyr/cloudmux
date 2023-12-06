@@ -9,7 +9,7 @@ import (
 func init() {
 	type ZoneListOptions struct {
 	}
-	// yunion.io/x/cloudmux/cmd/baiducli
+	// yunion.io/x/cloudmux/cmd/baiducli  --region-id bj zone-list
 	shellutils.R(&ZoneListOptions{}, "zone-list", "list zones", func(cli *baidu.SRegion, args *ZoneListOptions) error {
 		zones, err := cli.GetIZones()
 		if err != nil {

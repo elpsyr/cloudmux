@@ -22,6 +22,7 @@ import (
 	"yunion.io/x/cloudmux/pkg/multicloud"
 )
 
+// https://cloud.baidu.com/doc/BOS/s/akrqd2wcx
 var regions = map[string]string{
 	"bj":  "北京",
 	"gz":  "广州",
@@ -150,6 +151,7 @@ func (region *SRegion) fetchInfrastructure() error {
 	return nil
 }
 
+// https://cloud.baidu.com/doc/BCC/s/ijwvyo9im
 func (region *SRegion) _fetchZones() error {
 	body, err := region.client.list("bcc", region.Region, "/v2/zone", nil)
 	if err != nil {

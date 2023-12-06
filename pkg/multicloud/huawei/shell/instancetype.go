@@ -92,12 +92,18 @@ func init() {
 		return nil
 	})
 
-	shellutils.R(&InstanceTypePrice{}, "instance-type-pre-price", "Get instance type price", func(cli *huawei.SRegion, args *InstanceTypePrice) error {
-		instanceTypes, e := cli.GetPrePaidPrice("cn-east-3a", "ac7.12xlarge.2")
+	// 查询实例规格 包年包月价格
+	// yunion.io/x/cloudmux/cmd/huaweicli --region cn-east-3 --project projectId --access-key xxx  --secret xxx   instance-type-pre-price
+	shellutils.R(&InstanceTypePrice{}, "instance-type-pre-price", "Get instance type pre-paid price", func(cli *huawei.SRegion, args *InstanceTypePrice) error {
+		instanceTypesPrice, e := cli.GetPrePaidPrice("cn-east-3a", "ac7.12xlarge.2")
 		if e != nil {
 			return e
 		}
-		printList(instanceTypes, 0, 0, 0, []string{})
+		printObject(struct {
+			Price float64
+		}{
+			Price: instanceTypesPrice,
+		})
 		return nil
 	})
 }

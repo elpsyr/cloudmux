@@ -288,6 +288,14 @@ func (S SInstanceType) GetGpuSpec() string {
 	if S.OSExtraSpecs.InfoAscendName != "" {
 		S.OSExtraSpecs.InfoGpuName = handleSpecialCharacters(S.OSExtraSpecs.InfoAscendName)
 	}
+
+	// 这里需要处理特殊的显卡：
+	// NVIDIA Professional Graphics Card
+	if strings.Contains(S.OSExtraSpecs.InfoGpuName, "NVIDIA Professional Graphics Card") {
+		// nvidia-rtx5000
+		return strings.ReplaceAll(strings.ToUpper(S.OSExtraSpecs.QuotaGpu), "-", " ")
+	}
+
 	// 定义正则表达式
 	// 匹配了第一个 * 后面的任意字符，直到遇到第一个 /。匹配的结果是正则表达式的第一个捕获组 .*?，即 NVIDIA P100。 \s* 用于匹配可能存在的空格。
 	re := regexp.MustCompile(`\*\s*(.*?)\s*/`)

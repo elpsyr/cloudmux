@@ -32,6 +32,8 @@ func TestGetGpuSpec(t *testing.T) {
 	fmt.Println(instanceType.GetGpuSpec())
 	instanceType = SInstanceType{OSExtraSpecs: OSExtraSpecs{InfoAscendName: "'4 * HUAWEI Ascend 310'"}}
 	fmt.Println(instanceType.GetGpuSpec())
+	instanceType = SInstanceType{OSExtraSpecs: OSExtraSpecs{InfoAscendName: "2 * NVIDIA Professional Graphics Card / 2 * 16G", QuotaGpu: "nvidia-rtx5000"}}
+	fmt.Println(instanceType.GetGpuSpec())
 }
 
 func TestGetGPUMemorySizeMB(t *testing.T) {

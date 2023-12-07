@@ -258,7 +258,9 @@ func (S SInstanceType) GetNicMaxCount() int {
 }
 
 func (S SInstanceType) GetGpuAttachable() bool {
-	return S.OSExtraSpecs.InfoGpuName != ""
+	//  N卡信息记录在 InfoGpuName
+	//  HUAWEI卡记录在了 InfoAscendName
+	return S.OSExtraSpecs.InfoGpuName != "" || S.OSExtraSpecs.InfoAscendName != ""
 }
 
 func handleSpecialCharacters(info string) string {

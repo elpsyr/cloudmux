@@ -15,7 +15,6 @@
 package huawei
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -71,11 +70,11 @@ type OSExtraSpecs struct {
 	CondCompute                    string `json:"cond:compute"`                        // 计算约束
 	EcsInstanceArchitecture        string `json:"ecs:instance_architecture"`           // 该规格对应的CPU架构，且仅鲲鹏实例架构规格返回该字段。
 	InfoGpuName                    string `json:"info:gpu:name"`                       // GPU显卡数量和名称。
+	InfoAscendName                 string `json:"info:ascend:name"`                    // 华为昇腾AI处理器数量和名称
 	InfoCpuName                    string `json:"info:cpu:name"`                       // CPU名称
 	QuotaGpu                       string `json:"quota:gpu"`                           // GPU显卡名称。
 	QuotaVifMaxNum                 string `json:"quota:vif_max_num"`                   // 云服务器最多支持绑定的弹性网卡个数。
 	QuotaSubNetworkInterfaceMaxNum string `json:"quota:sub_network_interface_max_num"` // 云服务器最多支持绑定的辅助弹性网卡个数。
-	InfoAscendName                 string `json:"info:ascend:name"`                    // 云服务器最多支持绑定的辅助弹性网卡个数。
 }
 
 func (S SInstanceType) GetIsBareMetal() bool {
@@ -87,17 +86,7 @@ func (S SInstanceType) GetGPUMemorySizeMB() int {
 	//  N卡信息记录在 InfoGpuName
 	//  HUAWEI卡记录在了 InfoAscendName
 	if S.OSExtraSpecs.InfoAscendName != "" {
-		// 匹配没有以/进行分割的情况
-		count := strings.Count(S.OSExtraSpecs.InfoAscendName, "/")
-		if count == 0 {
-			if strings.Contains(S.OSExtraSpecs.InfoAscendName, "HUAWEI Ascend 310") {
-				S.OSExtraSpecs.InfoAscendName = S.OSExtraSpecs.InfoAscendName + "/ 8G"
-			} else {
-				return 0
-			}
-
-		}
-		S.OSExtraSpecs.InfoGpuName = S.OSExtraSpecs.InfoAscendName
+		S.OSExtraSpecs.InfoGpuName = handleSpecialCharacters(S.OSExtraSpecs.InfoAscendName)
 	}
 
 	memInfo := ""
@@ -272,18 +261,30 @@ func (S SInstanceType) GetGpuAttachable() bool {
 	return S.OSExtraSpecs.InfoGpuName != ""
 }
 
+func handleSpecialCharacters(info string) string {
+	// 检查是否包含单引号
+	if strings.Contains(info, "'") {
+		// 去除单引号
+		info = strings.ReplaceAll(info, "'", "")
+	}
+	// 匹配没有以/进行分割的情况
+	count := strings.Count(info, "/")
+	if count == 0 {
+		if strings.Contains(info, "HUAWEI Ascend 310") {
+			info = info + "/ 8G"
+		} else {
+			info = info + "/"
+		}
+	}
+	return info
+}
+
 func (S SInstanceType) GetGpuSpec() string {
 
 	//  N卡信息记录在 InfoGpuName
 	//  HUAWEI卡记录在了 InfoAscendName
 	if S.OSExtraSpecs.InfoAscendName != "" {
-		// 匹配没有以/进行分割的情况
-		count := strings.Count(S.OSExtraSpecs.InfoAscendName, "/")
-		if count == 0 {
-			S.OSExtraSpecs.InfoAscendName = S.OSExtraSpecs.InfoAscendName + "/"
-		}
-
-		S.OSExtraSpecs.InfoGpuName = S.OSExtraSpecs.InfoAscendName
+		S.OSExtraSpecs.InfoGpuName = handleSpecialCharacters(S.OSExtraSpecs.InfoAscendName)
 	}
 	// 定义正则表达式
 	// 匹配了第一个 * 后面的任意字符，直到遇到第一个 /。匹配的结果是正则表达式的第一个捕获组 .*?，即 NVIDIA P100。 \s* 用于匹配可能存在的空格。
@@ -315,12 +316,7 @@ func (S SInstanceType) GetGpuCount() string {
 	//  N卡信息记录在 InfoGpuName
 	//  HUAWEI卡记录在了 InfoAscendName
 	if S.OSExtraSpecs.InfoAscendName != "" {
-		// 匹配没有以/进行分割的情况
-		count := strings.Count(S.OSExtraSpecs.InfoAscendName, "/")
-		if count == 0 {
-			S.OSExtraSpecs.InfoAscendName = S.OSExtraSpecs.InfoAscendName + "/"
-		}
-		S.OSExtraSpecs.InfoGpuName = S.OSExtraSpecs.InfoAscendName
+		S.OSExtraSpecs.InfoGpuName = handleSpecialCharacters(S.OSExtraSpecs.InfoAscendName)
 	}
 
 	count := strings.Count(S.OSExtraSpecs.InfoGpuName, "*")
@@ -476,9 +472,6 @@ func (self *SRegion) GetRegionInstanceTypes() ([]SInstanceType, error) {
 		for _, instanceType := range zoneInstanceTypes {
 			instanceType.ZoneID = zone.GetId()
 			sInstanceTypes = append(sInstanceTypes, instanceType)
-			if instanceType.OSExtraSpecs.InfoAscendName != "" {
-				fmt.Println("")
-			}
 		}
 	}
 

@@ -182,6 +182,11 @@ func (S SFlavors) GetGpuAttachable() bool {
 }
 
 func (S SFlavors) GetGpuSpec() string {
+
+	cardType, ok := gpuCardTypeMap[S.GpuCardType]
+	if ok {
+		return cardType
+	}
 	return S.GpuCardType
 }
 
@@ -203,8 +208,35 @@ func (S SFlavors) GetIsBareMetal() bool {
 }
 
 func (S SFlavors) GetGPUMemorySizeMB() int {
+	if S.GpuCardCount != 0 {
+		memorySize, ok := gpuCardMemorySizeMap[S.GpuCardType]
+		if ok {
+			return memorySize * S.GpuCardCount
+		}
+	}
 	return 0
 }
+
+var (
+	// GPU 名称映射
+	gpuCardTypeMap = map[string]string{
+		"nTeslaP4":       "NVIDIA P4",
+		"nTeslaA10Intel": "NVIDIA A10",
+		"nTeslaA100-40G": "NVIDIA A100",
+		"nTeslaA100-80G": "NVIDIA A100 80G", // A100 default 40 GB
+		"nTeslaV100-32":  "NVIDIA V100 32G", // V100 default 16 GB
+		"nTeslaT4":       "NVIDIA T4",
+	}
+	// GPU 显存映射，单位 GB
+	gpuCardMemorySizeMap = map[string]int{
+		"nTeslaP4":       8,
+		"nTeslaA10Intel": 24,
+		"nTeslaA100-40G": 40,
+		"nTeslaA100-80G": 80, // A100 default 40 GB
+		"nTeslaV100-32":  32, // V100 default 16 GB
+		"nTeslaT4":       16,
+	}
+)
 
 // fetchFlavorSpec 查询实例套餐规格列表
 // https://cloud.baidu.com/doc/BCC/s/Xk3pb75k1

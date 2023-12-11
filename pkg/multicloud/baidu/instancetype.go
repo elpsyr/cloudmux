@@ -211,7 +211,7 @@ func (S SFlavors) GetGPUMemorySizeMB() int {
 	if S.GpuCardCount != 0 {
 		memorySize, ok := gpuCardMemorySizeMap[S.GpuCardType]
 		if ok {
-			return memorySize * S.GpuCardCount
+			return memorySize * S.GpuCardCount * 1024
 		}
 	}
 	return 0
@@ -224,6 +224,7 @@ var (
 		"nTeslaA10Intel": "NVIDIA A10",
 		"nTeslaA100-40G": "NVIDIA A100",
 		"nTeslaA100-80G": "NVIDIA A100 80G", // A100 default 40 GB
+		"nTeslaV100-16":  "NVIDIA V100 16G",
 		"nTeslaV100-32":  "NVIDIA V100 32G", // V100 default 16 GB
 		"nTeslaT4":       "NVIDIA T4",
 	}
@@ -233,7 +234,8 @@ var (
 		"nTeslaA10Intel": 24,
 		"nTeslaA100-40G": 40,
 		"nTeslaA100-80G": 80, // A100 default 40 GB
-		"nTeslaV100-32":  32, // V100 default 16 GB
+		"nTeslaV100-16":  16,
+		"nTeslaV100-32":  32,
 		"nTeslaT4":       16,
 	}
 )

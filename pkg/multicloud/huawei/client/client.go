@@ -25,7 +25,7 @@ import (
 type Client struct {
 	cfg *SClientConfig
 	// 标记初始化状态
-	init                 bool
+	init bool
 
 	Bills                *modules.SBillManager
 	Credentials          *modules.SCredentialManager

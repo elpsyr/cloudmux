@@ -25,7 +25,7 @@ import (
 type Client struct {
 	cfg *SClientConfig
 	// 标记初始化状态
-	init                 bool
+	init bool
 
 	Bills                *modules.SBillManager
 	Credentials          *modules.SCredentialManager
@@ -202,7 +202,6 @@ func (self *Client) initManagers() {
 		self.Users = modules.NewUserManager(self.cfg)
 		self.Interface = modules.NewInterfaceManager(self.cfg)
 		self.Jobs = modules.NewJobManager(self.cfg)
-		self.Balances = modules.NewBalanceManager(self.cfg)
 		self.Credentials = modules.NewCredentialManager(self.cfg)
 		self.Port = modules.NewPortManager(self.cfg)
 		self.Flavors = modules.NewFlavorManager(self.cfg)

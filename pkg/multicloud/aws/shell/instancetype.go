@@ -64,7 +64,7 @@ func init() {
 		return nil
 	})
 
-	// 获取带 zone的sku 列表
+	// 获取带 zone 的 sku 列表
 	shellutils.R(&SkuListOptions{}, "zone-offering-sku-list", "List all intance types offering", func(cli *aws.SRegion, args *SkuListOptions) error {
 		skus, err := cli.GetISkus()
 		if err != nil {
@@ -74,7 +74,7 @@ func init() {
 		return nil
 	})
 
-	// 获取 instanceType 价格
+	// 获取 instanceType 预付费价格
 	shellutils.R(&SkuListOptions{}, "zone-instance-price", "get price", func(cli *aws.SRegion, args *SkuListOptions) error {
 		skusPrice, err := cli.GetPrePaidPrice("", "g4dn.12xlarge")
 		if err != nil {

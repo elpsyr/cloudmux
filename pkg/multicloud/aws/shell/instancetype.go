@@ -32,6 +32,7 @@ func init() {
 		return nil
 	})
 
+	// --access-key xxx --secret xxx --region-id ap-southeast-2 sku-list
 	type SkuListOptions struct {
 		Arch      string
 		NextToken string
@@ -75,21 +76,27 @@ func init() {
 
 	// 获取 instanceType 价格
 	shellutils.R(&SkuListOptions{}, "zone-instance-price", "get price", func(cli *aws.SRegion, args *SkuListOptions) error {
-		skus, err := cli.GetPrePaidPrice("", "c6i.16xlarge")
+		skusPrice, err := cli.GetPrePaidPrice("", "g4dn.12xlarge")
 		if err != nil {
 			return err
 		}
-		printList(skus, 0, 0, 0, []string{})
+		printObject(struct {
+			Price float64
+		}{Price: skusPrice})
 		return nil
 	})
 
-	// 获取 instanceType 价格
-	shellutils.R(&SkuListOptions{}, "instance-post-paid-price", "get price", func(cli *aws.SRegion, args *SkuListOptions) error {
-		skus, err := cli.GetPostPaidPrice("", "m7a.48xlarge")
+	// 获取 instanceType 按量付费价格（https://aws.amazon.com/cn/ec2/pricing/on-demand/）
+	// aws usage:
+	// --access-key xxx --secret xxx --region-id ap-southeast-2 instance-post-paid-price
+	shellutils.R(&SkuListOptions{}, "instance-post-paid-price", "get post-paid price", func(cli *aws.SRegion, args *SkuListOptions) error {
+		skusPrice, err := cli.GetPostPaidPrice("", "g4dn.12xlarge")
 		if err != nil {
 			return err
 		}
-		printList(skus, 0, 0, 0, []string{})
+		printObject(struct {
+			Price float64
+		}{Price: skusPrice})
 		return nil
 	})
 

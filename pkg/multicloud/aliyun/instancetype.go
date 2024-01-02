@@ -323,16 +323,24 @@ func (self *SInstanceType) GetSysDiskMaxSizeGB() int {
 	return 0
 }
 
+// 本地盘  https://help.aliyun.com/zh/ecs/user-guide/local-disks
+// openapi  https://api.aliyun.com/api/Ecs/2014-05-26/DescribeInstanceTypes
+
+// GetAttachedDiskType 本地盘类型
+// local_hdd_pro：实例规格族 d1ne 和 d1 搭载的 SATA HDD 本地盘。
+// local_ssd_pro：实例规格族 i2、i2g、i1、ga1 和 gn5 等搭载的 NVMe SSD 本地盘。
 func (self *SInstanceType) GetAttachedDiskType() string {
-	return "iscsi"
+	return self.LocalStorageCategory
 }
 
+// GetAttachedDiskSizeGB 实例挂载的本地盘的单盘容量
 func (self *SInstanceType) GetAttachedDiskSizeGB() int {
-	return 0
+	return int(self.LocalStorageCapacity)
 }
 
+// GetAttachedDiskCount 实例挂载的本地盘的数量。
 func (self *SInstanceType) GetAttachedDiskCount() int {
-	return 0
+	return self.LocalStorageAmount
 }
 
 func (self *SInstanceType) GetDataDiskTypes() string {
@@ -340,7 +348,12 @@ func (self *SInstanceType) GetDataDiskTypes() string {
 }
 
 func (self *SInstanceType) GetDataDiskMaxCount() int {
-	return 6
+	// DiskQuantity为支持挂载的云盘数量上限，系统盘为 1 块云盘
+	if self.DiskQuantity < 1 {
+		return 0
+	}
+	return self.DiskQuantity - 1
+
 }
 
 func (self *SInstanceType) GetNicType() string {

@@ -21,6 +21,11 @@ import (
 )
 
 func init() {
+
+	// 获取 region 下 instanceTypes 列表
+	// aliyun usages：
+	// yunion.io/x/cloudmux/cmd/aliyuncli
+	// --access-key xxx --secret xxx --region-id me-east-1 instance-type-list
 	type InstanceTypeListOptions struct {
 	}
 	shellutils.R(&InstanceTypeListOptions{}, "instance-type-list", "List intance types", func(cli *aliyun.SRegion, args *InstanceTypeListOptions) error {

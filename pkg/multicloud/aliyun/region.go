@@ -1325,6 +1325,9 @@ func (self *SRegion) GetDescribePrice(zoneID, InstanceType, paidType string) (*S
 		log.Errorf("Unmarshal available resources details fail %s", err)
 		return nil, err
 	}
+	if instancePrice == nil {
+		return nil, errors.Errorf("body.Unmarshal err: return nil")
+	}
 
 	return instancePrice, nil
 }

@@ -229,6 +229,10 @@ func (self *SVpc) Delete() error {
 	return self.region.DeleteVpc(self.VpcId)
 }
 
+func (self *SVpc) Update(opts *cloudprovider.VpcUpdateOptions) error {
+	return self.region.UpdateVpc(opts)
+}
+
 func (self *SVpc) getNatGateways() ([]SNatGateway, error) {
 	natgatways := make([]SNatGateway, 0)
 	gwTotal := -1

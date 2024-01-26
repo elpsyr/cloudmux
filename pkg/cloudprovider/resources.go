@@ -633,6 +633,12 @@ type ICloudVpc interface {
 	GetICloudIPv6Gateways() ([]ICloudIPv6Gateway, error)
 }
 
+// ICloudVpcUltra  vpc 额外功能接口
+// define by cfel
+type ICloudVpcUltra interface {
+	Update(opts *VpcUpdateOptions) error // 更新 vpc 名称以及描述
+}
+
 type ICloudInternetGateway interface {
 	ICloudResource
 }

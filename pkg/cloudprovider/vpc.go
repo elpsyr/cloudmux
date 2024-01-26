@@ -20,3 +20,9 @@ type VpcCreateOptions struct {
 	GlobalVpcExternalId string
 	Desc                string
 }
+
+type VpcUpdateOptions struct {
+	ID   string
+	NAME string
+	Desc string
+}

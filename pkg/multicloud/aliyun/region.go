@@ -748,6 +748,20 @@ func (self *SRegion) DeleteVpc(vpcId string) error {
 	return err
 }
 
+// UpdateVpc 更新VPC名称以及描述
+func (self *SRegion) UpdateVpc(opts *cloudprovider.VpcUpdateOptions) error {
+	params := make(map[string]string)
+	params["VpcId"] = opts.ID
+	if opts.NAME != "" {
+		params["VpcName"] = opts.NAME
+	}
+	if opts.Desc != "" {
+		params["Description"] = opts.Desc
+	}
+	_, err := self.ecsRequest("ModifyVpcAttribute", params)
+	return err
+}
+
 func (self *SRegion) GetIHostById(id string) (cloudprovider.ICloudHost, error) {
 	izones, err := self.GetIZones()
 	if err != nil {

@@ -228,4 +228,15 @@ func init() {
 		return nil
 	})
 
+	type InstanceGetMonitorDataOptions struct {
+	}
+	shellutils.R(&InstanceGetMonitorDataOptions{}, "instance-monitor", "DescribeInstanceMonitorData", func(cli *aliyun.SRegion, args *InstanceGetMonitorDataOptions) error {
+		data, err := cli.DescribeInstanceMonitorData("i-uf6drcxl94dsfby1m6zh", "2024-02-22T01:00:00Z", "2024-02-22T02:00:00Z", "")
+		if err != nil {
+			return err
+		}
+		printList(data, 0, 0, 0, []string{})
+		return nil
+	})
+
 }

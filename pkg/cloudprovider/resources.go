@@ -397,12 +397,6 @@ type ICloudVM interface {
 	GetPowerStates() string
 }
 
-// ICloudVMUltra vm操作接口进阶操作
-// define by cfel
-type ICloudVMUltra interface {
-	RebootVM(ctx context.Context) error
-}
-
 type ICloudNic interface {
 	GetId() string
 	GetIP() string

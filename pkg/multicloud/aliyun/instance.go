@@ -1246,3 +1246,117 @@ func (self *SInstance) SaveImage(opts *cloudprovider.SaveImageOptions) (cloudpro
 	}
 	return image, nil
 }
+
+func (self *SInstance) GetMonitorData(start, end string) ([]cloudprovider.MonitorData, error) {
+	data, err := self.host.zone.region.DescribeInstanceMonitorData(self.InstanceId, start, end, "")
+	if err != nil {
+		return nil, errors.Wrap(err, "DescribeInstanceMonitorData")
+	}
+	// 将 []MonitorDataItem 转换成 []cloudprovider.MonitorData
+	var providerData []cloudprovider.MonitorData
+	for _, item := range data {
+		providerData = append(providerData, cloudprovider.MonitorData(item))
+	}
+	return providerData, nil
+}
+
+func (self *SRegion) DescribeInstanceMonitorData(instanceId, startTime, endTime, period string) ([]MonitorDataItem, error) {
+	params := map[string]string{
+		"InstanceId": instanceId,
+		"StartTime":  startTime,
+		"EndTime":    endTime,
+		"Period":     period,
+	}
+	if period == "" {
+		params["Period"] = "600" // 默认值：60
+	}
+	resp, err := self.ecsRequest("DescribeInstanceMonitorData", params)
+	if err != nil {
+		return nil, errors.Wrapf(err, "DescribeInstanceMonitorData")
+	}
+	ret := DescribeInstanceMonitorDataResponse{}
+	err = resp.Unmarshal(&ret)
+	if err != nil {
+		return nil, errors.Wrapf(err, "resp.Unmarshal")
+	}
+	return ret.MonitorData.InstanceMonitorData, nil
+}
+
+// DescribeInstanceMonitorDataResponse
+// DescribeInstanceMonitorData 接口返回数据结构
+type DescribeInstanceMonitorDataResponse struct {
+	RequestId   string `json:"RequestId"`
+	MonitorData struct {
+		InstanceMonitorData []MonitorDataItem `json:"InstanceMonitorData"`
+	} `json:"MonitorData"`
+}
+
+type MonitorDataItem struct {
+	IOPSRead          int    `json:"IOPSRead,omitempty"`
+	IntranetBandwidth int    `json:"IntranetBandwidth"`
+	IOPSWrite         int    `json:"IOPSWrite,omitempty"`
+	InstanceId        string `json:"InstanceId"`
+	IntranetTX        int    `json:"IntranetTX"`
+	CPU               int    `json:"CPU"`
+	BPSRead           int    `json:"BPSRead,omitempty"`
+	IntranetRX        int    `json:"IntranetRX"`
+	TimeStamp         string `json:"TimeStamp"`
+	InternetBandwidth int    `json:"InternetBandwidth"`
+	InternetTX        int    `json:"InternetTX"`
+	InternetRX        int    `json:"InternetRX"`
+	BPSWrite          int    `json:"BPSWrite,omitempty"`
+}
+
+var _ cloudprovider.MonitorData = (*MonitorDataItem)(nil)
+
+func (m MonitorDataItem) GetBPSRead() int {
+	return m.IOPSRead
+}
+
+func (m MonitorDataItem) GetInternetTX() int {
+	return m.InternetTX
+}
+
+func (m MonitorDataItem) GetCPU() int {
+	return m.CPU
+}
+
+func (m MonitorDataItem) GetIOPSWrite() int {
+	return m.IOPSWrite
+}
+
+func (m MonitorDataItem) GetIntranetTX() int {
+	return m.IntranetTX
+}
+
+func (m MonitorDataItem) GetInstanceId() string {
+	return m.InstanceId
+}
+
+func (m MonitorDataItem) GetBPSWrite() int {
+	return m.BPSWrite
+}
+
+func (m MonitorDataItem) GetIOPSRead() int {
+	return m.IOPSRead
+}
+
+func (m MonitorDataItem) GetInternetBandwidth() int {
+	return m.InternetBandwidth
+}
+
+func (m MonitorDataItem) GetInternetRX() int {
+	return m.InternetRX
+}
+
+func (m MonitorDataItem) GetTimeStamp() string {
+	return m.TimeStamp
+}
+
+func (m MonitorDataItem) GetIntranetRX() int {
+	return m.IntranetRX
+}
+
+func (m MonitorDataItem) GetIntranetBandwidth() int {
+	return m.IntranetBandwidth
+}

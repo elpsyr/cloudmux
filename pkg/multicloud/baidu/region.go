@@ -29,7 +29,6 @@ var regions = map[string]string{
 	"hkg": "香港",
 	"fwh": "武汉",
 	"bd":  "保定",
-	"sin": "新加坡",
 	"fsh": "上海",
 }
 

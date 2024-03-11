@@ -106,6 +106,7 @@ func CloudImage2Image(image ICloudImage) SImage {
 }
 
 type SImageCreateOption struct {
+	IsProtected    bool
 	ImageId        string
 	ExternalId     string
 	ImageName      string

@@ -39,6 +39,10 @@ func (r *SRegion) GetIHosts() ([]cloudprovider.ICloudHost, error) {
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetIHosts")
 }
 
+func (r *SRegion) GetBareMetalIHosts(zoneId string) ([]cloudprovider.ICloudHost, error) {
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetIBareMetalHosts")
+}
+
 func (r *SRegion) GetISnapshotById(snapshotId string) (cloudprovider.ICloudSnapshot, error) {
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetISnapshotById")
 }

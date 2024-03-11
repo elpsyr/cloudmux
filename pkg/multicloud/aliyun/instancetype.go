@@ -23,6 +23,7 @@ import (
 // InstanceBandwidthRx":26214400,"InstanceBandwidthTx":26214400,"InstancePpsRx":4500000,"InstancePpsTx":4500000
 
 type SInstanceType struct {
+	SInstanceTypeCFEL
 	BaselineCredit       int
 	CpuCoreCount         int
 	MemorySize           float32

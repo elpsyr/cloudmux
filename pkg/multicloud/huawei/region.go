@@ -35,6 +35,9 @@ type Locales struct {
 	ZhCN string `json:"zh-cn"`
 }
 
+// Verify that *SInstanceType implements ICloudSku、ICloudSkuUltra
+var _ cloudprovider.ICfelCloudRegion = (*SRegion)(nil)
+
 type SRegion struct {
 	multicloud.SRegion
 

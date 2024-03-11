@@ -29,7 +29,6 @@ var regions = map[string]string{
 	"hkg": "香港",
 	"fwh": "武汉",
 	"bd":  "保定",
-	"sin": "新加坡",
 	"fsh": "上海",
 }
 
@@ -41,6 +40,7 @@ type SRegion struct {
 
 	Region     string
 	RegionName string
+	SCfelRegion
 }
 
 func (self *SRegion) GetId() string {
@@ -131,7 +131,7 @@ func (self *SRegion) GetIEips() ([]cloudprovider.ICloudEIP, error) {
 }
 
 func (self *SRegion) GetIZones() ([]cloudprovider.ICloudZone, error) {
-	return nil, cloudprovider.ErrNotImplemented
+	return self.GetICfelZones()
 }
 
 func (self *SRegion) GetIZoneById(id string) (cloudprovider.ICloudZone, error) {

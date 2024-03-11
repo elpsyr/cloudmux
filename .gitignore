@@ -20,6 +20,7 @@
 # Folders
 _obj
 _test
+vendor
 
 .VERSION
 .DS_Store

@@ -232,6 +232,9 @@ func doRequest(client *sdk.Client, domain, apiVersion, apiName string, params ma
 					"InvalidFileSystemStatus.Ordering",    // Message: The filesystem is ordering now, please check it later.
 					"OperationUnsupported.EipNatBWPCheck": // create nat snat
 					retry = true
+				case "Throttling": // cfel 限流
+					time.Sleep(time.Second * 60)
+					retry = true
 				default:
 					if strings.HasPrefix(code, "EntityNotExist.") || strings.HasSuffix(code, ".NotFound") || strings.HasSuffix(code, "NotExist") {
 						if strings.HasPrefix(apiName, "Delete") {
@@ -282,6 +285,7 @@ func _jsonRequest(client *sdk.Client, domain string, version string, apiName str
 	req.Domain = domain
 	req.Version = version
 	req.ApiName = apiName
+	req.ReadTimeout = time.Second * 30
 	if params != nil {
 		for k, v := range params {
 			req.QueryParams[k] = v

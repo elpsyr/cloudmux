@@ -178,6 +178,7 @@ type SManagedVMChangeConfig struct {
 	CpuSocket    int
 	MemoryMB     int
 	InstanceType string
+	AutoStart bool
 }
 
 type SManagedVMRebuildRootConfig struct {

@@ -48,7 +48,12 @@ const (
 	VM_POWER_STATES_OFF = "off"
 	VM_POWER_STATES_ON  = "on"
 
-	HYPERVISOR_ESXI = "esxi"
+	HYPERVISOR_KVM       = "kvm"
+	HYPERVISOR_CONTAINER = "container"
+	HYPERVISOR_BAREMETAL = "baremetal"
+	HYPERVISOR_ESXI      = "esxi"
+	HYPERVISOR_HYPERV    = "hyperv"
+	HYPERVISOR_XEN       = "xen"
 
 	HYPERVISOR_ALIYUN         = "aliyun"
 	HYPERVISOR_APSARA         = "apsara"

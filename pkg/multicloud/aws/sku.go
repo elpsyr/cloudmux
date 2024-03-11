@@ -177,6 +177,7 @@ func (self *SRegion) GetInstanceTypes() ([]SInstanceType, error) {
 
 type Sku struct {
 	InstanceType string `xml:"instanceType"`
+	SCfelSku
 }
 
 func (self *SRegion) DescribeInstanceTypes(arch string, nextToken string) ([]Sku, string, error) {

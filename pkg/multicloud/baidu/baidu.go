@@ -113,6 +113,8 @@ func (self *SBaiduClient) getUrl(service, regionId, resource string) (string, er
 		regionId = BAIDU_DEFAULT_REGION
 	}
 	switch service {
+	case "bcc": // 云服务器BCC
+		return fmt.Sprintf("https://bcc.%s.baidubce.com/%s", regionId, strings.TrimPrefix(resource, "/")), nil
 	case "bbc":
 		return fmt.Sprintf("https://bbc.%s.baidubce.com/%s", regionId, strings.TrimPrefix(resource, "/")), nil
 	case "bos":

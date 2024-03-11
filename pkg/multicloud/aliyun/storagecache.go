@@ -61,7 +61,7 @@ func (self *SStoragecache) IsEmulated() bool {
 }
 
 func (self *SStoragecache) GetICloudImages() ([]cloudprovider.ICloudImage, error) {
-	return nil, cloudprovider.ErrNotImplemented
+	return self.CfelGetICloudImages()
 }
 
 func (self *SStoragecache) GetICustomizedCloudImages() ([]cloudprovider.ICloudImage, error) {

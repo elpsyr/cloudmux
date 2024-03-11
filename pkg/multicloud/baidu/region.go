@@ -40,6 +40,7 @@ type SRegion struct {
 
 	Region     string
 	RegionName string
+	SCfelRegion
 }
 
 func (self *SRegion) GetId() string {
@@ -130,7 +131,7 @@ func (self *SRegion) GetIEips() ([]cloudprovider.ICloudEIP, error) {
 }
 
 func (self *SRegion) GetIZones() ([]cloudprovider.ICloudZone, error) {
-	return nil, cloudprovider.ErrNotImplemented
+	return self.GetICfelZones()
 }
 
 func (self *SRegion) GetIZoneById(id string) (cloudprovider.ICloudZone, error) {

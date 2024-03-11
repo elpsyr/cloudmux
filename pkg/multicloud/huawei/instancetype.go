@@ -22,6 +22,7 @@ import (
 )
 
 type SInstanceType struct {
+	SCfelInstanceType
 	ID           string       `json:"id"`
 	Name         string       `json:"name"`
 	Vcpus        string       `json:"vcpus"`
@@ -31,6 +32,7 @@ type SInstanceType struct {
 
 type OSExtraSpecs struct {
 	EcsPerformancetype string `json:"ecs:performancetype"`
+	CfelOSExtraSpecs
 }
 
 // https://console.huaweicloud.com/apiexplorer/#/openapi/ECS/doc?api=ListFlavors

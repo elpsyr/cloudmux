@@ -17,7 +17,7 @@ package shell
 import (
 	"yunion.io/x/pkg/util/shellutils"
 
-	"yunion.io/x/onecloud/pkg/mcclient/cloudpods"
+	"yunion.io/x/cloudmux/pkg/multicloud/cloudpods"
 )
 
 func init() {

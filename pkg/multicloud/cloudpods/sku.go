@@ -23,6 +23,7 @@ import (
 )
 
 type SServerSku struct {
+	SInstanceTypeCFEL
 	multicloud.SResourceBase
 	CloudpodsTags
 	region *SRegion

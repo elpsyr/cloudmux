@@ -140,7 +140,7 @@ func (self *SRegion) CreateISecurityGroup(opts *cloudprovider.SecurityGroupCreat
 }
 
 func (self *SRegion) GetISecurityGroups() ([]cloudprovider.ICloudSecurityGroup, error) {
-	secgroups, err := self.GetSecurityGroups()
+	secgroups, err := self.CfelGetSecurityGroups()
 	if err != nil {
 		return nil, err
 	}

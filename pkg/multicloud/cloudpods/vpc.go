@@ -127,7 +127,7 @@ func (self *SRegion) CreateWire(opts *cloudprovider.SWireCreateOptions, vpcId, d
 }
 
 func (self *SVpc) GetISecurityGroups() ([]cloudprovider.ICloudSecurityGroup, error) {
-	return self.CfelGetISecurityGroups()
+	return []cloudprovider.ICloudSecurityGroup{}, nil
 }
 
 func (self *SRegion) CreateIVpc(opts *cloudprovider.VpcCreateOptions) (cloudprovider.ICloudVpc, error) {

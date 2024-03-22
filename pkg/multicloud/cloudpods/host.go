@@ -162,7 +162,8 @@ func (host *SHost) GetStorageType() string {
 }
 
 func (host *SHost) GetHostType() string {
-	return api.HOST_TYPE_CLOUDPODS
+	//return api.HOST_TYPE_CLOUDPODS
+	return host.HostType
 }
 
 func (host *SHost) GetIsMaintenance() bool {

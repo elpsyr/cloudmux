@@ -1,6 +1,10 @@
 package cloudpods
 
-import "yunion.io/x/cloudmux/pkg/cloudprovider"
+import (
+	"yunion.io/x/jsonutils"
+	modules "yunion.io/x/onecloud/pkg/mcclient/modules/image"
+	"yunion.io/x/cloudmux/pkg/cloudprovider"
+)
 
 // Verify that *SRegion implements ICfelCloudRegion
 // 私有云 无需实现价格接口
@@ -42,4 +46,27 @@ func (self *SRegion) GetIVMs() ([]cloudprovider.ICloudVM, error) {
 		ret = append(ret, &instances[i])
 	}
 	return ret, nil
+}
+
+func (self *SRegion) CreateImageByUrl(opts *cloudprovider.CfelSImageCreateOption) (cloudprovider.ICloudImage,error) {
+	params := map[string]interface{}{
+		"generate_name": opts.ImageName,
+		"protected": opts.IsProtected,
+		"copy_from": opts.CopyFrom,
+		"properties": map[string]string{
+			"os_type":         opts.OsType,
+			"os_distribution": opts.OsDistribution,
+			"os_arch":         opts.OsArch,
+			"os_version":      opts.OsVersion,
+		},
+	}
+	res,err := modules.Images.Create(self.cli.s,jsonutils.Marshal(params))
+	if err != nil {
+		return nil, err
+	}
+	var image SImage
+	if err := res.Unmarshal(&image);err != nil {
+		return nil,err
+	}
+	return &image,nil
 }

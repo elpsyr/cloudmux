@@ -2,8 +2,8 @@ package cloudpods
 
 import (
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
-	modules "yunion.io/x/onecloud/pkg/mcclient/modules/compute"
 	api "yunion.io/x/onecloud/pkg/apis/compute"
+	modules "yunion.io/x/onecloud/pkg/mcclient/modules/compute"
 )
 
 func (self *SRegion) CfelGetSecurityGroups() ([]SSecurityGroup, error) {
@@ -15,7 +15,7 @@ func (self *SRegion) CfelGetSecurityGroups() ([]SSecurityGroup, error) {
 }
 
 func (self *SSecurityGroup) CreateRule(opts *cloudprovider.SecurityGroupRuleCreateOptions) (cloudprovider.ISecurityGroupRule, error) {
-	return self.region.CfelCreateSecRule(self.Id,opts)
+	return self.region.CfelCreateSecRule(self.Id, opts)
 }
 
 func (self *SRegion) CfelCreateSecRule(secId string, opts *cloudprovider.SecurityGroupRuleCreateOptions) (cloudprovider.ISecurityGroupRule, error) {
@@ -29,7 +29,6 @@ func (self *SRegion) CfelCreateSecRule(secId string, opts *cloudprovider.Securit
 	input.CIDR = opts.CIDR
 
 	input.Ports = opts.Ports
-	// ret := struct{}{}
 	var ret = &SecurityGroupRule{region: self}
-	return ret,self.create(&modules.SecGroupRules, input, &ret)
+	return ret, self.create(&modules.SecGroupRules, input, &ret)
 }

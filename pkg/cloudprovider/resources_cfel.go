@@ -13,6 +13,8 @@ type ICfelCloudRegion interface {
 	GetPrePaidStatus(zoneID, instanceType string) (string, error)      //  包年包月 售卖状态
 
 	CreateBareMetal(desc *SManagedVMCreateConfig) (ICloudVM, error)
+	CreateImageByUrl(params *CfelSImageCreateOption) (ICloudImage,error)
+	GetImageByID(id string) (ICloudImage, error)
 }
 
 type ICfelCloudSku interface {

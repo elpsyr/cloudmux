@@ -68,5 +68,5 @@ func (self *SecurityGroupRule) Delete() error {
 }
 
 func (self *SecurityGroupRule) Update(opts *cloudprovider.SecurityGroupRuleUpdateOptions) error {
-	return cloudprovider.ErrNotImplemented
+	return self.region.cli.update(&modules.SecGroupRules,self.Id,opts)
 }

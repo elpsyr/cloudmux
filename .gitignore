@@ -39,3 +39,4 @@ _testmain.go
 _output
 
 .idea
+vendor

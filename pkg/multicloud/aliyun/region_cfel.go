@@ -209,3 +209,7 @@ func (self *SRegion) UpdateVpc(opts *cloudprovider.VpcUpdateOptions) error {
 	_, err := self.ecsRequest("ModifyVpcAttribute", params)
 	return err
 }
+
+func (self *SRegion) CreateBareMetal(opts *cloudprovider.SManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
+	return nil, cloudprovider.ErrNotImplemented
+}

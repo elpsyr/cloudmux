@@ -1,6 +1,9 @@
 package cloudpods
 
-import "yunion.io/x/cloudmux/pkg/cloudprovider"
+import (
+	"yunion.io/x/cloudmux/pkg/cloudprovider"
+	api "yunion.io/x/onecloud/pkg/apis/compute"
+)
 
 // Verify that *SRegion implements ICfelCloudRegion
 var _ cloudprovider.ICfelCloudSku = (*SServerSku)(nil)
@@ -32,4 +35,15 @@ func (self *SServerSku) GetGPUMemorySizeMB() int {
 
 func (self *SServerSku) GetIsBareMetal() bool {
 	return false
+}
+
+func (self *SRegion) CreateBareMetal(opts *cloudprovider.SManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
+	hypervisor := api.HYPERVISOR_BAREMETAL
+	ins, err := self.CreateInstance("", hypervisor, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	hostInstance, err := self.GetHostInstance(ins.GetId())
+	return hostInstance, nil
 }

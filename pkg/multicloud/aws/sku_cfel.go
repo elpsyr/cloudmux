@@ -799,3 +799,7 @@ func getInstanceFamily(instanceType string) string {
 	}
 	return ""
 }
+
+func (self *SRegion) CreateBareMetal(opts *cloudprovider.SManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
+	return nil, cloudprovider.ErrNotImplemented
+}

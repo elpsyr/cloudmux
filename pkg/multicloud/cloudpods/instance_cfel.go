@@ -57,19 +57,19 @@ func (self *SRegion) RebootVM(instanceId string) error {
 func (self *SRegion) GetHostInstance(instanceId string) (cloudprovider.ICloudVM, error) {
 	instance, err := self.GetIVMById(instanceId)
 	if err != nil {
-		log.Errorf("Fail to GetInstance on RebootVM: %s", err)
+		log.Errorf("GetIVMById: %s", err)
 		return instance, err
 	}
 	host, err := self.GetHost(instance.GetIHostId())
 	if err != nil {
-		log.Errorf("Fail to GetHost on RebootVM: %s", err)
+		log.Errorf("GetHost err: %s", err)
 		return instance, err
 	}
 	// add host
 	instance, err = host.GetIVMById(instanceId)
 
 	if err != nil {
-		log.Errorf("Fail to get instance status on RebootVM: %s", err)
+		log.Errorf("GetIVMById err: %s", err)
 		return instance, err
 	}
 
@@ -78,4 +78,13 @@ func (self *SRegion) GetHostInstance(instanceId string) (cloudprovider.ICloudVM,
 
 func (self *SInstance) GetMonitorData(start, end string) ([]cloudprovider.ICfelMonitorData, error) {
 	return nil, cloudprovider.ErrNotImplemented
+}
+
+func (self *SRegion) CreateBareMetal(opts *cloudprovider.SManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
+	hypervisor := api.HYPERVISOR_BAREMETAL
+	ins, err := self.CreateInstance("", hypervisor, opts)
+	if err != nil {
+		return nil, err
+	}
+	return ins, nil
 }

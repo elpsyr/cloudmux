@@ -16,3 +16,11 @@ type CfelSImageCreateOption struct {
 	OsVersion      string `json:"os_version,omitempty"`
 	OsFullVersion  string `json:"os_full_version,omitempty"`
 }
+
+type CfelResetGuestPasswordOption struct {
+	GuestID       string `json:"guest_id,omitempty"`
+	ResetPassword bool   `json:"reset_password,omitempty"`
+	AutoStart     bool   `json:"auto_start,omitempty"`
+	Password      string `json:"password,omitempty"`
+	UserName      string `json:"username,omitempty"`
+}

@@ -3,6 +3,8 @@ package cloudpods
 import (
 	"context"
 	"time"
+	modules "yunion.io/x/onecloud/pkg/mcclient/modules/compute"
+	"yunion.io/x/jsonutils"
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/log"
@@ -87,4 +89,35 @@ func (self *SRegion) CreateBareMetal(opts *cloudprovider.SManagedVMCreateConfig)
 		return nil, err
 	}
 	return ins, nil
+}
+
+func (self *SRegion) ResetGuestPassword(params *cloudprovider.CfelResetGuestPasswordOption) (cloudprovider.ICloudVM, error) {
+	instance, err := self.GetIVMById(params.GuestID)
+	if err != nil {
+		log.Errorf("Fail to GetIVMById on ResetGuestPassword: %s", err)
+		return instance, err
+	}
+	param := map[string]interface{}{
+		"reset_password": params.ResetPassword,
+		"auto_start":     params.AutoStart,
+		"password":       params.Password,
+		"username":       params.UserName,
+	}
+	var vm SInstance
+	res, err := self.perform(&modules.Servers, params.GuestID, "set-password", jsonutils.Marshal(param))
+	if err != nil {
+		log.Errorf("Fail  ResetGuestPassword: %s", err)
+		return instance, err
+	}
+	return &vm, res.Unmarshal(&vm)
+}
+
+func (self *SRegion) PingQga(guestId string, timeout int) (bool, error) {
+	param := map[string]interface{}{"timeout": timeout}
+	res, err := self.perform(&modules.Servers, guestId, "qga-ping", jsonutils.Marshal(param))
+	if err != nil {
+		log.Errorf("Fail PingQga: %s", err)
+		return false, err
+	}
+	return res.IsZero(), nil
 }

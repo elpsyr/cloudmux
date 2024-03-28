@@ -1,9 +1,10 @@
 package cloudpods
 
 import (
-	"yunion.io/x/jsonutils"
-	modules "yunion.io/x/onecloud/pkg/mcclient/modules/image"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
+	"yunion.io/x/jsonutils"
+	disk "yunion.io/x/onecloud/pkg/mcclient/modules/compute"
+	modules "yunion.io/x/onecloud/pkg/mcclient/modules/image"
 )
 
 // Verify that *SRegion implements ICfelCloudRegion
@@ -48,11 +49,11 @@ func (self *SRegion) GetIVMs() ([]cloudprovider.ICloudVM, error) {
 	return ret, nil
 }
 
-func (self *SRegion) CreateImageByUrl(opts *cloudprovider.CfelSImageCreateOption) (cloudprovider.ICloudImage,error) {
+func (self *SRegion) CreateImageByUrl(opts *cloudprovider.CfelSImageCreateOption) (cloudprovider.ICloudImage, error) {
 	params := map[string]interface{}{
 		"generate_name": opts.ImageName,
-		"protected": opts.IsProtected,
-		"copy_from": opts.CopyFrom,
+		"protected":     opts.IsProtected,
+		"copy_from":     opts.CopyFrom,
 		"properties": map[string]string{
 			"os_type":         opts.OsType,
 			"os_distribution": opts.OsDistribution,
@@ -60,13 +61,33 @@ func (self *SRegion) CreateImageByUrl(opts *cloudprovider.CfelSImageCreateOption
 			"os_version":      opts.OsVersion,
 		},
 	}
-	res,err := modules.Images.Create(self.cli.s,jsonutils.Marshal(params))
+	res, err := modules.Images.Create(self.cli.s, jsonutils.Marshal(params))
 	if err != nil {
 		return nil, err
 	}
 	var image SImage
-	if err := res.Unmarshal(&image);err != nil {
-		return nil,err
+	if err := res.Unmarshal(&image); err != nil {
+		return nil, err
 	}
-	return &image,nil
+	return &image, nil
 }
+
+func (self *SRegion) CfelCreateDisk(opts *cloudprovider.CfelDiskCreateConfig) (cloudprovider.ICloudDisk, error) {
+	params := map[string]interface{}{
+		"name":        opts.Name,
+		"size":        opts.SizeGb,
+		"backend":     opts.Backend,
+		"medium":      opts.Medium,
+		"description": opts.Desc,
+	}
+	res, err := disk.Disks.Create(self.cli.s, jsonutils.Marshal(params))
+	if err != nil {
+		return nil, err
+	}
+	var dd SDisk
+	if err := res.Unmarshal(&dd); err != nil {
+		return nil, err
+	}
+	return &dd, nil
+}
+

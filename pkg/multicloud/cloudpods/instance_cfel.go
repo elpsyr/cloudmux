@@ -3,11 +3,11 @@ package cloudpods
 import (
 	"context"
 	"time"
-	modules "yunion.io/x/onecloud/pkg/mcclient/modules/compute"
-	"yunion.io/x/jsonutils"
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
+	"yunion.io/x/jsonutils"
 	"yunion.io/x/log"
+	modules "yunion.io/x/onecloud/pkg/mcclient/modules/compute"
 )
 
 var _ cloudprovider.ICfelCloudVM = (*SInstance)(nil)
@@ -120,4 +120,23 @@ func (self *SRegion) PingQga(guestId string, timeout int) (bool, error) {
 		return false, err
 	}
 	return res.IsZero(), nil
+}
+
+func (self *SRegion) CfelAttachDisk(instanceId, diskId string) error {
+	// input := api.ServerAttachDiskInput{}
+	// input.DiskId = diskId
+	input := map[string]interface{}{
+		"disk_id": diskId,
+	}
+	_, err := self.perform(&modules.Servers, instanceId, "attachdisk", input)
+	return err
+}
+
+func (self *SRegion) CfelDetachDisk(instanceId, diskId string) error {
+	input := map[string]interface{}{
+		"disk_id":   diskId,
+		"keep_disk": true,
+	}
+	_, err := self.perform(&modules.Servers, instanceId, "detachdisk", input)
+	return err
 }

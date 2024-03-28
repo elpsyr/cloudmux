@@ -17,6 +17,10 @@ type ICfelCloudRegion interface {
 	GetImageByID(id string) (ICloudImage, error)
 	ResetGuestPassword(params *CfelResetGuestPasswordOption) (ICloudVM, error)
 	PingQga(guestId string, timeout int) (bool, error)
+
+	CfelCreateDisk(params *CfelDiskCreateConfig) (ICloudDisk, error)
+	CfelAttachDisk(instanceId,diskId string) error
+	CfelDetachDisk(instanceId,diskId string) error
 }
 
 type ICfelCloudSku interface {

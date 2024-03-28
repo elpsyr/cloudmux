@@ -26,3 +26,15 @@ func (self *SRegion) ResetGuestPassword(params *cloudprovider.CfelResetGuestPass
 func (self *SRegion) PingQga(guestId string, timeout int) (bool, error) {
 	return false, errors.Wrapf(cloudprovider.ErrNotImplemented, "ResetGuestPassword")
 }
+
+func (self *SRegion) CfelCreateDisk(params *cloudprovider.CfelDiskCreateConfig)(cloudprovider.ICloudDisk,error) {
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "CfelCreateDisk")
+}
+
+func (self *SRegion) CfelAttachDisk(instanceId,diskId string) error {
+	return errors.Wrapf(cloudprovider.ErrNotImplemented, "CfelCreateDisk")
+}
+
+func (self *SRegion) CfelDetachDisk(instanceId,diskId string) error {
+	return errors.Wrapf(cloudprovider.ErrNotImplemented, "CfelCreateDisk")
+}

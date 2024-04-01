@@ -10,6 +10,10 @@ func (self *SRegion) CreateBareMetal(opts *cloudprovider.SManagedVMCreateConfig)
 
 }
 
+func (self *SRegion) CreateVM(opts *cloudprovider.SManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "CreateVM")
+
+}
 func (self *SRegion) CreateImageByUrl(params *cloudprovider.CfelSImageCreateOption) (cloudprovider.ICloudImage, error) {
 
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "CreateImageByUrl")

@@ -3,10 +3,12 @@ package cloudpods
 import (
 	"context"
 	"time"
+
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/jsonutils"
 	"yunion.io/x/log"
+	compute "yunion.io/x/onecloud/pkg/apis/compute"
 	modules "yunion.io/x/onecloud/pkg/mcclient/modules/compute"
 )
 
@@ -40,7 +42,7 @@ func (self *SRegion) RebootVM(instanceId string) error {
 		return err
 	}
 
-	err = cloudprovider.WaitStatus(self, api.VM_READY, 10*time.Second, 300*time.Second) // 5mintues
+	err = cloudprovider.WaitStatus(instance, api.VM_READY, 10*time.Second, 300*time.Second) // 5mintues
 	if err != nil {
 		log.Errorf("Fail to RebootVM  , first step StopVM failed : %s", err)
 		return err
@@ -53,7 +55,7 @@ func (self *SRegion) RebootVM(instanceId string) error {
 	if err != nil {
 		return err
 	}
-	return cloudprovider.WaitStatus(self, api.VM_RUNNING, 10*time.Second, 300*time.Second) // 5mintues
+	return cloudprovider.WaitStatus(instance, api.VM_RUNNING, 10*time.Second, 300*time.Second) // 5mintues
 }
 
 func (self *SRegion) GetHostInstance(instanceId string) (cloudprovider.ICloudVM, error) {
@@ -62,7 +64,7 @@ func (self *SRegion) GetHostInstance(instanceId string) (cloudprovider.ICloudVM,
 		log.Errorf("GetIVMById: %s", err)
 		return instance, err
 	}
-	host, err := self.GetHost(instance.GetIHostId())
+	host, err := self.GetIHostById(instance.GetIHostId())
 	if err != nil {
 		log.Errorf("GetHost err: %s", err)
 		return instance, err
@@ -84,7 +86,16 @@ func (self *SInstance) GetMonitorData(start, end string) ([]cloudprovider.ICfelM
 
 func (self *SRegion) CreateBareMetal(opts *cloudprovider.SManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
 	hypervisor := api.HYPERVISOR_BAREMETAL
-	ins, err := self.CreateInstance("", hypervisor, opts)
+	ins, err := self.cfelCreateInstance("", hypervisor, opts)
+	if err != nil {
+		return nil, err
+	}
+	return ins, nil
+}
+
+func (self *SRegion) CreateVM(opts *cloudprovider.SManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
+	hypervisor := api.HYPERVISOR_KVM
+	ins, err := self.cfelCreateInstance("", hypervisor, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -139,4 +150,57 @@ func (self *SRegion) CfelDetachDisk(instanceId, diskId string) error {
 	}
 	_, err := self.perform(&modules.Servers, instanceId, "detachdisk", input)
 	return err
+}
+
+func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudprovider.SManagedVMCreateConfig) (*SInstance, error) {
+	input := compute.ServerCreateInput{
+		ServerConfigs: &compute.ServerConfigs{},
+	}
+	input.Name = opts.Name
+	input.Hostname = opts.Hostname
+	input.Description = opts.Description
+	input.InstanceType = opts.InstanceType
+	input.VcpuCount = opts.Cpu
+	input.VmemSize = opts.MemoryMB
+	input.Password = opts.Password
+	input.PublicIpBw = opts.PublicIpBw
+	input.PublicIpChargeType = string(opts.PublicIpChargeType)
+	input.ProjectId = opts.ProjectId
+	input.Metadata = opts.Tags
+	input.UserData = opts.UserData
+	input.PreferHost = hostId
+	input.Hypervisor = hypervisor
+	input.AutoStart = true
+	input.DisableDelete = new(bool)
+	if len(input.UserData) > 0 {
+		input.EnableCloudInit = true
+	}
+	input.Secgroups = opts.ExternalSecgroupIds
+	if opts.BillingCycle != nil {
+		input.Duration = opts.BillingCycle.String()
+	}
+	input.Disks = append(input.Disks, &compute.DiskConfig{
+		Index:    0,
+		ImageId:  opts.ExternalImageId,
+		DiskType: api.DISK_TYPE_SYS,
+		SizeMb:   opts.SysDisk.SizeGB * 1024,
+		Backend:  opts.SysDisk.StorageType,
+		Storage:  opts.SysDisk.StorageExternalId,
+	})
+	for idx, disk := range opts.DataDisks {
+		input.Disks = append(input.Disks, &compute.DiskConfig{
+			Index:    idx + 1,
+			DiskType: api.DISK_TYPE_DATA,
+			SizeMb:   disk.SizeGB * 1024,
+			Backend:  disk.StorageType,
+			Storage:  disk.StorageExternalId,
+		})
+	}
+	input.Networks = append(input.Networks, &compute.NetworkConfig{
+		Index:   0,
+		Network: opts.ExternalNetworkId,
+		Address: opts.IpAddr,
+	})
+	ins := &SInstance{}
+	return ins, self.create(&modules.Servers, input, ins)
 }

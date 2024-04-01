@@ -91,3 +91,15 @@ func (self *SRegion) CfelCreateDisk(opts *cloudprovider.CfelDiskCreateConfig) (c
 	return &dd, nil
 }
 
+func (self *SRegion) CfelGetINetworks() ([]cloudprovider.ICloudNetwork, error) {
+	networks,err := self.GetNetworks("")
+	if err != nil {
+		return nil, err
+	}
+	ret := []cloudprovider.ICloudNetwork{}
+	for i := range networks {
+		// networks[i].wire = self
+		ret = append(ret, &networks[i])
+	}
+	return ret, nil
+}

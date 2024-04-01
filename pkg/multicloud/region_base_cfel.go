@@ -46,3 +46,7 @@ func (self *SRegion) CfelDetachDisk(instanceId,diskId string) error {
 func (self *SRegion) CfelInstanceSettingChange(id string,params *cloudprovider.CfelChangeSettingOption) error {
 	return errors.Wrapf(cloudprovider.ErrNotImplemented, "CfelInstanceSettingChange")
 }
+
+func (self *SRegion) CfelGetINetworks() ([]cloudprovider.ICloudNetwork, error) {
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetINetworks")
+}

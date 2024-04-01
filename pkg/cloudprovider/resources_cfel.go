@@ -23,6 +23,7 @@ type ICfelCloudRegion interface {
 	CfelAttachDisk(instanceId,diskId string) error
 	CfelDetachDisk(instanceId,diskId string) error
 	CfelInstanceSettingChange(id string,params *CfelChangeSettingOption) error //虚拟机配置修改
+	CfelGetINetworks() ([]ICloudNetwork, error)
 }
 
 type ICfelCloudSku interface {

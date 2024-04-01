@@ -22,6 +22,7 @@ type ICfelCloudRegion interface {
 	CfelCreateDisk(params *CfelDiskCreateConfig) (ICloudDisk, error)
 	CfelAttachDisk(instanceId,diskId string) error
 	CfelDetachDisk(instanceId,diskId string) error
+	CfelInstanceSettingChange(id string,params *CfelChangeSettingOption) error //虚拟机配置修改
 }
 
 type ICfelCloudSku interface {

@@ -152,6 +152,14 @@ func (self *SRegion) CfelDetachDisk(instanceId, diskId string) error {
 	return err
 }
 
+func (self *SRegion) CfelInstanceSettingChange(id string,opts *cloudprovider.CfelChangeSettingOption) error {
+	
+	_,err := modules.Servers.Update(self.cli.s,id,jsonutils.Marshal(opts))
+	return err
+}
+
+
+
 func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudprovider.SManagedVMCreateConfig) (*SInstance, error) {
 	input := compute.ServerCreateInput{
 		ServerConfigs: &compute.ServerConfigs{},

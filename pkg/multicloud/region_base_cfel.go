@@ -42,3 +42,7 @@ func (self *SRegion) CfelAttachDisk(instanceId,diskId string) error {
 func (self *SRegion) CfelDetachDisk(instanceId,diskId string) error {
 	return errors.Wrapf(cloudprovider.ErrNotImplemented, "CfelCreateDisk")
 }
+
+func (self *SRegion) CfelInstanceSettingChange(id string,params *cloudprovider.CfelChangeSettingOption) error {
+	return errors.Wrapf(cloudprovider.ErrNotImplemented, "CfelInstanceSettingChange")
+}

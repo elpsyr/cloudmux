@@ -5,12 +5,12 @@ import (
 	"yunion.io/x/pkg/errors"
 )
 
-func (self *SRegion) CreateBareMetal(opts *cloudprovider.SManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
+func (self *SRegion) CreateBareMetal(opts *cloudprovider.CfelSManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "CreateBareMetal")
 
 }
 
-func (self *SRegion) CreateVM(opts *cloudprovider.SManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
+func (self *SRegion) CreateVM(opts *cloudprovider.CfelSManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "CreateVM")
 
 }
@@ -31,19 +31,19 @@ func (self *SRegion) PingQga(guestId string, timeout int) (bool, error) {
 	return false, errors.Wrapf(cloudprovider.ErrNotImplemented, "ResetGuestPassword")
 }
 
-func (self *SRegion) CfelCreateDisk(params *cloudprovider.CfelDiskCreateConfig)(cloudprovider.ICloudDisk,error) {
+func (self *SRegion) CfelCreateDisk(params *cloudprovider.CfelDiskCreateConfig) (cloudprovider.ICloudDisk, error) {
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "CfelCreateDisk")
 }
 
-func (self *SRegion) CfelAttachDisk(instanceId,diskId string) error {
+func (self *SRegion) CfelAttachDisk(instanceId, diskId string) error {
 	return errors.Wrapf(cloudprovider.ErrNotImplemented, "CfelCreateDisk")
 }
 
-func (self *SRegion) CfelDetachDisk(instanceId,diskId string) error {
+func (self *SRegion) CfelDetachDisk(instanceId, diskId string) error {
 	return errors.Wrapf(cloudprovider.ErrNotImplemented, "CfelCreateDisk")
 }
 
-func (self *SRegion) CfelInstanceSettingChange(id string,params *cloudprovider.CfelChangeSettingOption) error {
+func (self *SRegion) CfelInstanceSettingChange(id string, params *cloudprovider.CfelChangeSettingOption) error {
 	return errors.Wrapf(cloudprovider.ErrNotImplemented, "CfelInstanceSettingChange")
 }
 

@@ -210,6 +210,6 @@ func (self *SRegion) UpdateVpc(opts *cloudprovider.VpcUpdateOptions) error {
 	return err
 }
 
-func (self *SRegion) CreateBareMetal(opts *cloudprovider.SManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
+func (self *SRegion) CreateBareMetal(opts *cloudprovider.CfelSManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
 	return nil, cloudprovider.ErrNotImplemented
 }

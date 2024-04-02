@@ -84,7 +84,7 @@ func (self *SInstance) GetMonitorData(start, end string) ([]cloudprovider.ICfelM
 	return nil, cloudprovider.ErrNotImplemented
 }
 
-func (self *SRegion) CreateBareMetal(opts *cloudprovider.SManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
+func (self *SRegion) CreateBareMetal(opts *cloudprovider.CfelSManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
 	hypervisor := api.HYPERVISOR_BAREMETAL
 	ins, err := self.cfelCreateInstance("", hypervisor, opts)
 	if err != nil {
@@ -93,7 +93,7 @@ func (self *SRegion) CreateBareMetal(opts *cloudprovider.SManagedVMCreateConfig)
 	return ins, nil
 }
 
-func (self *SRegion) CreateVM(opts *cloudprovider.SManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
+func (self *SRegion) CreateVM(opts *cloudprovider.CfelSManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
 	hypervisor := api.HYPERVISOR_KVM
 	ins, err := self.cfelCreateInstance("", hypervisor, opts)
 	if err != nil {
@@ -160,9 +160,20 @@ func (self *SRegion) CfelInstanceSettingChange(id string,opts *cloudprovider.Cfe
 
 
 
-func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudprovider.SManagedVMCreateConfig) (*SInstance, error) {
+func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudprovider.CfelSManagedVMCreateConfig) (*SInstance, error) {
 	input := compute.ServerCreateInput{
 		ServerConfigs: &compute.ServerConfigs{},
+	}
+	var isolatedDevice []*compute.IsolatedDeviceConfig
+	if opts.IsolatedDevice != nil {
+		for _,v := range isolatedDevice {
+			isolatedDevice = append(isolatedDevice, &compute.IsolatedDeviceConfig{
+				DevType:      v.DevType,
+				Model:        v.Model,
+				Vendor:       v.Vendor,
+			})
+		}
+		
 	}
 	input.Name = opts.Name
 	input.Hostname = opts.Hostname
@@ -180,6 +191,7 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 	input.Hypervisor = hypervisor
 	input.AutoStart = true
 	input.DisableDelete = new(bool)
+	input.IsolatedDevices = isolatedDevice
 	if len(input.UserData) > 0 {
 		input.EnableCloudInit = true
 	}

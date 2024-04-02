@@ -12,8 +12,8 @@ type ICfelCloudRegion interface {
 	GetPostPaidStatus(zoneID, instanceType string) (string, error)     //  按量付费 售卖状态
 	GetPrePaidStatus(zoneID, instanceType string) (string, error)      //  包年包月 售卖状态
 
-	CreateBareMetal(desc *SManagedVMCreateConfig) (ICloudVM, error)
-	CreateVM(desc *SManagedVMCreateConfig) (ICloudVM, error)
+	CreateBareMetal(desc *CfelSManagedVMCreateConfig) (ICloudVM, error)
+	CreateVM(desc *CfelSManagedVMCreateConfig) (ICloudVM, error)
 	CreateImageByUrl(params *CfelSImageCreateOption) (ICloudImage, error)
 	GetImageByID(id string) (ICloudImage, error)
 	ResetGuestPassword(params *CfelResetGuestPasswordOption) (ICloudVM, error)

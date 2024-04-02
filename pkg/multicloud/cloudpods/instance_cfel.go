@@ -166,7 +166,7 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 	}
 	var isolatedDevice []*compute.IsolatedDeviceConfig
 	if opts.IsolatedDevice != nil {
-		for _,v := range isolatedDevice {
+		for _,v := range opts.IsolatedDevice {
 			isolatedDevice = append(isolatedDevice, &compute.IsolatedDeviceConfig{
 				DevType:      v.DevType,
 				Model:        v.Model,

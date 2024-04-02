@@ -122,7 +122,10 @@ func (self *SCloudpodsClient) auth() error {
 			serviceRegion = region
 		}
 	}
-	self.s = client.NewSession(context.Background(), serviceRegion, "", "publicURL", token)
+	// endpointType：
+	// https://www.cloudpods.org/en/docs/guides/climc/usage
+	// https://www.cloudpods.org/en/docs/development/apisdk/apigateway
+	self.s = client.NewSession(context.Background(), serviceRegion, "", "apigateway", token)
 	if !self.s.GetToken().HasSystemAdminPrivilege() {
 		return fmt.Errorf("no system admin privilege")
 	}

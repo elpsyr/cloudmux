@@ -2,6 +2,7 @@ package cloudpods
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
@@ -9,7 +10,9 @@ import (
 	"yunion.io/x/jsonutils"
 	"yunion.io/x/log"
 	compute "yunion.io/x/onecloud/pkg/apis/compute"
+	monitor_input "yunion.io/x/onecloud/pkg/apis/monitor"
 	modules "yunion.io/x/onecloud/pkg/mcclient/modules/compute"
+	monitor "yunion.io/x/onecloud/pkg/mcclient/modules/monitor"
 )
 
 var _ cloudprovider.ICfelCloudVM = (*SInstance)(nil)
@@ -84,6 +87,148 @@ func (self *SInstance) GetMonitorData(start, end string) ([]cloudprovider.ICfelM
 	return nil, cloudprovider.ErrNotImplemented
 }
 
+type Monitor struct {
+	Series []struct {
+		Columns []string `json:"columns"`
+		Name string `json:"name"`
+		Points [][]float64 `json:"points"`
+		RawName string `json:"raw_name"`
+		
+	} `json:"series"`
+	SeriesTotal int `json:"series_total"`
+	Type string `json:"-"`
+	Item []*MonitorDataItem `json:"-"`
+}
+
+func (self *SRegion) GetMonitorData(vmId,start, end,interval string) ([]cloudprovider.ICfelMonitorData,[]string, error) {
+	tmp := map[string][]string{
+		"vm_diskio": {"write_bps", "read_bps"},
+		"vm_cpu":    {"usage_active"},
+		"vm_mem":    {"used_percent"},
+		"vm_disk":   {"used_percent"},
+		"vm_netio":  {"bps_send", "bps_recv"},
+	}
+	var wg sync.WaitGroup
+	var m sync.Mutex
+	var faild []string
+	
+	var mute sync.Mutex
+	var item []*MonitorDataItem
+
+	// var mm sync.Mutex
+	var ms []*Monitor
+	// var ch = make(chan Monitor)
+	for measure,val := range tmp {
+		for _,v := range val {
+			
+			wg.Add(1)
+			go func (p,vv string)  {
+				params := monitor_input.MetricQueryInput{
+					From: start,
+					To:   end,
+					Unit:     false,
+					Interval: interval,
+					MetricQuery: []*monitor_input.AlertQuery{{
+						Model: monitor_input.MetricQuery{
+							Measurement: p, // vm_diskio[write_bps,read_bps] vm_cpu[usage_active] vm_mem[used_percent] vm_disk[used_percent] vm_netio[bps_send,bps_recv]
+							Tags: []monitor_input.MetricQueryTag{{
+								Key:      "vm_id",
+								Operator: "=",
+								Value:    vmId,
+							}},
+							GroupBy: []monitor_input.MetricQueryPart{{
+								Type:   "tag",
+								Params: []string{"vm_id"},
+							}},
+							Selects: []monitor_input.MetricQuerySelect{
+								[]monitor_input.MetricQueryPart{
+									{
+										Type:   "field",
+										Params: []string{vv},
+									},
+									{
+										Type:   "mean",
+										Params: []string{},
+									},
+									{
+										Type:   "alias",
+										Params: []string{"result"},
+									},
+								},
+							},
+						},
+					}},					
+					SkipCheckSeries: true,
+				}
+				res,err := monitor.UnifiedMonitorManager.PerformQuery(self.cli.s, &params)
+				if err != nil {
+					m.Lock()
+					faild = append(faild, p + "_"+ vv)
+					m.Unlock()
+					// fmt.Println(vv ," error: ",err)
+				} else {
+					// fmt.Println("************"+p + "_"+ vv+"************",res.String())
+					var obj Monitor
+					_ = res.Unmarshal(&obj)
+					mute.Lock()
+					
+					if item == nil && obj.SeriesTotal > 0 {
+						item = make([]*MonitorDataItem, len(obj.Series[0].Points))
+						for i := range item {
+							item[i] = &MonitorDataItem{}
+						}
+					}
+					obj.Type = p + "_" + vv
+					ms = append(ms, &obj)
+					mute.Unlock()
+				}
+				
+				wg.Done()
+			}(measure,v)
+		}
+	}
+	wg.Wait()
+	
+	for _,v := range ms {
+			
+		if v.SeriesTotal == 0 {
+			continue
+		}
+		
+		for i := range item {
+			item[i].TimeStamp = time.Unix(int64(v.Series[0].Points[i][1]/1000),0).Format("2006-01-02 15:04:05")
+			item[i].InstanceId = v.Series[0].RawName
+			
+			val := v.Series[0].Points[i][0]
+			if v.Type == "vm_diskio_write_bps" {
+				item[i].BPSWrite = val
+			} else if v.Type == "vm_diskio_read_bps" {
+				item[i].BPSRead = val
+			} else if  v.Type == "vm_cpu_usage_active" {
+				item[i].CPU = val
+			} else if v.Type == "vm_mem_used_percent" {
+				item[i].Mem = val
+			} else if v.Type == "vm_disk_used_percent" {
+				item[i].Disk = val
+			} else if v.Type == "vm_netio_bps_send" {
+				item[i].InternetTX = val
+				item[i].IntranetTX = val
+			} else if v.Type == "vm_netio_bps_recv" {
+				item[i].InternetRX = val
+				item[i].IntranetRX = val
+			}
+		}
+	}
+	
+	var res []cloudprovider.ICfelMonitorData
+	for i := range item {
+		res = append(res, item[i])
+	}
+	return res,faild,nil
+	
+	
+}
+
 func (self *SRegion) CreateBareMetal(opts *cloudprovider.CfelSManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
 	hypervisor := api.HYPERVISOR_BAREMETAL
 	ins, err := self.cfelCreateInstance("", hypervisor, opts)
@@ -152,13 +297,11 @@ func (self *SRegion) CfelDetachDisk(instanceId, diskId string) error {
 	return err
 }
 
-func (self *SRegion) CfelInstanceSettingChange(id string,opts *cloudprovider.CfelChangeSettingOption) error {
-	
-	_,err := modules.Servers.Update(self.cli.s,id,jsonutils.Marshal(opts))
+func (self *SRegion) CfelInstanceSettingChange(id string, opts *cloudprovider.CfelChangeSettingOption) error {
+
+	_, err := modules.Servers.Update(self.cli.s, id, jsonutils.Marshal(opts))
 	return err
 }
-
-
 
 func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudprovider.CfelSManagedVMCreateConfig) (*SInstance, error) {
 	input := compute.ServerCreateInput{
@@ -166,14 +309,14 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 	}
 	var isolatedDevice []*compute.IsolatedDeviceConfig
 	if opts.IsolatedDevice != nil {
-		for _,v := range opts.IsolatedDevice {
+		for _, v := range opts.IsolatedDevice {
 			isolatedDevice = append(isolatedDevice, &compute.IsolatedDeviceConfig{
-				DevType:      v.DevType,
-				Model:        v.Model,
-				Vendor:       v.Vendor,
+				DevType: v.DevType,
+				Model:   v.Model,
+				Vendor:  v.Vendor,
 			})
 		}
-		
+
 	}
 	input.Name = opts.Name
 	input.Hostname = opts.Hostname

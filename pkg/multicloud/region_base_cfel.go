@@ -50,3 +50,15 @@ func (self *SRegion) CfelInstanceSettingChange(id string, params *cloudprovider.
 func (self *SRegion) CfelGetINetworks() ([]cloudprovider.ICloudNetwork, error) {
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetINetworks")
 }
+
+func (self *SRegion) GetIHostsByCondition(*cloudprovider.FilterOption) ([]cloudprovider.ICloudHost, error) {
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetIHostsByCondition")
+}
+
+func (self *SRegion) MigrateForecast(*cloudprovider.MigrateForecastOption) ([]cloudprovider.ICfelFilter, error) {
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "MigrateForecast")
+}
+
+func (self *SRegion) GetMonitorData(vmId, start, end, interval string) ([]cloudprovider.ICfelMonitorData ,[]string, error) {
+	return nil,[]string{}, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetMonitorData")
+}

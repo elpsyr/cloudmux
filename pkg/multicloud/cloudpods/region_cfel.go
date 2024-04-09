@@ -3,8 +3,8 @@ package cloudpods
 import (
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/jsonutils"
-	disk "yunion.io/x/onecloud/pkg/mcclient/modules/compute"
-	modules "yunion.io/x/onecloud/pkg/mcclient/modules/image"
+	modules "yunion.io/x/onecloud/pkg/mcclient/modules/compute"
+	image "yunion.io/x/onecloud/pkg/mcclient/modules/image"
 )
 
 // Verify that *SRegion implements ICfelCloudRegion
@@ -61,7 +61,7 @@ func (self *SRegion) CreateImageByUrl(opts *cloudprovider.CfelSImageCreateOption
 			"os_version":      opts.OsVersion,
 		},
 	}
-	res, err := modules.Images.Create(self.cli.s, jsonutils.Marshal(params))
+	res, err := image.Images.Create(self.cli.s, jsonutils.Marshal(params))
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (self *SRegion) CfelCreateDisk(opts *cloudprovider.CfelDiskCreateConfig) (c
 		"medium":      opts.Medium,
 		"description": opts.Desc,
 	}
-	res, err := disk.Disks.Create(self.cli.s, jsonutils.Marshal(params))
+	res, err := modules.Disks.Create(self.cli.s, jsonutils.Marshal(params))
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (self *SRegion) CfelCreateDisk(opts *cloudprovider.CfelDiskCreateConfig) (c
 }
 
 func (self *SRegion) CfelGetINetworks() ([]cloudprovider.ICloudNetwork, error) {
-	networks,err := self.GetNetworks("")
+	networks, err := self.GetNetworks("")
 	if err != nil {
 		return nil, err
 	}
@@ -100,6 +100,65 @@ func (self *SRegion) CfelGetINetworks() ([]cloudprovider.ICloudNetwork, error) {
 	for i := range networks {
 		// networks[i].wire = self
 		ret = append(ret, &networks[i])
+	}
+	return ret, nil
+}
+
+func (self *SRegion) GetIHostsByCondition(opts *cloudprovider.FilterOption) ([]cloudprovider.ICloudHost, error) {
+	
+	params := map[string]interface{}{
+		// "scope":                 "system",
+		"show_fail_reason": "true",
+		"host_type":        opts.HostType,
+		"limit":            opts.Limit,
+		"enabled":               1,
+		"host_status": "online",
+		"os_arch":     opts.OsArch,
+		//"field":       ,
+		// "server_id_for_network": "f13faa78-5a46-4236-80ee-f427defd947e",
+		// "project_domain":        "default",
+		//"filter":                "id.notin(7d09d25e-87ef-44db-8bf5-bf42b8554388,7096846e-4341-4267-874e-d047838e2c99)",
+		"details": false,
+	}
+	if len(opts.FilterIds) > 0 {
+		params["filter"] = "id.notin(" + opts.FilterIds + ")"
+	}
+	if len(opts.Field) > 0 {
+		params["field"] = opts.Field
+	}
+	var ret []SHost
+
+	err := self.cli.list(&modules.Hosts, params, &ret)
+	var res []cloudprovider.ICloudHost
+	for i := range ret {
+		res = append(res, &ret[i])
+	}
+	return res, err
+}
+
+func (self *SRegion) MigrateForecast(opts *cloudprovider.MigrateForecastOption) ([]cloudprovider.ICfelFilter, error) {
+	params := map[string]interface{}{
+		"live_migrate":opts.LiveMigrate,
+		"skip_cpu_check":false,
+		"skip_kernel_check":opts.SkipKernelCheck,
+		// "is_rescue_mode":true,
+	}
+	res,err := self.cli.perform(&modules.Servers,opts.GuestId,"migrate-forecast",params)
+	if err != nil {
+		return nil,err
+	}
+	rr,err := res.Get("filtered_candidates")
+	if err != nil {
+		return nil,err
+	}
+	var filter []SCfelFilter
+	err = rr.Unmarshal(&filter)
+	if err != nil {
+		return nil,err
+	}
+	var ret []cloudprovider.ICfelFilter
+	for i := range filter {
+		ret = append(ret, &filter[i])
 	}
 	return ret, nil
 }

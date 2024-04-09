@@ -83,40 +83,48 @@ type DescribeInstanceMonitorDataResponse struct {
 }
 
 type MonitorDataItem struct {
-	IOPSRead          int    `json:"IOPSRead,omitempty"`
-	IntranetBandwidth int    `json:"IntranetBandwidth"`
-	IOPSWrite         int    `json:"IOPSWrite,omitempty"`
+	IOPSRead          float64    `json:"IOPSRead,omitempty"`
+	IntranetBandwidth float64    `json:"IntranetBandwidth"`
+	IOPSWrite         float64    `json:"IOPSWrite,omitempty"`
 	InstanceId        string `json:"InstanceId"`
-	IntranetTX        int    `json:"IntranetTX"`
-	CPU               int    `json:"CPU"`
-	BPSRead           int    `json:"BPSRead,omitempty"`
-	IntranetRX        int    `json:"IntranetRX"`
+	IntranetTX        float64    `json:"IntranetTX"`
+	CPU               float64    `json:"CPU"`
+	BPSRead           float64    `json:"BPSRead,omitempty"`
+	IntranetRX        float64    `json:"IntranetRX"`
 	TimeStamp         string `json:"TimeStamp"`
-	InternetBandwidth int    `json:"InternetBandwidth"`
-	InternetTX        int    `json:"InternetTX"`
-	InternetRX        int    `json:"InternetRX"`
-	BPSWrite          int    `json:"BPSWrite,omitempty"`
+	InternetBandwidth float64    `json:"InternetBandwidth"`
+	InternetTX        float64    `json:"InternetTX"`
+	InternetRX        float64    `json:"InternetRX"`
+	BPSWrite          float64    `json:"BPSWrite,omitempty"`
 }
 
 var _ cloudprovider.ICfelMonitorData = (*MonitorDataItem)(nil)
 
-func (m MonitorDataItem) GetBPSRead() int {
+func (m MonitorDataItem) GetBPSRead() float64 {
 	return m.IOPSRead
 }
 
-func (m MonitorDataItem) GetInternetTX() int {
+func (m MonitorDataItem) GetInternetTX() float64 {
 	return m.InternetTX
 }
 
-func (m MonitorDataItem) GetCPU() int {
+func (m MonitorDataItem) GetCPU() float64 {
 	return m.CPU
 }
 
-func (m MonitorDataItem) GetIOPSWrite() int {
+func (m MonitorDataItem) GetMem() float64 {
+	return 0
+}
+
+func (m MonitorDataItem) GetDisk() float64 {
+	return 0
+}
+
+func (m MonitorDataItem) GetIOPSWrite() float64 {
 	return m.IOPSWrite
 }
 
-func (m MonitorDataItem) GetIntranetTX() int {
+func (m MonitorDataItem) GetIntranetTX() float64 {
 	return m.IntranetTX
 }
 
@@ -124,19 +132,19 @@ func (m MonitorDataItem) GetInstanceId() string {
 	return m.InstanceId
 }
 
-func (m MonitorDataItem) GetBPSWrite() int {
+func (m MonitorDataItem) GetBPSWrite() float64 {
 	return m.BPSWrite
 }
 
-func (m MonitorDataItem) GetIOPSRead() int {
+func (m MonitorDataItem) GetIOPSRead() float64 {
 	return m.IOPSRead
 }
 
-func (m MonitorDataItem) GetInternetBandwidth() int {
+func (m MonitorDataItem) GetInternetBandwidth() float64 {
 	return m.InternetBandwidth
 }
 
-func (m MonitorDataItem) GetInternetRX() int {
+func (m MonitorDataItem) GetInternetRX() float64 {
 	return m.InternetRX
 }
 
@@ -144,10 +152,10 @@ func (m MonitorDataItem) GetTimeStamp() string {
 	return m.TimeStamp
 }
 
-func (m MonitorDataItem) GetIntranetRX() int {
+func (m MonitorDataItem) GetIntranetRX() float64 {
 	return m.IntranetRX
 }
 
-func (m MonitorDataItem) GetIntranetBandwidth() int {
+func (m MonitorDataItem) GetIntranetBandwidth() float64 {
 	return m.IntranetBandwidth
 }

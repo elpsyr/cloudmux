@@ -303,6 +303,7 @@ func (self *SInstance) ChangeConfig(ctx context.Context, opts *cloudprovider.SMa
 	input.VmemSize = fmt.Sprintf("%dM", opts.MemoryMB)
 	input.VcpuCount = &opts.Cpu
 	input.InstanceType = opts.InstanceType
+	input.AutoStart = opts.AutoStart
 	_, err := self.host.zone.region.perform(&modules.Servers, self.Id, "change-config", input)
 	return err
 }

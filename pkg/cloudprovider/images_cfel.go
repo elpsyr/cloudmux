@@ -28,5 +28,5 @@ type CfelResetGuestPasswordOption struct {
 type CfelChangeSettingOption struct {
 	Desc     string `json:"description,omitempty"`
 	Name     string `json:"name,omitempty"`
-	HostName string `json:"host_name,omitempty"`
+	HostName string `json:"hostname,omitempty"`
 }

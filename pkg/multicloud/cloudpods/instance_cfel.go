@@ -196,7 +196,7 @@ func (self *SRegion) GetMonitorData(vmId,start, end,interval string) ([]cloudpro
 		}
 		
 		for i := range item {
-			item[i].TimeStamp = time.Unix(int64(v.Series[0].Points[i][1]/1000),0).Format("2006-01-02 15:04:05")
+			item[i].TimeStamp = time.Unix(int64((v.Series[0].Points[i][1]/1000) - 8 * 3600),0).Format("2006-01-02 15:04:05")
 			item[i].InstanceId = v.Series[0].RawName
 			
 			val := v.Series[0].Points[i][0]

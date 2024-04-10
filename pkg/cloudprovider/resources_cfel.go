@@ -31,6 +31,7 @@ type ICfelCloudRegion interface {
 	GetIHostsByCondition(*FilterOption) ([]ICloudHost, error)
 	MigrateForecast(*MigrateForecastOption) ([]ICfelFilter, error)
 	GetMonitorData(vmId, start, end, interval string) ([]ICfelMonitorData,[]string ,error) // 获取主机监控数据
+	GetMonitorDataJSON(*MonitorDataJSONOption) (jsonutils.JSONObject,error) // 获取主机监控数据
 }
 
 type ICfelCloudSku interface {

@@ -229,6 +229,47 @@ func (self *SRegion) GetMonitorData(vmId,start, end,interval string) ([]cloudpro
 	
 }
 
+func (self *SRegion) GetMonitorDataJSON(opts *cloudprovider.MonitorDataJSONOption) (jsonutils.JSONObject, error) {
+	params := monitor_input.MetricQueryInput{
+		From: opts.Start,
+		To:   opts.End,
+		Unit:     false,
+		Interval: opts.Interval,
+		MetricQuery: []*monitor_input.AlertQuery{{
+			Model: monitor_input.MetricQuery{
+				Measurement: opts.Measure, // vm_diskio[write_bps,read_bps] vm_cpu[usage_active] vm_mem[used_percent] vm_disk[used_percent] vm_netio[bps_send,bps_recv]
+				Tags: []monitor_input.MetricQueryTag{{
+					Key:      "vm_id",
+					Operator: "=",
+					Value:    opts.GuestID,
+				}},
+				GroupBy: []monitor_input.MetricQueryPart{{
+					Type:   "tag",
+					Params: []string{"vm_id"},
+				}},
+				Selects: []monitor_input.MetricQuerySelect{
+					[]monitor_input.MetricQueryPart{
+						{
+							Type:   "field",
+							Params: []string{opts.Field},
+						},
+						{
+							Type:   "mean",
+							Params: []string{},
+						},
+						{
+							Type:   "alias",
+							Params: []string{"result"},
+						},
+					},
+				},
+			},
+		}},					
+		SkipCheckSeries: true,
+	}
+	return monitor.UnifiedMonitorManager.PerformQuery(self.cli.s, &params)
+}
+
 func (self *SRegion) CreateBareMetal(opts *cloudprovider.CfelSManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
 	hypervisor := api.HYPERVISOR_BAREMETAL
 	ins, err := self.cfelCreateInstance("", hypervisor, opts)

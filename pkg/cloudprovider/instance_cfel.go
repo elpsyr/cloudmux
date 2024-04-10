@@ -24,6 +24,15 @@ type MigrateForecastOption struct {
 	IsRescueMode    bool   `json:"is_rescue_mode,omitempty"`
 }
 
+type MonitorDataJSONOption struct {
+	Measure string
+	Field string
+	GuestID string
+	Start string
+	End string
+	Interval string
+}
+
 type FilterOption struct {
 	ShowFailReason string   `json:"show_fail_reason"`
 	HostType       string   `json:"host_type"`

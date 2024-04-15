@@ -106,3 +106,69 @@ func (m *MonitorDataItem) GetIntranetBandwidth() float64 {
 }
 
 var _ cloudprovider.ICfelMonitorData = (*MonitorDataItem)(nil)
+
+var _ cloudprovider.ICfelGeneralUsage = (*GeneralUsage)(nil)
+
+type GeneralUsage struct {
+	AllServers                       int `json:"all.servers"`                          //	all.servers  //虚拟机数量
+	AllServersCpu                    int `json:"all.servers.cpu"`                      // all.servers.cpu  //cpu使用量
+	AllServersMem                    int `json:"all.servers.memory"`                   // all.servers.memory //内存使用量 mb
+	AllServersDisk                   int `json:"all.servers.disk"`                     // all.servers.disk //存储使用量 mb
+	Hosts                            int `json:"hosts"`                                // hosts //宿主机数量
+	HostsCpuTotal                    int `json:"hosts.cpu.total"`                      // hosts.cpu.total //cpu总量
+	Baremetals                       int `json:"baremetals"`                           // baremetals //物理机数量
+	HostsMem                         int `json:"hosts.memory"`                         // hosts.memory //内存总量 mb
+	Storages                         int `json:"storages"`                             // storages //存储总量 mb
+	IsolatedDevices                  int `json:"isolated_devices"`                     // isolated_devices //gpu总量
+	AllServersIsolatedDevices        int `json:"all.servers.isolated_devices"`         // all.servers.isolated_devices //gpu使用数量
+	AllRunningServersIsolatedDevices int `json:"all.running_servers.isolated_devices"` // all.running_servers.isolated_devices //
+}
+
+
+func (g *GeneralUsage) GetAllServers() int {
+	return g.AllServers
+}
+
+func (g *GeneralUsage) GetAllServersCpu() int {
+	return g.AllServersCpu
+}
+
+func (g *GeneralUsage) GetAllServersMem() int {
+	return g.AllServersMem
+}
+
+func (g *GeneralUsage) GetAllServersDisk() int {
+	return g.AllServersDisk
+}
+
+func (g *GeneralUsage) GetHosts() int {
+	return g.Hosts
+}
+
+func (g *GeneralUsage) GetHostsCpuTotal() int {
+	return g.HostsCpuTotal
+}
+
+func (g *GeneralUsage) GetBaremetals() int {
+	return g.Baremetals
+}
+
+func (g *GeneralUsage) GetHostsMem() int {
+	return g.HostsMem
+}
+
+func (g *GeneralUsage) GetStorages() int {
+	return g.Storages
+}
+
+func (g *GeneralUsage) GetIsolatedDevices() int {
+	return g.IsolatedDevices
+}
+
+func (g *GeneralUsage) GetAllServersIsolatedDevices() int {
+	return g.AllServersIsolatedDevices
+}
+
+func (g *GeneralUsage) GetRunningServersIsolatedDevices() int {
+	return g.AllRunningServersIsolatedDevices
+}

@@ -2,8 +2,8 @@ package multicloud
 
 import (
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
-	"yunion.io/x/pkg/errors"
 	"yunion.io/x/jsonutils"
+	"yunion.io/x/pkg/errors"
 )
 
 func (self *SRegion) CreateBareMetal(opts *cloudprovider.CfelSManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
@@ -60,10 +60,14 @@ func (self *SRegion) MigrateForecast(*cloudprovider.MigrateForecastOption) ([]cl
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "MigrateForecast")
 }
 
-func (self *SRegion) GetMonitorData(vmId, start, end, interval string) ([]cloudprovider.ICfelMonitorData ,[]string, error) {
-	return nil,[]string{}, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetMonitorData")
+// func (self *SRegion) GetMonitorData(vmId, start, end, interval string) ([]cloudprovider.ICfelMonitorData, []string, error) {
+// 	return nil, []string{}, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetMonitorData")
+// }
+
+func (self *SRegion) GetMonitorDataJSON(*cloudprovider.MonitorDataJSONOption) (jsonutils.JSONObject, error) {
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetMonitorDataJSON")
 }
 
-func (self *SRegion) GetMonitorDataJSON(*cloudprovider.MonitorDataJSONOption) (jsonutils.JSONObject,error) {
-	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetMonitorDataJSON")
+func (self *SRegion) GetGeneralUsage() (cloudprovider.ICfelGeneralUsage, error) {
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetGeneralUsage")
 }

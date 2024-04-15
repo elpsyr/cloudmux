@@ -162,3 +162,13 @@ func (self *SRegion) MigrateForecast(opts *cloudprovider.MigrateForecastOption) 
 	}
 	return ret, nil
 }
+
+func (self *SRegion) GetGeneralUsage() (cloudprovider.ICfelGeneralUsage,error) {
+	var usage GeneralUsage
+	res,err := modules.Usages.GetGeneralUsage(self.cli.s,nil)
+	if err != nil {
+		return nil,err
+	}
+	_ = res.Unmarshal(&usage)
+	return &usage,nil
+}

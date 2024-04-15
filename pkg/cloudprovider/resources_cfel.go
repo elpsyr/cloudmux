@@ -30,8 +30,9 @@ type ICfelCloudRegion interface {
 	CfelGetINetworks() ([]ICloudNetwork, error)
 	GetIHostsByCondition(*FilterOption) ([]ICloudHost, error)
 	MigrateForecast(*MigrateForecastOption) ([]ICfelFilter, error)
-	GetMonitorData(vmId, start, end, interval string) ([]ICfelMonitorData,[]string ,error) // 获取主机监控数据
-	GetMonitorDataJSON(*MonitorDataJSONOption) (jsonutils.JSONObject,error) // 获取主机监控数据
+	// GetMonitorData(vmId, start, end, interval string) ([]ICfelMonitorData,[]string ,error) // 获取主机监控数据
+	GetMonitorDataJSON(*MonitorDataJSONOption) (jsonutils.JSONObject, error) // 获取主机监控数据
+	GetGeneralUsage() (ICfelGeneralUsage, error)
 }
 
 type ICfelCloudSku interface {
@@ -82,4 +83,19 @@ type ICfelFilter interface {
 	GetID() string
 	GetName() string
 	GetReason() []string
+}
+
+type ICfelGeneralUsage interface {
+	GetAllServers() int
+	GetAllServersCpu() int
+	GetAllServersMem() int
+	GetAllServersDisk() int
+	GetHosts() int
+	GetHostsCpuTotal() int
+	GetBaremetals() int
+	GetHostsMem() int
+	GetStorages() int
+	GetIsolatedDevices() int
+	GetAllServersIsolatedDevices() int
+	GetRunningServersIsolatedDevices() int
 }

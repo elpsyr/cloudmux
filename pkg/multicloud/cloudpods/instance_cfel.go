@@ -361,7 +361,8 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 		}
 
 	}
-	input.Name = opts.Name
+	input.GenerateName = opts.Name
+	// input.Name = opts.Name
 	input.Hostname = opts.Hostname
 	input.Description = opts.Description
 	input.InstanceType = opts.InstanceType

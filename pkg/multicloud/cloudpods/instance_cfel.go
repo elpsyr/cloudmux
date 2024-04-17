@@ -89,18 +89,17 @@ func (self *SInstance) GetMonitorData(start, end string) ([]cloudprovider.ICfelM
 
 type Monitor struct {
 	Series []struct {
-		Columns []string `json:"columns"`
-		Name string `json:"name"`
-		Points [][]float64 `json:"points"`
-		RawName string `json:"raw_name"`
-		
+		Columns []string    `json:"columns"`
+		Name    string      `json:"name"`
+		Points  [][]float64 `json:"points"`
+		RawName string      `json:"raw_name"`
 	} `json:"series"`
-	SeriesTotal int `json:"series_total"`
-	Type string `json:"-"`
-	Item []*MonitorDataItem `json:"-"`
+	SeriesTotal int                `json:"series_total"`
+	Type        string             `json:"-"`
+	Item        []*MonitorDataItem `json:"-"`
 }
 
-func (self *SRegion) GetMonitorData(vmId,start, end,interval string) ([]cloudprovider.ICfelMonitorData,[]string, error) {
+func (self *SRegion) GetMonitorData(vmId, start, end, interval string) ([]cloudprovider.ICfelMonitorData, []string, error) {
 	tmp := map[string][]string{
 		"vm_diskio": {"write_bps", "read_bps"},
 		"vm_cpu":    {"usage_active"},
@@ -111,21 +110,21 @@ func (self *SRegion) GetMonitorData(vmId,start, end,interval string) ([]cloudpro
 	var wg sync.WaitGroup
 	var m sync.Mutex
 	var faild []string
-	
+
 	var mute sync.Mutex
 	var item []*MonitorDataItem
 
 	// var mm sync.Mutex
 	var ms []*Monitor
 	// var ch = make(chan Monitor)
-	for measure,val := range tmp {
-		for _,v := range val {
-			
+	for measure, val := range tmp {
+		for _, v := range val {
+
 			wg.Add(1)
-			go func (p,vv string)  {
+			go func(p, vv string) {
 				params := monitor_input.MetricQueryInput{
-					From: start,
-					To:   end,
+					From:     start,
+					To:       end,
 					Unit:     false,
 					Interval: interval,
 					MetricQuery: []*monitor_input.AlertQuery{{
@@ -157,13 +156,13 @@ func (self *SRegion) GetMonitorData(vmId,start, end,interval string) ([]cloudpro
 								},
 							},
 						},
-					}},					
+					}},
 					SkipCheckSeries: true,
 				}
-				res,err := monitor.UnifiedMonitorManager.PerformQuery(self.cli.s, &params)
+				res, err := monitor.UnifiedMonitorManager.PerformQuery(self.cli.s, &params)
 				if err != nil {
 					m.Lock()
-					faild = append(faild, p + "_"+ vv)
+					faild = append(faild, p+"_"+vv)
 					m.Unlock()
 					// fmt.Println(vv ," error: ",err)
 				} else {
@@ -171,7 +170,7 @@ func (self *SRegion) GetMonitorData(vmId,start, end,interval string) ([]cloudpro
 					var obj Monitor
 					_ = res.Unmarshal(&obj)
 					mute.Lock()
-					
+
 					if item == nil && obj.SeriesTotal > 0 {
 						item = make([]*MonitorDataItem, len(obj.Series[0].Points))
 						for i := range item {
@@ -182,29 +181,29 @@ func (self *SRegion) GetMonitorData(vmId,start, end,interval string) ([]cloudpro
 					ms = append(ms, &obj)
 					mute.Unlock()
 				}
-				
+
 				wg.Done()
-			}(measure,v)
+			}(measure, v)
 		}
 	}
 	wg.Wait()
-	
-	for _,v := range ms {
-			
+
+	for _, v := range ms {
+
 		if v.SeriesTotal == 0 {
 			continue
 		}
-		
+
 		for i := range item {
-			item[i].TimeStamp = time.Unix(int64((v.Series[0].Points[i][1]/1000) - 8 * 3600),0).Format("2006-01-02 15:04:05")
+			item[i].TimeStamp = time.Unix(int64((v.Series[0].Points[i][1]/1000)-8*3600), 0).Format("2006-01-02 15:04:05")
 			item[i].InstanceId = v.Series[0].RawName
-			
+
 			val := v.Series[0].Points[i][0]
 			if v.Type == "vm_diskio_write_bps" {
 				item[i].BPSWrite = val
 			} else if v.Type == "vm_diskio_read_bps" {
 				item[i].BPSRead = val
-			} else if  v.Type == "vm_cpu_usage_active" {
+			} else if v.Type == "vm_cpu_usage_active" {
 				item[i].CPU = val
 			} else if v.Type == "vm_mem_used_percent" {
 				item[i].Mem = val
@@ -219,20 +218,19 @@ func (self *SRegion) GetMonitorData(vmId,start, end,interval string) ([]cloudpro
 			}
 		}
 	}
-	
+
 	var res []cloudprovider.ICfelMonitorData
 	for i := range item {
 		res = append(res, item[i])
 	}
-	return res,faild,nil
-	
-	
+	return res, faild, nil
+
 }
 
 func (self *SRegion) GetMonitorDataJSON(opts *cloudprovider.MonitorDataJSONOption) (jsonutils.JSONObject, error) {
 	params := monitor_input.MetricQueryInput{
-		From: opts.Start,
-		To:   opts.End,
+		From:     opts.Start,
+		To:       opts.End,
 		Unit:     false,
 		Interval: opts.Interval,
 		MetricQuery: []*monitor_input.AlertQuery{{
@@ -264,7 +262,7 @@ func (self *SRegion) GetMonitorDataJSON(opts *cloudprovider.MonitorDataJSONOptio
 					},
 				},
 			},
-		}},					
+		}},
 		SkipCheckSeries: true,
 	}
 	return monitor.UnifiedMonitorManager.PerformQuery(self.cli.s, &params)
@@ -400,11 +398,21 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 			Storage:  disk.StorageExternalId,
 		})
 	}
-	input.Networks = append(input.Networks, &compute.NetworkConfig{
-		Index:   0,
-		Network: opts.ExternalNetworkId,
-		Address: opts.IpAddr,
-	})
+	if opts.ExternalNetworkId != "" {
+		input.Networks = append(input.Networks, &compute.NetworkConfig{
+			Index:   0,
+			Network: opts.ExternalNetworkId,
+			Address: opts.IpAddr,
+		})
+	} else if len(opts.Networks) != 0 {
+		for i := 0; i < len(opts.Networks); i++ {
+			input.Networks = append(input.Networks, &compute.NetworkConfig{
+				Index:   i,
+				Network: opts.Networks[i].NetworkId,
+				Address: opts.Networks[i].Address,
+			})
+		}
+	}
 	ins := &SInstance{}
 	return ins, self.create(&modules.Servers, input, ins)
 }

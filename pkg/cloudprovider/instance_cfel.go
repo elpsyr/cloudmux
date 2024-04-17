@@ -3,6 +3,12 @@ package cloudprovider
 type CfelSManagedVMCreateConfig struct {
 	SManagedVMCreateConfig
 	IsolatedDevice []*IsolatedDeviceConfig
+	Networks       []Network
+}
+type Network struct {
+	NetworkId      string
+	RequireTeaming bool
+	Address        string
 }
 
 type IsolatedDeviceConfig struct {
@@ -25,11 +31,11 @@ type MigrateForecastOption struct {
 }
 
 type MonitorDataJSONOption struct {
-	Measure string
-	Field string
-	GuestID string
-	Start string
-	End string
+	Measure  string
+	Field    string
+	GuestID  string
+	Start    string
+	End      string
 	Interval string
 }
 
@@ -40,6 +46,6 @@ type FilterOption struct {
 	HostStatus     string   `json:"host_status"`
 	OsArch         string   `json:"os_arch"`
 	Field          []string `json:"field"`
-	FilterIds      string `json:"filter"`
+	FilterIds      string   `json:"filter"`
 	Details        bool     `json:"details"`
 }

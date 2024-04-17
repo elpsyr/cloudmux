@@ -22,6 +22,12 @@ type IsolatedDeviceConfig struct {
 	WireId       string `json:"wire_id"`
 }
 
+type IsolatedDeviceInfo struct {
+	DevType string `json:"dev_type,omitempty"`
+	Model   string `json:"model,omitempty"`
+	VendorDeviceId  string `json:"vendor,omitempty"`
+}
+
 type MigrateForecastOption struct {
 	GuestId         string `json:"guest_id,omitempty"`
 	LiveMigrate     bool   `json:"live_migrate,omitempty"`

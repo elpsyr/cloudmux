@@ -51,6 +51,8 @@ type ICfelZone interface {
 type ICfelCloudVM interface {
 	RebootVM(ctx context.Context) error
 	GetMonitorData(start, end string) ([]ICfelMonitorData, error) // 获取主机监控数据
+	GetIsolatedDevice() ([]*IsolatedDeviceInfo,error)
+	GetCfelHypervisor() string
 	ICloudVM
 }
 

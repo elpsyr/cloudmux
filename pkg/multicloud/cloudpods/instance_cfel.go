@@ -87,6 +87,10 @@ func (self *SInstance) GetMonitorData(start, end string) ([]cloudprovider.ICfelM
 	return nil, cloudprovider.ErrNotImplemented
 }
 
+func (self *SInstance) GetCfelHypervisor() string {
+	return self.Hypervisor
+}
+
 type Monitor struct {
 	Series []struct {
 		Columns []string    `json:"columns"`
@@ -415,4 +419,17 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 	}
 	ins := &SInstance{}
 	return ins, self.create(&modules.Servers, input, ins)
+}
+
+func (self *SInstance) GetIsolatedDevice() ([]*cloudprovider.IsolatedDeviceInfo,error) {
+	
+	var res []*cloudprovider.IsolatedDeviceInfo
+	for _,v := range self.IsolatedDevices {
+		res = append(res, &cloudprovider.IsolatedDeviceInfo{
+			DevType: v.DevType,
+			Model:   v.Model,
+			VendorDeviceId:  v.VendorDeviceId,
+		})
+	}
+	return res, nil
 }

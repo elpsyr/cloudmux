@@ -412,9 +412,10 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 	} else if len(opts.Networks) != 0 {
 		for i := 0; i < len(opts.Networks); i++ {
 			input.Networks = append(input.Networks, &compute.NetworkConfig{
-				Index:   i,
-				Network: opts.Networks[i].NetworkId,
-				Address: opts.Networks[i].Address,
+				Index:          i,
+				Network:        opts.Networks[i].NetworkId,
+				Address:        opts.Networks[i].Address,
+				RequireTeaming: opts.Networks[i].RequireTeaming,
 			})
 		}
 	}
@@ -422,14 +423,14 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 	return ins, self.create(&modules.Servers, input, ins)
 }
 
-func (self *SInstance) GetIsolatedDevice() ([]*cloudprovider.IsolatedDeviceInfo,error) {
-	
+func (self *SInstance) GetIsolatedDevice() ([]*cloudprovider.IsolatedDeviceInfo, error) {
+
 	var res []*cloudprovider.IsolatedDeviceInfo
-	for _,v := range self.IsolatedDevices {
+	for _, v := range self.IsolatedDevices {
 		res = append(res, &cloudprovider.IsolatedDeviceInfo{
-			DevType: v.DevType,
-			Model:   v.Model,
-			VendorDeviceId:  v.VendorDeviceId,
+			DevType:        v.DevType,
+			Model:          v.Model,
+			VendorDeviceId: v.VendorDeviceId,
 		})
 	}
 	return res, nil

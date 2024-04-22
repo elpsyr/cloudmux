@@ -18,7 +18,7 @@ type ICfelCloudRegion interface {
 
 	CreateBareMetal(desc *CfelSManagedVMCreateConfig) (ICloudVM, error)
 	CreateVM(desc *CfelSManagedVMCreateConfig) (ICloudVM, error)
-	DeleteVM(ctx context.Context) error
+	DeleteVM(instanceId string) error
 	CreateImageByUrl(params *CfelSImageCreateOption) (ICloudImage, error)
 	GetImageByID(id string) (ICloudImage, error)
 	ResetGuestPassword(params *CfelResetGuestPasswordOption) (ICloudVM, error)

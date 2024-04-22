@@ -1,7 +1,6 @@
 package multicloud
 
 import (
-	"context"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/jsonutils"
 	"yunion.io/x/pkg/errors"
@@ -16,7 +15,7 @@ func (self *SRegion) CreateVM(opts *cloudprovider.CfelSManagedVMCreateConfig) (c
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "CreateVM")
 }
 
-func (self *SRegion) DeleteVM(ctx context.Context) error {
+func (self *SRegion) DeleteVM(instanceId string) error {
 	return errors.Wrapf(cloudprovider.ErrNotImplemented, "DeleteVM")
 
 }

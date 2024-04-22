@@ -290,8 +290,8 @@ func (self *SRegion) CreateVM(opts *cloudprovider.CfelSManagedVMCreateConfig) (c
 	return ins, nil
 }
 
-func (self *SRegion) DeleteVM(ctx context.Context) error {
-	return self.cli.delete(&modules.Servers, self.Id)
+func (self *SRegion) DeleteVM(instanceId string) error {
+	return self.cli.delete(&modules.Servers, instanceId)
 }
 
 func (self *SRegion) ResetGuestPassword(params *cloudprovider.CfelResetGuestPasswordOption) (cloudprovider.ICloudVM, error) {

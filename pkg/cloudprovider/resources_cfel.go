@@ -18,6 +18,7 @@ type ICfelCloudRegion interface {
 
 	CreateBareMetal(desc *CfelSManagedVMCreateConfig) (ICloudVM, error)
 	CreateVM(desc *CfelSManagedVMCreateConfig) (ICloudVM, error)
+	DeleteVM(ctx context.Context) error
 	CreateImageByUrl(params *CfelSImageCreateOption) (ICloudImage, error)
 	GetImageByID(id string) (ICloudImage, error)
 	ResetGuestPassword(params *CfelResetGuestPasswordOption) (ICloudVM, error)
@@ -51,7 +52,7 @@ type ICfelZone interface {
 type ICfelCloudVM interface {
 	RebootVM(ctx context.Context) error
 	GetMonitorData(start, end string) ([]ICfelMonitorData, error) // 获取主机监控数据
-	GetIsolatedDevice() ([]*IsolatedDeviceInfo,error)
+	GetIsolatedDevice() ([]*IsolatedDeviceInfo, error)
 	GetCfelHypervisor() string
 	ICloudVM
 }

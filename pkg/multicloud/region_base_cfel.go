@@ -1,6 +1,7 @@
 package multicloud
 
 import (
+	"context"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/jsonutils"
 	"yunion.io/x/pkg/errors"
@@ -13,8 +14,13 @@ func (self *SRegion) CreateBareMetal(opts *cloudprovider.CfelSManagedVMCreateCon
 
 func (self *SRegion) CreateVM(opts *cloudprovider.CfelSManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "CreateVM")
+}
+
+func (self *SRegion) DeleteVM(ctx context.Context) error {
+	return errors.Wrapf(cloudprovider.ErrNotImplemented, "DeleteVM")
 
 }
+
 func (self *SRegion) CreateImageByUrl(params *cloudprovider.CfelSImageCreateOption) (cloudprovider.ICloudImage, error) {
 
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "CreateImageByUrl")

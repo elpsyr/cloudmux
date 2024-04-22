@@ -420,7 +420,25 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 		}
 	}
 	// raid
-	input.BaremetalDiskConfigs = opts.BaremetalDiskConfigs
+	ebmDiskConfig := make([]*compute.BaremetalDiskConfig, 0)
+	for _, config := range opts.BaremetalDiskConfigs {
+		ebmDiskConfig = append(ebmDiskConfig, &compute.BaremetalDiskConfig{
+			Type:         config.Type,
+			Conf:         config.Conf,
+			Count:        config.Count,
+			Range:        config.Range,
+			Splits:       config.Splits,
+			Size:         config.Size,
+			Adapter:      config.Adapter,
+			Driver:       config.Driver,
+			Cachedbadbbu: config.Cachedbadbbu,
+			Strip:        config.Strip,
+			RA:           config.RA,
+			WT:           config.WT,
+			Direct:       config.Direct,
+		})
+	}
+	input.BaremetalDiskConfigs = ebmDiskConfig
 
 	ins := &SInstance{}
 	return ins, self.create(&modules.Servers, input, ins)

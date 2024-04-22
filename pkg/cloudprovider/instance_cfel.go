@@ -1,12 +1,10 @@
 package cloudprovider
 
-import "yunion.io/x/onecloud/pkg/apis/compute"
-
 type CfelSManagedVMCreateConfig struct {
 	SManagedVMCreateConfig
 	IsolatedDevice       []*IsolatedDeviceConfig
 	Networks             []Network
-	BaremetalDiskConfigs []*compute.BaremetalDiskConfig
+	BaremetalDiskConfigs []*BaremetalDiskConfig
 }
 type Network struct {
 	NetworkId      string
@@ -23,6 +21,24 @@ type IsolatedDeviceConfig struct {
 	NetworkIndex int    `json:"network_index"`
 	Vendor       string `json:"vendor"`
 	WireId       string `json:"wire_id"`
+}
+type BaremetalDiskConfig struct {
+	//Index int `json:"index"`
+	// disk type
+	Type string `json:"type"` // ssd / rotate
+	// raid config
+	Conf         string  `json:"conf"`  // raid配置
+	Count        int64   `json:"count"` // 连续几块
+	Range        []int64 `json:"range"` // 指定几块
+	Splits       string  `json:"splits"`
+	Size         []int64 `json:"size"` //
+	Adapter      *int    `json:"adapter,omitempty"`
+	Driver       string  `json:"driver"`
+	Cachedbadbbu *bool   `json:"cachedbadbbu,omitempty"`
+	Strip        *int64  `json:"strip,omitempty"`
+	RA           *bool   `json:"ra,omitempty"`
+	WT           *bool   `json:"wt,omitempty"`
+	Direct       *bool   `json:"direct,omitempty"`
 }
 
 type IsolatedDeviceInfo struct {

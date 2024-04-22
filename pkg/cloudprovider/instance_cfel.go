@@ -1,9 +1,12 @@
 package cloudprovider
 
+import "yunion.io/x/onecloud/pkg/apis/compute"
+
 type CfelSManagedVMCreateConfig struct {
 	SManagedVMCreateConfig
-	IsolatedDevice []*IsolatedDeviceConfig
-	Networks       []Network
+	IsolatedDevice       []*IsolatedDeviceConfig
+	Networks             []Network
+	BaremetalDiskConfigs []*compute.BaremetalDiskConfig
 }
 type Network struct {
 	NetworkId      string
@@ -23,9 +26,9 @@ type IsolatedDeviceConfig struct {
 }
 
 type IsolatedDeviceInfo struct {
-	DevType string `json:"dev_type,omitempty"`
-	Model   string `json:"model,omitempty"`
-	VendorDeviceId  string `json:"vendor,omitempty"`
+	DevType        string `json:"dev_type,omitempty"`
+	Model          string `json:"model,omitempty"`
+	VendorDeviceId string `json:"vendor,omitempty"`
 }
 
 type MigrateForecastOption struct {

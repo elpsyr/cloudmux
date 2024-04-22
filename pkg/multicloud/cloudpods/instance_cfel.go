@@ -419,6 +419,9 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 			})
 		}
 	}
+	// raid
+	input.BaremetalDiskConfigs = opts.BaremetalDiskConfigs
+
 	ins := &SInstance{}
 	return ins, self.create(&modules.Servers, input, ins)
 }

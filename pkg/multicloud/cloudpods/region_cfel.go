@@ -181,7 +181,7 @@ func (self *SRegion) ICfelDeleteImage(id string) error {
 
 func (self *SRegion) GetICfelCloudImage() ([]cloudprovider.ICloudImage, error) {
 	var params = map[string]interface{}{
-		"is_public": false,
+		"is_public": true,
 		"is_guest_image": false,
 	}
 	var rr []SImage

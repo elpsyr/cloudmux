@@ -105,15 +105,15 @@ func (self *SRegion) CfelGetINetworks() ([]cloudprovider.ICloudNetwork, error) {
 }
 
 func (self *SRegion) GetIHostsByCondition(opts *cloudprovider.FilterOption) ([]cloudprovider.ICloudHost, error) {
-	
+
 	params := map[string]interface{}{
 		// "scope":                 "system",
 		"show_fail_reason": "true",
 		"host_type":        opts.HostType,
 		"limit":            opts.Limit,
-		"enabled":               1,
-		"host_status": "online",
-		"os_arch":     opts.OsArch,
+		"enabled":          1,
+		"host_status":      "online",
+		"os_arch":          opts.OsArch,
 		//"field":       ,
 		// "server_id_for_network": "f13faa78-5a46-4236-80ee-f427defd947e",
 		// "project_domain":        "default",
@@ -138,23 +138,23 @@ func (self *SRegion) GetIHostsByCondition(opts *cloudprovider.FilterOption) ([]c
 
 func (self *SRegion) MigrateForecast(opts *cloudprovider.MigrateForecastOption) ([]cloudprovider.ICfelFilter, error) {
 	params := map[string]interface{}{
-		"live_migrate":opts.LiveMigrate,
-		"skip_cpu_check":false,
-		"skip_kernel_check":opts.SkipKernelCheck,
+		"live_migrate":      opts.LiveMigrate,
+		"skip_cpu_check":    false,
+		"skip_kernel_check": opts.SkipKernelCheck,
 		// "is_rescue_mode":true,
 	}
-	res,err := self.cli.perform(&modules.Servers,opts.GuestId,"migrate-forecast",params)
+	res, err := self.cli.perform(&modules.Servers, opts.GuestId, "migrate-forecast", params)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
-	rr,err := res.Get("filtered_candidates")
+	rr, err := res.Get("filtered_candidates")
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	var filter []SCfelFilter
 	err = rr.Unmarshal(&filter)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	var ret []cloudprovider.ICfelFilter
 	for i := range filter {
@@ -163,12 +163,37 @@ func (self *SRegion) MigrateForecast(opts *cloudprovider.MigrateForecastOption) 
 	return ret, nil
 }
 
-func (self *SRegion) GetGeneralUsage() (cloudprovider.ICfelGeneralUsage,error) {
+func (self *SRegion) GetGeneralUsage() (cloudprovider.ICfelGeneralUsage, error) {
 	var usage GeneralUsage
-	res,err := modules.Usages.GetGeneralUsage(self.cli.s,nil)
+	res, err := modules.Usages.GetGeneralUsage(self.cli.s, nil)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	_ = res.Unmarshal(&usage)
-	return &usage,nil
+	return &usage, nil
+}
+
+func (self *SRegion) ICfelDeleteImage(id string) error {
+	_,err := image.Images.Delete(self.cli.s,id,nil)
+	return err
+}
+
+
+func (self *SRegion) GetICfelCloudImage() ([]cloudprovider.ICloudImage, error) {
+	var params = map[string]interface{}{
+		"is_public": false,
+		"is_guest_image": false,
+	}
+	var rr []SImage
+	err := self.list(&image.Images,params,&rr)
+	
+	if err != nil {
+		return nil,nil
+	}
+	var ret []cloudprovider.ICloudImage
+	for i := range rr {
+		ret = append(ret, &rr[i])
+	}
+	return ret,nil
+
 }

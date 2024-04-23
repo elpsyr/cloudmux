@@ -76,3 +76,10 @@ func (self *SRegion) GetMonitorDataJSON(*cloudprovider.MonitorDataJSONOption) (j
 func (self *SRegion) GetGeneralUsage() (cloudprovider.ICfelGeneralUsage, error) {
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetGeneralUsage")
 }
+
+func (self *SRegion) ICfelDeleteImage(id string) error {
+	return errors.Wrapf(cloudprovider.ErrNotImplemented, "ICfelDeleteImage")
+}
+func (self *SRegion) GetICfelCloudImage() ([]cloudprovider.ICloudImage, error) {
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetICfelCloudImage")
+}

@@ -34,6 +34,9 @@ type ICfelCloudRegion interface {
 	// GetMonitorData(vmId, start, end, interval string) ([]ICfelMonitorData,[]string ,error) // 获取主机监控数据
 	GetMonitorDataJSON(*MonitorDataJSONOption) (jsonutils.JSONObject, error) // 获取主机监控数据
 	GetGeneralUsage() (ICfelGeneralUsage, error)
+	
+	ICfelDeleteImage(id string) error
+	GetICfelCloudImage() ([]ICloudImage,error)
 }
 
 type ICfelCloudSku interface {

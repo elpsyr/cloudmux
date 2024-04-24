@@ -390,14 +390,23 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 	if opts.BillingCycle != nil {
 		input.Duration = opts.BillingCycle.String()
 	}
+
+	// system disk
+	sysDiskSize := 0
+	if opts.SysDisk.SizeGB > 0 {
+		sysDiskSize = opts.SysDisk.SizeGB * 1024
+	} else {
+		sysDiskSize = -1
+	}
 	input.Disks = append(input.Disks, &compute.DiskConfig{
 		Index:    0,
 		ImageId:  opts.ExternalImageId,
 		DiskType: api.DISK_TYPE_SYS,
-		SizeMb:   opts.SysDisk.SizeGB * 1024,
+		SizeMb:   sysDiskSize,
 		Backend:  opts.SysDisk.StorageType,
 		Storage:  opts.SysDisk.StorageExternalId,
 	})
+
 	for idx, disk := range opts.DataDisks {
 		input.Disks = append(input.Disks, &compute.DiskConfig{
 			Index:    idx + 1,

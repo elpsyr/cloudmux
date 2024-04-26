@@ -80,6 +80,10 @@ func (self *SRegion) GetGeneralUsage() (cloudprovider.ICfelGeneralUsage, error) 
 func (self *SRegion) ICfelDeleteImage(id string) error {
 	return errors.Wrapf(cloudprovider.ErrNotImplemented, "ICfelDeleteImage")
 }
-func (self *SRegion) GetICfelCloudImage() ([]cloudprovider.ICloudImage, error) {
+func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.ICloudImage, error) {
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetICfelCloudImage")
+}
+
+func (self *SRegion) SetImageUserTag(*cloudprovider.CfelSetImageUserTag) error {
+	return errors.Wrapf(cloudprovider.ErrNotImplemented, "SetImageUserTag")
 }

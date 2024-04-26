@@ -25,6 +25,11 @@ type CfelResetGuestPasswordOption struct {
 	UserName      string `json:"username,omitempty"`
 }
 
+type CfelSetImageUserTag struct {
+	ImageId string
+	Tags map[string]string
+}
+
 type CfelChangeSettingOption struct {
 	Desc     string `json:"description,omitempty"`
 	Name     string `json:"name,omitempty"`

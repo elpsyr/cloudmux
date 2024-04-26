@@ -194,6 +194,7 @@ func (self *SRegion) UploadImage(ctx context.Context, opts *cloudprovider.SImage
 	}
 
 	params := map[string]interface{}{
+		"name": opts.ImageName,
 		"generate_name": opts.ImageName,
 		"protected": opts.IsProtected,
 		"properties": map[string]string{

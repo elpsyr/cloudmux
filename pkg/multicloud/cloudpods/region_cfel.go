@@ -51,6 +51,7 @@ func (self *SRegion) GetIVMs() ([]cloudprovider.ICloudVM, error) {
 
 func (self *SRegion) CreateImageByUrl(opts *cloudprovider.CfelSImageCreateOption) (cloudprovider.ICloudImage, error) {
 	params := map[string]interface{}{
+		"name": opts.ImageName,
 		"generate_name": opts.ImageName,
 		"protected":     opts.IsProtected,
 		"copy_from":     opts.CopyFrom,
@@ -174,26 +175,31 @@ func (self *SRegion) GetGeneralUsage() (cloudprovider.ICfelGeneralUsage, error) 
 }
 
 func (self *SRegion) ICfelDeleteImage(id string) error {
-	_,err := image.Images.Delete(self.cli.s,id,nil)
+	_, err := image.Images.Delete(self.cli.s, id, nil)
 	return err
 }
 
-
-func (self *SRegion) GetICfelCloudImage() ([]cloudprovider.ICloudImage, error) {
+func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.ICloudImage, error) {
 	var params = map[string]interface{}{
-		"is_public": true,
+		"is_public":      true,
 		"is_guest_image": false,
+		"with_user_meta": withUserMeta,
 	}
 	var rr []SImage
-	err := self.list(&image.Images,params,&rr)
-	
+	err := self.list(&image.Images, params, &rr)
+
 	if err != nil {
-		return nil,nil
+		return nil, nil
 	}
 	var ret []cloudprovider.ICloudImage
 	for i := range rr {
 		ret = append(ret, &rr[i])
 	}
-	return ret,nil
+	return ret, nil
 
+}
+
+func (self *SRegion) SetImageUserTag(opts *cloudprovider.CfelSetImageUserTag) error {
+	_,err := image.Images.PerformAction(self.cli.s,opts.ImageId,"set-user-metadata",jsonutils.Marshal(opts.Tags))
+	return err
 }

@@ -183,9 +183,7 @@ func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.IClo
 	var params = map[string]interface{}{
 		"is_public":      true,
 		"is_guest_image": false,
-	}
-	if withUserMeta {
-		params["with_user_meta"] = withUserMeta
+		"with_user_meta": true,
 	}
 	var rr []SImage
 	err := self.list(&image.Images, params, &rr)

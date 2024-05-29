@@ -592,7 +592,3 @@ func (self *SRegion) GetInstanceTypeStatus(zoneId, instanceTypeName string) (str
 	// 没有查询到对应 zone instanceType
 	return api.SkuStatusSoldout, nil
 }
-
-func (self *SRegion) CreateBareMetal(opts *cloudprovider.SManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
-	return nil, cloudprovider.ErrNotImplemented
-}

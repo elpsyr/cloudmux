@@ -87,3 +87,7 @@ func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.IClo
 func (self *SRegion) SetImageUserTag(*cloudprovider.CfelSetImageUserTag) error {
 	return errors.Wrapf(cloudprovider.ErrNotImplemented, "SetImageUserTag")
 }
+
+func (self *SRegion) GetUsableIEip() ([]cloudprovider.ICloudEIP, error) {
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetUsableIEip")
+}

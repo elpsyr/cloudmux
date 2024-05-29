@@ -51,7 +51,7 @@ func (self *SRegion) GetIVMs() ([]cloudprovider.ICloudVM, error) {
 
 func (self *SRegion) CreateImageByUrl(opts *cloudprovider.CfelSImageCreateOption) (cloudprovider.ICloudImage, error) {
 	params := map[string]interface{}{
-		"name": opts.ImageName,
+		"name":          opts.ImageName,
 		"generate_name": opts.ImageName,
 		"protected":     opts.IsProtected,
 		"copy_from":     opts.CopyFrom,
@@ -183,7 +183,7 @@ func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.IClo
 	var params = map[string]interface{}{
 		"is_public":      true,
 		"is_guest_image": false,
-		"with_user_meta": true,
+		"with_user_meta": withUserMeta,
 	}
 	var rr []SImage
 	err := self.list(&image.Images, params, &rr)
@@ -200,6 +200,23 @@ func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.IClo
 }
 
 func (self *SRegion) SetImageUserTag(opts *cloudprovider.CfelSetImageUserTag) error {
-	_,err := image.Images.PerformAction(self.cli.s,opts.ImageId,"set-user-metadata",jsonutils.Marshal(opts.Tags))
+	_, err := image.Images.PerformAction(self.cli.s, opts.ImageId, "set-user-metadata", jsonutils.Marshal(opts.Tags))
 	return err
+}
+
+func (self *SRegion) GetUsableIEip() ([]cloudprovider.ICloudEIP, error) {
+	eips := []SEip{}
+	params := map[string]interface{}{
+		"usable": true,
+	}
+
+	err := self.list(&modules.Elasticips, params, &eips)
+	if err != nil {
+		return nil, err
+	}
+	var ret []cloudprovider.ICloudEIP
+	for i := range eips {
+		ret = append(ret, &eips[i])
+	}
+	return ret, nil
 }

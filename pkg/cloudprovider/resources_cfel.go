@@ -34,10 +34,12 @@ type ICfelCloudRegion interface {
 	// GetMonitorData(vmId, start, end, interval string) ([]ICfelMonitorData,[]string ,error) // 获取主机监控数据
 	GetMonitorDataJSON(*MonitorDataJSONOption) (jsonutils.JSONObject, error) // 获取主机监控数据
 	GetGeneralUsage() (ICfelGeneralUsage, error)
-	
+
 	ICfelDeleteImage(id string) error
-	GetICfelCloudImage(withUserMeta bool) ([]ICloudImage,error)
+	GetICfelCloudImage(withUserMeta bool) ([]ICloudImage, error)
 	SetImageUserTag(*CfelSetImageUserTag) error
+
+	GetUsableIEip() ([]ICloudEIP, error)
 }
 
 type ICfelCloudSku interface {
@@ -105,4 +107,19 @@ type ICfelGeneralUsage interface {
 	GetIsolatedDevices() int
 	GetAllServersIsolatedDevices() int
 	GetRunningServersIsolatedDevices() int
+}
+
+type ICfelLoadbalancerBackendGroup interface {
+	ICloudLoadbalancerBackendGroup
+	CfelAddBackendServer(serverType, serverId, ssl string, weight int, port int) (ICloudLoadbalancerBackend, error)
+}
+
+type ICfelLoadbalancerListener interface {
+	ICloudLoadbalancerListener
+	CfelCreateILoadBalancerListenerRule(*SCfelLoadbalancerListenerRule) (ICloudLoadbalancerListenerRule, error)
+}
+
+type ICfelLoadbalancer interface {
+	ICloudLoadbalancer
+	CfelCreateILoadBalancerBackendGroup(*SCfelLoadbalancerBackendGroup) (ICloudLoadbalancerBackendGroup, error)
 }

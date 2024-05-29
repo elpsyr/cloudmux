@@ -92,7 +92,7 @@ type SCfelSku struct {
 	//PlacementGroupInfo *PlacementGroupInfo `locationName:"placementGroupInfo" type:"structure"`
 	//
 	// Describes the processor.
-	ProcessorInfo *ProcessorInfo `locationName:"processorInfo" type:"structure"`
+	ProcessorInfo *ProcessorInfo `xml:"processorInfo" locationName:"processorInfo" type:"structure"`
 
 	//// Describes the Amazon EBS settings for the instance type.
 	//EbsInfo *EbsInfo `locationName:"ebsInfo" type:"structure"`
@@ -168,7 +168,10 @@ func (s Sku) GetPostpaidStatus() string {
 }
 
 func (s Sku) GetCpuArch() string {
-	return strings.Join(s.ProcessorInfo.SupportedArchitectures, ",")
+	if s.ProcessorInfo != nil {
+		return strings.Join(s.ProcessorInfo.SupportedArchitectures, ",")
+	}
+	return ""
 }
 
 func (s Sku) GetCpuCoreCount() int {
@@ -799,4 +802,3 @@ func getInstanceFamily(instanceType string) string {
 	}
 	return ""
 }
-

@@ -91,3 +91,7 @@ func (self *SRegion) SetImageUserTag(*cloudprovider.CfelSetImageUserTag) error {
 func (self *SRegion) GetUsableIEip() ([]cloudprovider.ICloudEIP, error) {
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetUsableIEip")
 }
+
+func (self *SRegion) GetLoadbalancerSkus() ([]cloudprovider.ICfelLoadbalancerSku, error) {
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetLoadbalancerSkus")
+}

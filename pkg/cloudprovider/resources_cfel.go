@@ -40,6 +40,8 @@ type ICfelCloudRegion interface {
 	SetImageUserTag(*CfelSetImageUserTag) error
 
 	GetUsableIEip() ([]ICloudEIP, error)
+
+	GetLoadbalancerSkus() ([]ICfelLoadbalancerSku, error)
 }
 
 type ICfelCloudSku interface {
@@ -117,9 +119,16 @@ type ICfelLoadbalancerBackendGroup interface {
 type ICfelLoadbalancerListener interface {
 	ICloudLoadbalancerListener
 	CfelCreateILoadBalancerListenerRule(*SCfelLoadbalancerListenerRule) (ICloudLoadbalancerListenerRule, error)
+	Update(*SLoadbalancerListenerCreateOptions) error
 }
 
 type ICfelLoadbalancer interface {
 	ICloudLoadbalancer
 	CfelCreateILoadBalancerBackendGroup(*SCfelLoadbalancerBackendGroup) (ICloudLoadbalancerBackendGroup, error)
+}
+
+type ICfelLoadbalancerSku interface {
+	GetName() string
+	GetType() string
+	GetID() string
 }

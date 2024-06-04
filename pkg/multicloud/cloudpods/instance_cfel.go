@@ -391,6 +391,10 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 		input.Duration = opts.BillingCycle.String()
 	}
 
+	if opts.EipBw > 0 {
+		input.EipBw = opts.EipBw
+		input.EipAutoDellocate = opts.EipAutoDellocate
+	}
 	// system disk
 	sysDiskSize := 0
 	if opts.SysDisk.SizeGB > 0 {

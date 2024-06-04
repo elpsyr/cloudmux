@@ -57,6 +57,8 @@ type SCloudLoadbalancerListener struct {
 	HealthCheckTimeout  int    `json:"health_check_timeout"`
 	HealthCheckType     string `json:"health_check_type"`
 	HealthCheckURI      string `json:"health_check_uri"`
+	HealthCheckExp      string `json:"health_check_exp"`
+	HealthCheckReq      string `json:"health_check_req"`
 
 	Scheduler                  string    `json:"scheduler"`
 	SendProxy                  string    `json:"send_proxy"`
@@ -69,6 +71,63 @@ type SCloudLoadbalancerListener struct {
 	UpdateVersion              int       `json:"update_version"`
 	UpdatedAt                  time.Time `json:"updated_at"`
 	XforwardedFor              bool      `json:"xforwarded_for"`
+}
+
+// Update implements cloudprovider.ICfelLoadbalancerListener.
+func (s *SCloudLoadbalancerListener) Update(listener *cloudprovider.SLoadbalancerListenerCreateOptions) error {
+	params := map[string]interface{}{
+		"acl_status": "off",
+		// "backend_connect_timeout":       5,
+		"backend_group":          listener.BackendGroupId,
+		"backend_idle_timeout":   90,
+		"client_idle_timeout":    90,
+		"client_request_timeout": 10,
+		"description":            listener.Description,
+		"enable_http2":           listener.EnableHTTP2,
+		"gzip":                   listener.Gzip,
+
+		"health_check": "off",
+
+		// "http_request_rate":     0,
+		// "http_request_rate_src": 0,
+
+		"redirect": "off",
+	
+		"scheduler": listener.Scheduler,
+
+		"sticky_session": "off",
+
+		"tls_cipher_policy": listener.TLSCipherPolicy,
+		"x_forwarded_for":   listener.XForwardedFor,
+	}
+	if listener.ListenerType == "https" && s.CertificateID != listener.CertificateId {
+		params["certificate_id"] = listener.CertificateId
+	}
+	if listener.AccessControlListStatus == "on" {
+		params["acl_id"] = listener.AccessControlListId
+		params["acl_type"] = listener.AccessControlListType
+	}
+	if listener.StickySession == "on" {
+		params["sticky_session_cookie"] = listener.StickySessionCookie
+		params["sticky_session_cookie_timeout"] = listener.StickySessionCookieTimeout
+		params["sticky_session_type"] = listener.StickySessionType
+	}
+	if listener.HealthCheck == "on" {
+		params["health_check"] = listener.HealthCheck
+		params["health_check_fail"] = listener.HealthCheckFail
+		params["health_check_http_code"] = listener.HealthCheckHttpCode
+		params["health_check_interval"] = listener.HealthCheckInterval
+		params["health_check_path"] = listener.HealthCheckURI
+		params["health_check_rise"] = listener.HealthCheckRise
+		params["health_check_timeout"] = listener.HealthCheckTimeout
+		params["health_check_type"] = listener.HealthCheckType
+		params["health_check_domain"] = listener.HealthCheckDomain
+		params["health_check_uri"] = listener.HealthCheckURI
+		params["health_check_req"] = listener.HealthCheckReq
+		params["health_check_exp"] = listener.HealthCheckExp
+	}
+	_, err := modules.LoadbalancerListeners.Update(s.loadbalancer.region.cli.s, s.ID, jsonutils.Marshal(params))
+	return err
 }
 
 type SCloudLoadbalancerListenerRule struct {
@@ -243,7 +302,7 @@ func (s *SCloudLoadbalancerListener) GetHealthCheckDomain() string {
 
 // GetHealthCheckExp implements cloudprovider.ICloudLoadbalancerListener.
 func (s *SCloudLoadbalancerListener) GetHealthCheckExp() string {
-	return s.GetHealthCheckExp()
+	return s.HealthCheckExp
 }
 
 // GetHealthCheckFail implements cloudprovider.ICloudLoadbalancerListener.
@@ -258,7 +317,7 @@ func (s *SCloudLoadbalancerListener) GetHealthCheckInterval() int {
 
 // GetHealthCheckReq implements cloudprovider.ICloudLoadbalancerListener.
 func (s *SCloudLoadbalancerListener) GetHealthCheckReq() string {
-	return ""
+	return s.HealthCheckReq
 }
 
 // GetHealthCheckRise implements cloudprovider.ICloudLoadbalancerListener.
@@ -308,12 +367,24 @@ func (s *SCloudLoadbalancerListener) GetRedirectScheme() string {
 
 // ChangeCertificate implements cloudprovider.ICloudLoadbalancerListener.
 func (s *SCloudLoadbalancerListener) ChangeCertificate(ctx context.Context, opts *cloudprovider.ListenerCertificateOptions) error {
-	panic("unimplemented")
+	params := map[string]interface{}{
+		"certificate_id": opts.CertificateId,
+	}
+	_, err := modules.LoadbalancerListeners.Update(s.loadbalancer.region.cli.s, s.ID, jsonutils.Marshal(params))
+	return err
 }
 
 // ChangeScheduler implements cloudprovider.ICloudLoadbalancerListener.
 func (s *SCloudLoadbalancerListener) ChangeScheduler(ctx context.Context, opts *cloudprovider.ChangeListenerSchedulerOptions) error {
-	panic("unimplemented")
+	params := map[string]interface{}{
+		"scheduler":                     opts.Scheduler,
+		"sticky_session":                opts.StickySession,
+		"sticky_session_cookie":         opts.StickySessionCookie,
+		"sticky_session_cookie_timeout": opts.StickySessionCookieTimeout,
+		"sticky_session_type":           opts.StickySessionType,
+	}
+	_, err := modules.LoadbalancerListeners.Update(s.loadbalancer.region.cli.s, s.ID, jsonutils.Marshal(params))
+	return err
 }
 
 // CreateILoadBalancerListenerRule implements cloudprovider.ICloudLoadbalancerListener.
@@ -482,14 +553,28 @@ func (s *SCloudLoadbalancerListener) SetAcl(ctx context.Context, opts *cloudprov
 	}
 
 	_, err := modules.LoadbalancerListeners.Update(s.loadbalancer.region.cli.s, s.ID, jsonutils.Marshal(params))
-	// _,err := s.loadbalancer.region.perform(&modules.LoadbalancerListeners,s.ID,"",params)
 	return err
 
 }
 
 // SetHealthCheck implements cloudprovider.ICloudLoadbalancerListener.
 func (s *SCloudLoadbalancerListener) SetHealthCheck(ctx context.Context, opts *cloudprovider.ListenerHealthCheckOptions) error {
-	panic("unimplemented")
+	params := map[string]interface{}{
+		"health_check":           opts.HealthCheck,
+		"health_check_fail":      opts.HealthCheckFail,
+		"health_check_http_code": opts.HealthCheckHttpCode,
+		"health_check_interval":  opts.HealthCheckInterval,
+		"health_check_path":      opts.HealthCheckURI,
+		"health_check_rise":      opts.HealthCheckRise,
+		"health_check_timeout":   opts.HealthCheckTimeout,
+		"health_check_type":      opts.HealthCheckType,
+		"health_check_domain":    opts.HealthCheckDomain,
+		"health_check_uri":       opts.HealthCheckURI,
+		"health_check_req":       opts.HealthCheckReq,
+		"health_check_exp":       opts.HealthCheckExp,
+	}
+	_, err := modules.LoadbalancerListeners.Update(s.loadbalancer.region.cli.s, s.ID, jsonutils.Marshal(params))
+	return err
 }
 
 // Start implements cloudprovider.ICloudLoadbalancerListener.

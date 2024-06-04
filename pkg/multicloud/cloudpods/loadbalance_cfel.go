@@ -56,7 +56,6 @@ func (s *SLoadbalancer) CfelCreateILoadBalancerBackendGroup(bg *cloudprovider.SC
 	return &ret, res.Unmarshal(&ret)
 }
 
-
 // CreateILoadBalancerBackendGroup implements cloudprovider.ICloudLoadbalancer.
 func (s *SLoadbalancer) CreateILoadBalancerBackendGroup(group *cloudprovider.SLoadbalancerBackendGroup) (cloudprovider.ICloudLoadbalancerBackendGroup, error) {
 	params := map[string]interface{}{
@@ -71,15 +70,12 @@ func (s *SLoadbalancer) CreateILoadBalancerBackendGroup(group *cloudprovider.SLo
 // CreateILoadBalancerListener implements cloudprovider.ICloudLoadbalancer.
 func (s *SLoadbalancer) CreateILoadBalancerListener(ctx context.Context, listener *cloudprovider.SLoadbalancerListenerCreateOptions) (cloudprovider.ICloudLoadbalancerListener, error) {
 	params := map[string]interface{}{
-		// "acl":                           "string",
 		"acl_id":     listener.AccessControlListId,
 		"acl_status": listener.AccessControlListStatus,
 		"acl_type":   listener.AccessControlListType,
 		// "backend_connect_timeout":       5,
-		"backend_group": listener.BackendGroupId,
-		// "backend_group_id":              listener.BackendGroupId,
-		"backend_idle_timeout": 90,
-		// "certificate":                   "string",
+		"backend_group":          listener.BackendGroupId,
+		"backend_idle_timeout":   90,
 		"certificate_id":         listener.CertificateId,
 		"client_idle_timeout":    90,
 		"client_request_timeout": 10,
@@ -91,32 +87,35 @@ func (s *SLoadbalancer) CreateILoadBalancerListener(ctx context.Context, listene
 		"health_check_http_code": listener.HealthCheckHttpCode,
 		"health_check_interval":  listener.HealthCheckInterval,
 		"health_check_path":      listener.HealthCheckURI,
-		"health_check_rise":      5,
-		"health_check_timeout":   5,
+		"health_check_rise":      listener.HealthCheckRise,
+		"health_check_timeout":   listener.HealthCheckTimeout,
 		"health_check_type":      listener.HealthCheckType,
-		"http_request_rate":      0,
-		"http_request_rate_src":  0,
-		// "is_emulated":                   true,
-		"listener_port":   listener.ListenerPort,
-		"listener_type":   listener.ListenerType,
-		"loadbalancer":    s.Name,
-		"loadbalancer_id": s.ID,
-		"name":            listener.Name,
-		"redirect":        "off",
-		// "redirect_code":                 0,
-		// "redirect_host":                 "string",
-		// "redirect_path":                 "string",
-		// "redirect_scheme":               "string",
+		"health_check_domain":    listener.HealthCheckDomain,
+		"health_check_uri":       listener.HealthCheckURI,
+		"health_check_req":       listener.HealthCheckReq,
+		"health_check_exp":       listener.HealthCheckExp,
+
+		"http_request_rate":     0,
+		"http_request_rate_src": 0,
+		"listener_port":         listener.ListenerPort,
+		"listener_type":         listener.ListenerType,
+		"loadbalancer":          s.Name,
+		"loadbalancer_id":       s.ID,
+		"name":                  listener.Name,
+		"redirect":              "off",
+
 		"scheduler": listener.Scheduler,
 		// "send_proxy":                    "",
-		// "status":                        "string",
-		// "sticky_session":                "string",
-		// "sticky_session_cookie":         "string",
-		// "sticky_session_cookie_timeout": 0,
-		// "sticky_session_type":           "string",
-		// "string":                        "string",
+
+		"sticky_session": listener.StickySession,
+
 		"tls_cipher_policy": listener.TLSCipherPolicy,
 		"x_forwarded_for":   listener.XForwardedFor,
+	}
+	if (listener.ListenerType == "http" || listener.ListenerType == "https") && listener.StickySession == "on" {
+		params["sticky_session_cookie"] = listener.StickySessionCookie
+		params["sticky_session_cookie_timeout"] = listener.StickySessionCookieTimeout
+		params["sticky_session_type"] = listener.StickySessionType
 	}
 	var ret SCloudLoadbalancerListener
 	err := s.region.create(&modules.LoadbalancerListeners, params, &ret)
@@ -125,7 +124,7 @@ func (s *SLoadbalancer) CreateILoadBalancerListener(ctx context.Context, listene
 
 // Delete implements cloudprovider.ICloudLoadbalancer.
 func (s *SLoadbalancer) Delete(ctx context.Context) error {
-	return s.region.cli.delete(&modules.Loadbalancers,s.ID)
+	return s.region.cli.delete(&modules.Loadbalancers, s.ID)
 }
 
 // GetAddress implements cloudprovider.ICloudLoadbalancer.
@@ -270,20 +269,20 @@ func (s *SLoadbalancer) GetZoneId() string {
 // Start implements cloudprovider.ICloudLoadbalancer.
 func (s *SLoadbalancer) Start() error {
 	params := map[string]interface{}{
-		"id": s.ID,
+		"id":     s.ID,
 		"status": "enabled",
-	  }
-	_,err := s.region.cli.perform(&modules.Loadbalancers,s.ID,"status",params)
+	}
+	_, err := s.region.cli.perform(&modules.Loadbalancers, s.ID, "status", params)
 	return err
 }
 
 // Stop implements cloudprovider.ICloudLoadbalancer.
 func (s *SLoadbalancer) Stop() error {
 	params := map[string]interface{}{
-		"id": s.ID,
+		"id":     s.ID,
 		"status": "disabled",
-	  }
-	_,err := s.region.cli.perform(&modules.Loadbalancers,s.ID,"status",params)
+	}
+	_, err := s.region.cli.perform(&modules.Loadbalancers, s.ID, "status", params)
 	return err
 }
 
@@ -293,6 +292,7 @@ var _ cloudprovider.ICfelLoadbalancer = (*SLoadbalancer)(nil)
 func (self *SRegion) CreateILoadBalancer(loadbalancer *cloudprovider.SLoadbalancerCreateOptions) (cloudprovider.ICloudLoadbalancer, error) {
 	params := map[string]interface{}{
 		// "cluster_id":  "",
+		"__meta__":       loadbalancer.Tags,
 		"disable_delete": false,
 		"name":           loadbalancer.Name,
 		"vpc":            loadbalancer.VpcId,

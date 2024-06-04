@@ -5,6 +5,8 @@ type CfelSManagedVMCreateConfig struct {
 	IsolatedDevice       []*IsolatedDeviceConfig
 	Networks             []Network
 	BaremetalDiskConfigs []*BaremetalDiskConfig
+	EipBw int
+	EipAutoDellocate bool
 }
 type Network struct {
 	NetworkId      string

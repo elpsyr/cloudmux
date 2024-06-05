@@ -1,12 +1,14 @@
 package cloudprovider
 
+import "yunion.io/x/onecloud/pkg/apis"
+
 type CfelSManagedVMCreateConfig struct {
 	SManagedVMCreateConfig
 	IsolatedDevice       []*IsolatedDeviceConfig
 	Networks             []Network
 	BaremetalDiskConfigs []*BaremetalDiskConfig
-	EipBw int
-	EipAutoDellocate bool
+	EipBw                int
+	EipAutoDellocate     bool
 }
 type Network struct {
 	NetworkId      string
@@ -75,4 +77,14 @@ type FilterOption struct {
 	Field          []string `json:"field"`
 	FilterIds      string   `json:"filter"`
 	Details        bool     `json:"details"`
+}
+
+// ServerSSHInfo
+// copy from ServerRemoteConsoleResponse
+type ServerSSHInfo struct {
+	AccessUrl     string `json:"access_url"`
+	ConnectParams string `json:"connect_params"`
+	Session       string `json:"session,omitempty"`
+
+	apis.Meta
 }

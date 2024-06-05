@@ -4,6 +4,9 @@ import (
 	"context"
 	"sync"
 	"time"
+	"yunion.io/x/onecloud/pkg/mcclient/modules/identity"
+	"yunion.io/x/onecloud/pkg/mcclient/modules/webconsole"
+	"yunion.io/x/pkg/errors"
 
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
@@ -472,4 +475,26 @@ func (self *SInstance) GetIsolatedDevice() ([]*cloudprovider.IsolatedDeviceInfo,
 		})
 	}
 	return res, nil
+}
+
+func (self *SInstance) GetSSHInfo() (*cloudprovider.ServerSSHInfo, error) {
+	return self.host.zone.region.GetInstanceSSH(self.Id)
+}
+
+func (self *SRegion) GetInstanceSSH(id string) (*cloudprovider.ServerSSHInfo, error) {
+	s := self.cli.s
+	resp, err := webconsole.WebConsole.DoSshConnect(s, id, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "DoSshConnect")
+	}
+	result := &cloudprovider.ServerSSHInfo{}
+	err = resp.Unmarshal(&result)
+	if err != nil {
+		return nil, errors.Wrapf(err, "resp.Unmarshal")
+	}
+	resp, err = identity.ServicesV3.GetSpecific(s, "common", "config", nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "GetSpecific")
+	}
+	return result, nil
 }

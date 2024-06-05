@@ -2,7 +2,6 @@ package cloudprovider
 
 import (
 	"context"
-
 	"yunion.io/x/jsonutils"
 )
 
@@ -62,6 +61,7 @@ type ICfelCloudVM interface {
 	GetMonitorData(start, end string) ([]ICfelMonitorData, error) // 获取主机监控数据
 	GetIsolatedDevice() ([]*IsolatedDeviceInfo, error)
 	GetCfelHypervisor() string
+	GetSSHInfo() (*ServerSSHInfo, error)
 	ICloudVM
 }
 

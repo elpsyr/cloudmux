@@ -28,13 +28,15 @@ type SCloudLoadbalancerCertificate struct {
 	UpdatedAt   time.Time
 	Fingerprint string
 	IsPublic    bool
+	SubjectAlternativeNames string
+	CommonName string
 	NotAfter    time.Time
 	NotBefore   time.Time
 }
 
 // GetSubjectAlternativeNames implements cloudprovider.ICloudLoadbalancerCertificate.
 func (s *SCloudLoadbalancerCertificate) GetSubjectAlternativeNames() string {
-	return ""
+	return s.SubjectAlternativeNames
 }
 
 // Delete implements cloudprovider.ICloudLoadbalancerCertificate.
@@ -49,7 +51,7 @@ func (s *SCloudLoadbalancerCertificate) GetCreatedAt() time.Time {
 
 // GetCommonName implements cloudprovider.ICloudLoadbalancerCertificate.
 func (s *SCloudLoadbalancerCertificate) GetCommonName() string {
-	return ""
+	return s.CommonName
 }
 
 // GetExpireTime implements cloudprovider.ICloudLoadbalancerCertificate.

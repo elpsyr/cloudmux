@@ -81,7 +81,14 @@ func (s *SLoadbalancerAcl) GetStatus() string {
 
 // Sync implements cloudprovider.ICloudLoadbalancerAcl.
 func (s *SLoadbalancerAcl) Sync(acl *cloudprovider.SLoadbalancerAccessControlList) error {
-	panic("unimplemented")
+	var entry []map[string]string
+	for _,v := range acl.Entrys {
+		entry = append(entry, map[string]string{"cidr":v.CIDR,"comment":v.Comment})
+	}
+	params := map[string]interface{}{
+		"acl_entries": entry,
+	  }
+	return s.region.cli.update(&modules.LoadbalancerAcls,s.ID,params)
 }
 
 var _ cloudprovider.ICloudLoadbalancerAcl = (*SLoadbalancerAcl)(nil)

@@ -114,6 +114,20 @@ func (self *SRegion) CreateILoadBalancerCertificate(cert *cloudprovider.SLoadbal
 	return &res, err
 }
 
+func (self *SRegion) CfelCreateILoadBalancerCertificate(cert *cloudprovider.SCfelLoadbalancerCertificate) (cloudprovider.ICloudLoadbalancerCertificate, error) {
+	params := map[string]interface{}{
+		"__meta__":       cert.Tags,
+		"disable_delete": false,
+		"name":           cert.Name,
+		"certificate":    cert.Certificate,
+		"private_key":    cert.PrivateKey,
+	}
+	var res SCloudLoadbalancerCertificate
+	err := self.create(&modules.LoadbalancerCertificates, params, &res)
+
+	return &res, err
+}
+
 func (self *SRegion) GetILoadBalancerCertificates() ([]cloudprovider.ICloudLoadbalancerCertificate, error) {
 	params := map[string]interface{}{}
 	var ret []SCloudLoadbalancerCertificate

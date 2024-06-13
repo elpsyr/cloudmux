@@ -95,3 +95,7 @@ func (self *SRegion) GetUsableIEip() ([]cloudprovider.ICloudEIP, error) {
 func (self *SRegion) GetLoadbalancerSkus() ([]cloudprovider.ICfelLoadbalancerSku, error) {
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetLoadbalancerSkus")
 }
+
+func (self *SRegion) CfelCreateILoadBalancerCertificate(cert *cloudprovider.SCfelLoadbalancerCertificate) (cloudprovider.ICloudLoadbalancerCertificate, error) {
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "CfelCreateILoadBalancerCertificate")
+}

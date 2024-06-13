@@ -41,6 +41,8 @@ type ICfelCloudRegion interface {
 	GetUsableIEip() ([]ICloudEIP, error)
 
 	GetLoadbalancerSkus() ([]ICfelLoadbalancerSku, error)
+
+	CfelCreateILoadBalancerCertificate(cert *SCfelLoadbalancerCertificate) (ICloudLoadbalancerCertificate, error)
 }
 
 type ICfelCloudSku interface {

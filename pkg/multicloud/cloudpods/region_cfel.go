@@ -5,6 +5,7 @@ import (
 	"yunion.io/x/jsonutils"
 	modules "yunion.io/x/onecloud/pkg/mcclient/modules/compute"
 	image "yunion.io/x/onecloud/pkg/mcclient/modules/image"
+	"yunion.io/x/pkg/errors"
 )
 
 // Verify that *SRegion implements ICfelCloudRegion
@@ -45,6 +46,39 @@ func (self *SRegion) GetIVMs() ([]cloudprovider.ICloudVM, error) {
 	var ret []cloudprovider.ICloudVM
 	for i := range instances {
 		ret = append(ret, &instances[i])
+	}
+	return ret, nil
+}
+
+// GetBareMetalIHosts 获取可用区下的裸金属 host
+func (region *SRegion) GetBareMetalIHosts(zoneId string) ([]cloudprovider.ICloudHost, error) {
+	hosts, err := region.getBareMetalHosts(zoneId)
+	if err != nil {
+		return nil, errors.Wrapf(err, "GetBareMetalHosts")
+	}
+	zone, err := region.GetIZoneById(zoneId)
+	if err != nil {
+		return nil, errors.Wrapf(err, "GetIZoneById")
+	}
+	var ret []cloudprovider.ICloudHost
+	for i := range hosts {
+		hosts[i].zone = zone.(*SZone)
+		ret = append(ret, &hosts[i])
+	}
+	return ret, nil
+}
+
+func (region *SRegion) getBareMetalHosts(zoneId string) ([]SHost, error) {
+	params := map[string]interface{}{
+		"baremetal": true,
+	}
+	if len(zoneId) > 0 {
+		params["zone_id"] = zoneId
+	}
+	ret := []SHost{}
+	err := region.list(&modules.Hosts, params, &ret)
+	if err != nil {
+		return nil, errors.Wrap(err, "list")
 	}
 	return ret, nil
 }

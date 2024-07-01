@@ -29,6 +29,7 @@ type ICfelCloudRegion interface {
 	CfelInstanceSettingChange(id string, params *CfelChangeSettingOption) error //虚拟机配置修改
 	CfelGetINetworks() ([]ICloudNetwork, error)
 	GetIHostsByCondition(*FilterOption) ([]ICloudHost, error)
+	GetBareMetalIHosts(zoneId string) ([]ICloudHost, error)
 	MigrateForecast(*MigrateForecastOption) ([]ICfelFilter, error)
 	// GetMonitorData(vmId, start, end, interval string) ([]ICfelMonitorData,[]string ,error) // 获取主机监控数据
 	GetMonitorDataJSON(*MonitorDataJSONOption) (jsonutils.JSONObject, error) // 获取主机监控数据

@@ -83,7 +83,7 @@ func (s *SLoadbalancer) CreateILoadBalancerListener(ctx context.Context, listene
 		"enable_http2":           listener.EnableHTTP2,
 		"gzip":                   listener.Gzip,
 		"health_check":           listener.HealthCheck,
-		"health_check_fail":      listener.HealthCheckFail,
+		"health_check_fall":      listener.HealthCheckFail,
 		"health_check_http_code": listener.HealthCheckHttpCode,
 		"health_check_interval":  listener.HealthCheckInterval,
 		"health_check_path":      listener.HealthCheckURI,

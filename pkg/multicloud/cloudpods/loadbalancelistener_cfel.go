@@ -92,7 +92,7 @@ func (s *SCloudLoadbalancerListener) Update(listener *cloudprovider.SLoadbalance
 		// "http_request_rate_src": 0,
 
 		"redirect": "off",
-	
+
 		"scheduler": listener.Scheduler,
 
 		"sticky_session": "off",
@@ -104,10 +104,12 @@ func (s *SCloudLoadbalancerListener) Update(listener *cloudprovider.SLoadbalance
 		params["certificate_id"] = listener.CertificateId
 	}
 	if listener.AccessControlListStatus == "on" {
+		params["acl_status"] = "on"
 		params["acl_id"] = listener.AccessControlListId
 		params["acl_type"] = listener.AccessControlListType
 	}
 	if listener.StickySession == "on" {
+		params["sticky_session"] = "on"
 		params["sticky_session_cookie"] = listener.StickySessionCookie
 		params["sticky_session_cookie_timeout"] = listener.StickySessionCookieTimeout
 		params["sticky_session_type"] = listener.StickySessionType

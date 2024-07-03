@@ -407,27 +407,31 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 	} else {
 		sysDiskSize = -1
 	}
-	arr := strings.Split(opts.SysDisk.StorageType,"_")
-	input.Disks = append(input.Disks, &compute.DiskConfig{
-		Index:    0,
-		ImageId:  opts.ExternalImageId,
-		DiskType: api.DISK_TYPE_SYS,
-		SizeMb:   sysDiskSize,
-		Backend:  arr[0], 
-		Storage:  opts.SysDisk.StorageExternalId,
-		Medium: arr[1],
-	})
-
-	for idx, disk := range opts.DataDisks {
-		arr := strings.Split(disk.StorageType,"_")
+	if hypervisor == api.HYPERVISOR_KVM {
+		arr := strings.Split(opts.SysDisk.StorageType,"_")
 		input.Disks = append(input.Disks, &compute.DiskConfig{
-			Index:    idx + 1,
-			DiskType: api.DISK_TYPE_DATA,
-			SizeMb:   disk.SizeGB * 1024,
-			Backend:  arr[0],
-			Storage:  disk.StorageExternalId,
+			Index:    0,
+			ImageId:  opts.ExternalImageId,
+			DiskType: api.DISK_TYPE_SYS,
+			SizeMb:   sysDiskSize,
+			Backend:  arr[0], 
+			Storage:  opts.SysDisk.StorageExternalId,
 			Medium: arr[1],
 		})
+	}
+
+	if hypervisor == api.HYPERVISOR_KVM {
+		for idx, disk := range opts.DataDisks {
+			arr := strings.Split(disk.StorageType,"_")
+			input.Disks = append(input.Disks, &compute.DiskConfig{
+				Index:    idx + 1,
+				DiskType: api.DISK_TYPE_DATA,
+				SizeMb:   disk.SizeGB * 1024,
+				Backend:  arr[0],
+				Storage:  disk.StorageExternalId,
+				Medium: arr[1],
+			})
+		}
 	}
 	if opts.ExternalNetworkId != "" {
 		input.Networks = append(input.Networks, &compute.NetworkConfig{

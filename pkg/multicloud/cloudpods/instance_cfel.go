@@ -418,6 +418,15 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 			Storage:  opts.SysDisk.StorageExternalId,
 			Medium: arr[1],
 		})
+	} else if hypervisor == api.HYPERVISOR_BAREMETAL {
+		input.Disks = append(input.Disks, &compute.DiskConfig{
+			Index:    0,
+			ImageId:  opts.ExternalImageId,
+			DiskType: api.DISK_TYPE_SYS,
+			SizeMb:   sysDiskSize,
+			Backend: opts.SysDisk.StorageType,
+			Storage:  opts.SysDisk.StorageExternalId,
+		})
 	}
 
 	if hypervisor == api.HYPERVISOR_KVM {

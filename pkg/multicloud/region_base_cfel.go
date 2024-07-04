@@ -53,7 +53,7 @@ func (self *SRegion) CfelInstanceSettingChange(id string, params *cloudprovider.
 	return errors.Wrapf(cloudprovider.ErrNotImplemented, "CfelInstanceSettingChange")
 }
 
-func (self *SRegion) CfelGetINetworks() ([]cloudprovider.ICloudNetwork, error) {
+func (self *SRegion) CfelGetINetworks(*cloudprovider.GetNetworkOptions) ([]cloudprovider.ICloudNetwork, error) {
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetINetworks")
 }
 

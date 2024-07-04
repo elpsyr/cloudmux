@@ -126,14 +126,34 @@ func (self *SRegion) CfelCreateDisk(opts *cloudprovider.CfelDiskCreateConfig) (c
 	return &dd, nil
 }
 
-func (self *SRegion) CfelGetINetworks() ([]cloudprovider.ICloudNetwork, error) {
-	networks, err := self.GetNetworks("")
+func (self *SRegion) CfelGetINetworks(opts *cloudprovider.GetNetworkOptions) ([]cloudprovider.ICloudNetwork, error) {
+
+	params := map[string]interface{}{}
+	if opts != nil {
+		if len(opts.WireId) > 0 {
+			params["wire_id"] = opts.WireId
+		}
+		if len(opts.ServerType) > 0 {
+			params["server_type"] = opts.ServerType
+		}
+		if len(opts.ZoneId) > 0 {
+			params["zone_id"] = opts.ZoneId
+		}
+		if opts.WithUserMeta {
+			params["with_user_meta"] = opts.WithUserMeta
+		}
+		if len(opts.VpcId) > 0 {
+			params["vpc_id"] = opts.VpcId
+		}
+	}
+	networks := []SNetwork{}
+	err := self.list(&modules.Networks, params, &networks)
 	if err != nil {
 		return nil, err
 	}
+
 	ret := []cloudprovider.ICloudNetwork{}
 	for i := range networks {
-		// networks[i].wire = self
 		ret = append(ret, &networks[i])
 	}
 	return ret, nil

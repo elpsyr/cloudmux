@@ -27,7 +27,7 @@ type ICfelCloudRegion interface {
 	CfelAttachDisk(instanceId, diskId string) error
 	CfelDetachDisk(instanceId, diskId string) error
 	CfelInstanceSettingChange(id string, params *CfelChangeSettingOption) error //虚拟机配置修改
-	CfelGetINetworks() ([]ICloudNetwork, error)
+	CfelGetINetworks(*GetNetworkOptions) ([]ICloudNetwork, error)
 	GetIHostsByCondition(*FilterOption) ([]ICloudHost, error)
 	GetBareMetalIHosts(zoneId string) ([]ICloudHost, error)
 	MigrateForecast(*MigrateForecastOption) ([]ICfelFilter, error)

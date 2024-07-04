@@ -79,6 +79,15 @@ type FilterOption struct {
 	Details        bool     `json:"details"`
 }
 
+type GetNetworkOptions struct {
+	ZoneId       string `json:"zone_id,omitempty"`
+	WithUserMeta bool   `json:"with_user_meta,omitempty"`
+	ServerType   string `json:"server_type,omitempty"`
+	WireId       string `json:"wire_id,omitempty"`
+	VpcId        string `json:"vpc_id,omitempty"`
+}
+
+
 // ServerSSHInfo
 // copy from ServerRemoteConsoleResponse
 type ServerSSHInfo struct {

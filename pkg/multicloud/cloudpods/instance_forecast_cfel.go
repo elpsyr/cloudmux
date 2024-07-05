@@ -29,7 +29,7 @@ func init() {
 }
 
 func (this *SchedulerManager) DoForecast(s *mcclient.ClientSession, params jsonutils.JSONObject) (jsonutils.JSONObject, error) {
-	return this.PerformClassAction(s, "forecast", params)
+	return this.PerformClassAction(s, "scheduler/forecast", params)
 }
 
 func (self *SRegion) SchedulerForecast(hypervisor string, opts *cloudprovider.CfelSManagedVMCreateConfig) (jsonutils.JSONObject, error) {

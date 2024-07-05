@@ -21,7 +21,7 @@ var (
 )
 
 func init() {
-	Schedulers = SchedulerManager{modules.NewResourceManager(apis.SERVICE_TYPE_SCHEDULER, "scheduler", "schedulers",
+	Schedulers = SchedulerManager{modules.NewResourceManager(apis.SERVICE_TYPE_SCHEDULER, "scheduler", "scheduler",
 		[]string{},
 		[]string{}, "v1")}
 

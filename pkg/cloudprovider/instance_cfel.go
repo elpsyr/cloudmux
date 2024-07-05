@@ -9,6 +9,7 @@ type CfelSManagedVMCreateConfig struct {
 	BaremetalDiskConfigs []*BaremetalDiskConfig
 	EipBw                int
 	EipAutoDellocate     bool
+	Count                int // 数量
 }
 type Network struct {
 	NetworkId      string
@@ -86,7 +87,6 @@ type GetNetworkOptions struct {
 	WireId       string `json:"wire_id,omitempty"`
 	VpcId        string `json:"vpc_id,omitempty"`
 }
-
 
 // ServerSSHInfo
 // copy from ServerRemoteConsoleResponse

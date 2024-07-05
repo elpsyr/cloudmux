@@ -15,6 +15,10 @@ func (self *SRegion) CreateVM(opts *cloudprovider.CfelSManagedVMCreateConfig) (c
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "CreateVM")
 }
 
+func (self *SRegion) SchedulerForecast(hypervisor string, opts *cloudprovider.CfelSManagedVMCreateConfig) (jsonutils.JSONObject, error) {
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "CreateBareMetal")
+}
+
 func (self *SRegion) DeleteVM(instanceId string) error {
 	return errors.Wrapf(cloudprovider.ErrNotImplemented, "DeleteVM")
 

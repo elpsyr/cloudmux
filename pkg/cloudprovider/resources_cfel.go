@@ -17,6 +17,7 @@ type ICfelCloudRegion interface {
 
 	CreateBareMetal(desc *CfelSManagedVMCreateConfig) (ICloudVM, error)
 	CreateVM(desc *CfelSManagedVMCreateConfig) (ICloudVM, error)
+	SchedulerForecast(hypervisor string, opts *CfelSManagedVMCreateConfig) (jsonutils.JSONObject, error)
 	DeleteVM(instanceId string) error
 	CreateImageByUrl(params *CfelSImageCreateOption) (ICloudImage, error)
 	GetImageByID(id string) (ICloudImage, error)

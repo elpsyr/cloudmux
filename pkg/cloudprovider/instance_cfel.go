@@ -88,6 +88,16 @@ type GetNetworkOptions struct {
 	VpcId        string `json:"vpc_id,omitempty"`
 }
 
+type CfelSManagedVMRebuildRootConfig struct {
+	SManagedVMRebuildRootConfig
+	ResetPassword bool `json:"reset_password"`
+	// 重置指定密码
+	Password string `json:"password"`
+
+	
+	AutoStart bool `json:"auto_start"`
+	DeployTelegraf bool `json:"deploy_telegraf"`
+}
 // ServerSSHInfo
 // copy from ServerRemoteConsoleResponse
 type ServerSSHInfo struct {

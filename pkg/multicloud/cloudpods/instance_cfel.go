@@ -11,6 +11,7 @@ import (
 	"yunion.io/x/pkg/errors"
 
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
+	input "yunion.io/x/onecloud/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/jsonutils"
 	"yunion.io/x/log"
@@ -30,6 +31,26 @@ func (self *SInstance) RebootVM(ctx context.Context) error {
 	return cloudprovider.WaitStatus(self, api.VM_RUNNING, 10*time.Second, 300*time.Second) // 5mintues
 }
 
+func (self *SInstance) CfelRebuildRoot(ctx context.Context, opts *cloudprovider.CfelSManagedVMRebuildRootConfig) (string, error) {
+	input := input.ServerRebuildRootInput{}
+	input.ImageId = opts.ImageId
+	input.Password = opts.Password
+	input.AutoStart = &opts.AutoStart
+	input.ResetPassword = opts.ResetPassword
+	input.DeployTelegraf = opts.DeployTelegraf
+	if len(opts.PublicKey) > 0 {
+		keypairId, err := self.host.zone.region.syncKeypair(self.Name, opts.PublicKey)
+		if err != nil {
+			return "", errors.Wrapf(err, "syncKeypair")
+		}
+		input.KeypairId = keypairId
+	}
+	_, err := self.host.zone.region.perform(&modules.Servers, self.Id, "rebuild-root", input)
+	if err != nil {
+		return "", err
+	}
+	return self.DisksInfo[0].Id, nil
+}
 func (self *SRegion) RebootVM(instanceId string) error {
 	instance, err := self.GetHostInstance(instanceId)
 	if err != nil {
@@ -408,15 +429,15 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 		sysDiskSize = -1
 	}
 	if hypervisor == api.HYPERVISOR_KVM {
-		arr := strings.Split(opts.SysDisk.StorageType,"_")
+		arr := strings.Split(opts.SysDisk.StorageType, "_")
 		input.Disks = append(input.Disks, &compute.DiskConfig{
 			Index:    0,
 			ImageId:  opts.ExternalImageId,
 			DiskType: api.DISK_TYPE_SYS,
 			SizeMb:   sysDiskSize,
-			Backend:  arr[0], 
+			Backend:  arr[0],
 			Storage:  opts.SysDisk.StorageExternalId,
-			Medium: arr[1],
+			Medium:   arr[1],
 		})
 	} else if hypervisor == api.HYPERVISOR_BAREMETAL {
 		input.Disks = append(input.Disks, &compute.DiskConfig{
@@ -424,21 +445,21 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 			ImageId:  opts.ExternalImageId,
 			DiskType: api.DISK_TYPE_SYS,
 			SizeMb:   sysDiskSize,
-			Backend: opts.SysDisk.StorageType,
+			Backend:  opts.SysDisk.StorageType,
 			Storage:  opts.SysDisk.StorageExternalId,
 		})
 	}
 
 	if hypervisor == api.HYPERVISOR_KVM {
 		for idx, disk := range opts.DataDisks {
-			arr := strings.Split(disk.StorageType,"_")
+			arr := strings.Split(disk.StorageType, "_")
 			input.Disks = append(input.Disks, &compute.DiskConfig{
 				Index:    idx + 1,
 				DiskType: api.DISK_TYPE_DATA,
 				SizeMb:   disk.SizeGB * 1024,
 				Backend:  arr[0],
 				Storage:  disk.StorageExternalId,
-				Medium: arr[1],
+				Medium:   arr[1],
 			})
 		}
 	}

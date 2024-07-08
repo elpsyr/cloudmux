@@ -66,6 +66,7 @@ type ICfelCloudVM interface {
 	GetIsolatedDevice() ([]*IsolatedDeviceInfo, error)
 	GetCfelHypervisor() string
 	GetSSHInfo() (*ServerSSHInfo, error)
+	CfelRebuildRoot(ctx context.Context, config *CfelSManagedVMRebuildRootConfig) (string, error)
 	ICloudVM
 }
 

@@ -1,6 +1,7 @@
 package huawei
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -475,6 +476,10 @@ func (self *SRegion) GetPostPaidPrice(zoneID, instanceType string) (float64, err
 	}
 
 	resp, err := self.client.post(SERVICE_BSS, "", "bills/ratings/on-demand-resources", params)
+	if err != nil {
+		fmt.Printf("huawei sku postpaid price fetch failed: %v\n", err)
+		return -1, nil
+	}
 
 	getString, err := resp.GetString("amount")
 	f, err := strconv.ParseFloat(getString, 64)
@@ -511,7 +516,8 @@ func (self *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, erro
 
 	resp, err := self.client.post(SERVICE_BSS, "", "bills/ratings/period-resources/subscribe-rate", params)
 	if err != nil {
-		return -1, err
+		fmt.Printf("huawei sku prepaid price fetch failed: %v\n", err)
+		return -1, nil
 	}
 	object, err := resp.Get("official_website_rating_result")
 	if err != nil {
@@ -581,10 +587,12 @@ func (self *SRegion) GetInstanceTypeStatus(zoneId, instanceTypeName string) (str
 			retSkuStatus = status
 		}
 		switch retSkuStatus {
-		case "normal", "obt", "promotion":
+		case "normal", "promotion":
 			return api.SkuStatusAvailable, nil
-		case "abandon", "sellout", "obt_sellout":
+		case "sellout":
 			return api.SkuStatusSoldout, nil
+		case "obt", "obt_sellout", "abandon":
+			return api.CfelSkuStatusAbandon, nil
 		default:
 			return api.SkuStatusSoldout, nil
 		}

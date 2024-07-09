@@ -1,6 +1,8 @@
 package aliyun
 
 import (
+	"encoding/json"
+	"fmt"
 	alierr "github.com/aliyun/alibaba-cloud-sdk-go/sdk/errors"
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
@@ -58,6 +60,10 @@ func (self *SRegion) GetDescribePrice(zoneID, InstanceType, paidType string) (*S
 
 	body, err := self.ecsRequest("DescribePrice", params)
 	if err != nil {
+		// 打印出 请求参数
+		jsonParasm, _ := json.Marshal(params)
+		fmt.Println("aliyun DescribePrice fail params: ", string(jsonParasm))
+
 		// import "github.com/pkg/errors"
 		// errUnwrap := gerrors.Unwrap(err)
 		// log.Errorf("Unwrap err %s", errUnwrap)
@@ -76,6 +82,9 @@ func (self *SRegion) GetDescribePrice(zoneID, InstanceType, paidType string) (*S
 				price := new(SInstancePrice)
 				price.PriceInfo.Price.TradePrice = -1
 				return price, nil
+			default:
+				log.Errorf("aliyun DescribePrice fail %s", err)
+				return nil, err
 			}
 
 		} else {

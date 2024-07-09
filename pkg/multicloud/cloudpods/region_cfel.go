@@ -274,3 +274,26 @@ func (self *SRegion) GetUsableIEip() ([]cloudprovider.ICloudEIP, error) {
 	}
 	return ret, nil
 }
+
+func (self *SRegion) GetSshKeypair(project string, isAdmin bool) (string, error) {
+	query := jsonutils.NewDict()
+		if isAdmin {
+			query.Add(jsonutils.JSONTrue, "admin")
+		}
+		var keys jsonutils.JSONObject
+		if len(project) == 0 {
+			listResult, err := modules.Sshkeypairs.List(self.cli.s, query)
+			if err != nil {
+				return "", err
+			}
+			keys = listResult.Data[0]
+		} else {
+			result, err := modules.Sshkeypairs.GetById(self.cli.s, project, query)
+			if err != nil {
+				return "", err
+			}
+			keys = result
+		}
+		privKey, _ := keys.GetString("private_key")
+		return privKey, nil
+}

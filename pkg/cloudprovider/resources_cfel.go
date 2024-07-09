@@ -2,6 +2,7 @@ package cloudprovider
 
 import (
 	"context"
+
 	"yunion.io/x/jsonutils"
 )
 
@@ -45,6 +46,7 @@ type ICfelCloudRegion interface {
 	GetLoadbalancerSkus() ([]ICfelLoadbalancerSku, error)
 
 	CfelCreateILoadBalancerCertificate(cert *SCfelLoadbalancerCertificate) (ICloudLoadbalancerCertificate, error)
+	GetSshKeypair(project string, isAdmin bool) (string, error)
 }
 
 type ICfelCloudSku interface {

@@ -103,3 +103,7 @@ func (self *SRegion) GetLoadbalancerSkus() ([]cloudprovider.ICfelLoadbalancerSku
 func (self *SRegion) CfelCreateILoadBalancerCertificate(cert *cloudprovider.SCfelLoadbalancerCertificate) (cloudprovider.ICloudLoadbalancerCertificate, error) {
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "CfelCreateILoadBalancerCertificate")
 }
+
+func (self *SRegion) GetSshKeypair(project string, isAdmin bool) (string, error) {
+	return "", errors.Wrapf(cloudprovider.ErrNotImplemented, "GetSshKeypair")
+}

@@ -120,13 +120,13 @@ func (self *SRegion) GetRegionAvailableInstanceTypes() ([]SInstanceType, error) 
 	// 1. 获取 region->zone 层级下 可用资源 DescribeAvailableResource
 
 	// 1.1 PostPaid
-	postPaidAvailableResource, err := self.GetAvailableResource("PostPaid", "", "", false)
+	postPaidAvailableResource, err := self.GetAvailableResource(DestinationResourceInstanceType, POSTPAID, "", "", false)
 	if err != nil {
 		log.Errorf("GetAvailableResource PostPaid fail %s", err)
 		return nil, err
 	}
 	// 1.2 PrePaid
-	prePaidAvailableResource, err := self.GetAvailableResource("PrePaid", "", "", false)
+	prePaidAvailableResource, err := self.GetAvailableResource(DestinationResourceInstanceType, PREPAID, "", "", false)
 	if err != nil {
 		log.Errorf("GetAvailableResource PrePaid fail %s", err)
 		return nil, err
@@ -171,14 +171,20 @@ func (self *SRegion) GetRegionAvailableInstanceTypes() ([]SInstanceType, error) 
 	return zonesInstanceType, nil
 }
 
+const (
+	DestinationResourceSystemDisk   = "SystemDisk"
+	DestinationResourceInstanceType = "InstanceType"
+)
+
 // GetAvailableResource 查询某一可用区（zone）的资源列表。
 // AvailableResource 所属层级 ： region -> zone-> AvailableResource
-func (self *SRegion) GetAvailableResource(InstanceChargeType string, ZoneID, InstanceType string, spot bool) (*SAvailableResource, error) {
+// DestinationResource ：SystemDisk、InstanceType
+func (self *SRegion) GetAvailableResource(DestinationResource, InstanceChargeType string, ZoneID, InstanceType string, spot bool) (*SAvailableResource, error) {
 	// 0. 获取 region 层级下所有 InstanceTypes
 	params := make(map[string]string)
 	params["RegionId"] = self.RegionId
-	params["DestinationResource"] = "InstanceType"
-	params["InstanceChargeType"] = InstanceChargeType
+	params["DestinationResource"] = DestinationResource // 要查询的资源类型
+	params["InstanceChargeType"] = InstanceChargeType   //资源的计费方式
 	if InstanceType != "" {
 		params["InstanceType"] = InstanceType
 	}
@@ -186,8 +192,8 @@ func (self *SRegion) GetAvailableResource(InstanceChargeType string, ZoneID, Ins
 		params["ZoneId"] = ZoneID
 	}
 	if spot {
-		params["InstanceChargeType"] = "PostPaid"
-		params["SpotStrategy"] = "SpotAsPriceGo"
+		params["InstanceChargeType"] = POSTPAID
+		params["SpotStrategy"] = SPOTPOSTPAID
 	}
 
 	body, err := self.ecsRequest("DescribeAvailableResource", params)
@@ -203,6 +209,31 @@ func (self *SRegion) GetAvailableResource(InstanceChargeType string, ZoneID, Ins
 		return nil, err
 	}
 	return availableResources, nil
+}
+
+// GetInstanceTypeAvailableDiskType 获取实例规格可用的系统盘类型
+func (self *SRegion) GetInstanceTypeAvailableDiskType(InstanceChargeType string, ZoneID, InstanceType string, spot bool) ([]string, error) {
+	supportType := make([]string, 0)
+	resource, err := self.GetAvailableResource(DestinationResourceSystemDisk, InstanceChargeType, ZoneID, InstanceType, spot)
+	if err != nil {
+		return supportType, err
+	}
+	availableZone := resource.AvailableZones.AvailableZone
+	if availableZone != nil && len(availableZone) > 0 {
+		availableResource := availableZone[0].AvailableResources.AvailableResource
+		if availableResource != nil && len(availableResource) > 0 {
+			supportedResource := availableResource[0].SupportedResources.SupportedResource
+			if supportedResource != nil && len(supportedResource) > 0 {
+				for _, sResource := range supportedResource {
+					if sResource.Status == AliyunResourceAvailable {
+						supportType = append(supportType, sResource.Value)
+					}
+				}
+			}
+		}
+	}
+	return supportType, nil
+
 }
 
 func (self *SInstanceType) GetStatus() string {

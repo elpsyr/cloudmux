@@ -21,28 +21,39 @@ const (
 
 // SInstancePrice DescribePrice 接口返回
 type SInstancePrice struct {
-	RequestID string `json:"RequestId"`
-	PriceInfo struct {
-		Price struct {
-			OriginalPrice             int     `json:"OriginalPrice"`
-			ReservedInstanceHourPrice int     `json:"ReservedInstanceHourPrice"`
-			DiscountPrice             float64 `json:"DiscountPrice"`
-			Currency                  string  `json:"Currency"`
-			TradePrice                float64 `json:"TradePrice"`
-		} `json:"Price"`
-		Rules struct {
-			Rule []struct {
-				Description string `json:"Description"`
-				RuleID      int    `json:"RuleId"`
-			} `json:"Rule"`
-		} `json:"Rules"`
-	} `json:"PriceInfo"`
+	RequestID string    `json:"RequestId"`
+	PriceInfo PriceInfo `json:"PriceInfo"`
+}
+type DetailInfo struct {
+	OriginalPrice float64 `json:"OriginalPrice"`
+	DiscountPrice float64 `json:"DiscountPrice"`
+	Resource      string  `json:"Resource"`
+	TradePrice    float64 `json:"TradePrice"`
+}
+type DetailInfos struct {
+	DetailInfo []DetailInfo `json:"DetailInfo"`
+}
+type Price struct {
+	OriginalPrice             float64     `json:"OriginalPrice"`
+	ReservedInstanceHourPrice float64     `json:"ReservedInstanceHourPrice"`
+	DiscountPrice             float64     `json:"DiscountPrice"`
+	Currency                  string      `json:"Currency"`
+	DetailInfos               DetailInfos `json:"DetailInfos"`
+	TradePrice                float64     `json:"TradePrice"`
+}
+type PriceInfoRules struct {
+	Rule []any `json:"Rule"`
+}
+type PriceInfo struct {
+	Price Price          `json:"Price"`
+	Rules PriceInfoRules `json:"Rules"`
 }
 
-// / GetDescribePrice 查询云服务器ECS资源的最新价格。
-// implement by cfel
-func (self *SRegion) GetDescribePrice(zoneID, InstanceType, paidType string) (*SInstancePrice, error) {
+// GetDescribePrice 查询云服务器ECS资源的最新价格。
+// 只获取实例规格价格，不包含系统盘
+func (self *SRegion) GetDescribePrice(zoneID, InstanceType, paidType string) (*DetailInfo, error) {
 
+	var spot bool
 	params := make(map[string]string)
 	params["RegionId"] = self.RegionId
 	params["ResourceType"] = "instance" // 目标资源的类型
@@ -55,22 +66,31 @@ func (self *SRegion) GetDescribePrice(zoneID, InstanceType, paidType string) (*S
 	case SPOTPOSTPAID:
 		params["SpotStrategy"] = "SpotAsPriceGo" // 系统自动出价，最高按量付费价格。
 		params["ZoneId"] = zoneID                // 抢占式实例不同可用区价格可能不同，查询抢占式实例价格时，建议传入ZoneId查询指定可用区的抢占式实例价格。
+		spot = true
 	default:
 	}
 
 	body, err := self.ecsRequest("DescribePrice", params)
 	if err != nil {
 		// 打印出 请求参数
-		jsonParasm, _ := json.Marshal(params)
-		fmt.Println("aliyun DescribePrice fail params: ", string(jsonParasm))
+		jsonParams, _ := json.Marshal(params)
+		fmt.Println("aliyun DescribePrice fail params: ", string(jsonParams))
 
 		// import "github.com/pkg/errors"
 		// errUnwrap := gerrors.Unwrap(err)
 		// log.Errorf("Unwrap err %s", errUnwrap)
 		if e, ok := errors.Cause(err).(*alierr.ServerError); ok {
 			switch e.ErrorCode() {
-			case "InvalidSystemDiskCategory.ValueNotSupported":
-				params["SystemDisk.Category"] = "cloud_essd"
+			case "InvalidSystemDiskCategory.ValueNotSupported", "InvalidInstanceType.NotSupportDiskCategory":
+				Category, err := self.GetInstanceTypeAvailableDiskType(paidType, zoneID, InstanceType, spot)
+				if err != nil {
+					fmt.Println("aliyun GetInstanceTypeAvailableDiskType fail params: ", err.Error())
+				}
+				if len(Category) > 0 {
+					params["SystemDisk.Category"] = Category[0]
+				} else {
+					params["SystemDisk.Category"] = "cloud_essd"
+				}
 				body, err = self.ecsRequest("DescribePrice", params)
 				if err != nil {
 					log.Errorf("DescribePrice fail %s", err)
@@ -79,8 +99,8 @@ func (self *SRegion) GetDescribePrice(zoneID, InstanceType, paidType string) (*S
 			case "PriceNotFound", "InvalidInstanceType.ValueNotSupported":
 				// 部分 region 下查询 instanceType 出现 PriceNotFound ，返回空数据
 				// 部分 instanceType 可按量付费无法包年包月
-				price := new(SInstancePrice)
-				price.PriceInfo.Price.TradePrice = -1
+				price := new(DetailInfo)
+				price.TradePrice = -1
 				return price, nil
 			default:
 				log.Errorf("aliyun DescribePrice fail %s", err)
@@ -104,7 +124,15 @@ func (self *SRegion) GetDescribePrice(zoneID, InstanceType, paidType string) (*S
 		return nil, errors.Errorf("body.Unmarshal err: return nil")
 	}
 
-	return instancePrice, nil
+	// 获取并返回实例规格价格
+	for _, detailInfo := range instancePrice.PriceInfo.Price.DetailInfos.DetailInfo {
+		if detailInfo.Resource == "instanceType" {
+			return &detailInfo, nil
+		}
+	}
+	jsonParams, _ := json.Marshal(params)
+	log.Errorf("aliyun DescribePrice fail params: %s", string(jsonParams))
+	return nil, errors.Errorf("instanceType %s price detailInfo notfound ", InstanceType)
 }
 
 func (self *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) (float64, error) {
@@ -112,7 +140,7 @@ func (self *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) (float64,
 	if err != nil {
 		return 0, err
 	}
-	return price.PriceInfo.Price.TradePrice, nil
+	return price.TradePrice, nil
 
 }
 
@@ -121,7 +149,7 @@ func (self *SRegion) GetPostPaidPrice(zoneID, instanceType string) (float64, err
 	if err != nil {
 		return 0, err
 	}
-	return price.PriceInfo.Price.TradePrice, nil
+	return price.TradePrice, nil
 }
 
 func (self *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, error) {
@@ -129,11 +157,11 @@ func (self *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, erro
 	if err != nil {
 		return 0, err
 	}
-	return price.PriceInfo.Price.TradePrice, nil
+	return price.TradePrice, nil
 }
 
 func (self *SRegion) GetSpotPostPaidStatus(zoneID, instanceType string) (string, error) {
-	resource, err := self.GetAvailableResource("PostPaid", zoneID, instanceType, true)
+	resource, err := self.GetAvailableResource(DestinationResourceInstanceType, POSTPAID, zoneID, instanceType, true)
 	if err != nil {
 		return "", err
 	}
@@ -158,7 +186,7 @@ func (self *SRegion) GetSpotPostPaidStatus(zoneID, instanceType string) (string,
 }
 
 func (self *SRegion) GetPostPaidStatus(zoneID, instanceType string) (string, error) {
-	resource, err := self.GetAvailableResource("PostPaid", zoneID, instanceType, false)
+	resource, err := self.GetAvailableResource(DestinationResourceInstanceType, POSTPAID, zoneID, instanceType, false)
 	if err != nil {
 		return "", err
 	}
@@ -182,7 +210,7 @@ func (self *SRegion) GetPostPaidStatus(zoneID, instanceType string) (string, err
 }
 
 func (self *SRegion) GetPrePaidStatus(zoneID, instanceType string) (string, error) {
-	resource, err := self.GetAvailableResource("PrePaid", zoneID, instanceType, false)
+	resource, err := self.GetAvailableResource(DestinationResourceInstanceType, PREPAID, zoneID, instanceType, false)
 	if err != nil {
 		return "", err
 	}

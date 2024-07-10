@@ -75,9 +75,6 @@ func (self *SRegion) GetDescribePrice(zoneID, InstanceType, paidType string) (*D
 
 	body, err := self.ecsRequest("DescribePrice", params)
 	if err != nil {
-		// 打印出 请求参数
-		jsonParams, _ := json.Marshal(params)
-		fmt.Println("aliyun DescribePrice fail params: ", string(jsonParams))
 
 		// import "github.com/pkg/errors"
 		// errUnwrap := gerrors.Unwrap(err)
@@ -108,7 +105,10 @@ func (self *SRegion) GetDescribePrice(zoneID, InstanceType, paidType string) (*D
 				price.TradePrice = -1
 				return price, nil
 			default:
+				// 打印出 请求参数
+				jsonParams, _ := json.Marshal(params)
 				log.Errorf("aliyun DescribePrice fail %s", err)
+				log.Errorf("aliyun DescribePrice fail ,params: %s ", string(jsonParams))
 				return nil, err
 			}
 
@@ -136,7 +136,7 @@ func (self *SRegion) GetDescribePrice(zoneID, InstanceType, paidType string) (*D
 		}
 	}
 	jsonParams, _ := json.Marshal(params)
-	log.Errorf("aliyun DescribePrice fail params: %s", string(jsonParams))
+	log.Errorf("aliyun DescribePrice no detailInfo ,fail params: %s", string(jsonParams))
 	return nil, errors.Errorf("instanceType %s price detailInfo notfound ", InstanceType)
 }
 

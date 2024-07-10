@@ -193,7 +193,7 @@ func (self *SRegion) GetAvailableResource(DestinationResource, InstanceChargeTyp
 	}
 	if spot {
 		params["InstanceChargeType"] = POSTPAID
-		params["SpotStrategy"] = SPOTPOSTPAID
+		params["SpotStrategy"] = SpotStrategySpotAsPriceGo
 	}
 
 	body, err := self.ecsRequest("DescribeAvailableResource", params)

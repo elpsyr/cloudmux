@@ -14,9 +14,11 @@ import (
 var _ cloudprovider.ICfelCloudRegion = (*SRegion)(nil)
 
 const (
-	PREPAID      = "Prepaid"      // 包年包月
+	PREPAID      = "PrePaid"      // 包年包月
 	POSTPAID     = "PostPaid"     // 按量付费
 	SPOTPOSTPAID = "SpotPostPaid" // 抢占
+
+	SpotStrategySpotAsPriceGo = "SpotAsPriceGo"
 )
 
 // SInstancePrice DescribePrice 接口返回
@@ -64,8 +66,8 @@ func (self *SRegion) GetDescribePrice(zoneID, InstanceType, paidType string) (*D
 		params["Period"] = "1"
 		params["PriceUnit"] = "Month"
 	case SPOTPOSTPAID:
-		params["SpotStrategy"] = "SpotAsPriceGo" // 系统自动出价，最高按量付费价格。
-		params["ZoneId"] = zoneID                // 抢占式实例不同可用区价格可能不同，查询抢占式实例价格时，建议传入ZoneId查询指定可用区的抢占式实例价格。
+		params["SpotStrategy"] = SpotStrategySpotAsPriceGo // 系统自动出价，最高按量付费价格。
+		params["ZoneId"] = zoneID                          // 抢占式实例不同可用区价格可能不同，查询抢占式实例价格时，建议传入ZoneId查询指定可用区的抢占式实例价格。
 		spot = true
 	default:
 	}
@@ -88,8 +90,10 @@ func (self *SRegion) GetDescribePrice(zoneID, InstanceType, paidType string) (*D
 				}
 				if len(Category) > 0 {
 					params["SystemDisk.Category"] = Category[0]
-				} else {
-					params["SystemDisk.Category"] = "cloud_essd"
+				} else { //售罄
+					price := new(DetailInfo)
+					price.TradePrice = -1
+					return price, nil
 				}
 				body, err = self.ecsRequest("DescribePrice", params)
 				if err != nil {
@@ -138,7 +142,7 @@ func (self *SRegion) GetDescribePrice(zoneID, InstanceType, paidType string) (*D
 func (self *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) (float64, error) {
 	price, err := self.GetDescribePrice(zoneID, instanceType, SPOTPOSTPAID)
 	if err != nil {
-		return 0, err
+		return -1, err
 	}
 	return price.TradePrice, nil
 
@@ -147,7 +151,7 @@ func (self *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) (float64,
 func (self *SRegion) GetPostPaidPrice(zoneID, instanceType string) (float64, error) {
 	price, err := self.GetDescribePrice(zoneID, instanceType, POSTPAID)
 	if err != nil {
-		return 0, err
+		return -1, err
 	}
 	return price.TradePrice, nil
 }
@@ -155,7 +159,7 @@ func (self *SRegion) GetPostPaidPrice(zoneID, instanceType string) (float64, err
 func (self *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, error) {
 	price, err := self.GetDescribePrice(zoneID, instanceType, PREPAID)
 	if err != nil {
-		return 0, err
+		return -1, err
 	}
 	return price.TradePrice, nil
 }

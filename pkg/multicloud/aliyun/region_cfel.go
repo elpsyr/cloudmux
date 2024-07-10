@@ -44,7 +44,8 @@ type Price struct {
 	TradePrice                float64     `json:"TradePrice"`
 }
 type PriceInfoRules struct {
-	Rule []any `json:"Rule"`
+	Description string `json:"Description"`
+	RuleID      int    `json:"RuleId"`
 }
 type PriceInfo struct {
 	Price Price          `json:"Price"`

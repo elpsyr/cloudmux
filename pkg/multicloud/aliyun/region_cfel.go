@@ -252,6 +252,23 @@ func (self *SRegion) UpdateVpc(opts *cloudprovider.VpcUpdateOptions) error {
 	return err
 }
 
-func (self *SRegion) CreateBareMetal(opts *cloudprovider.CfelSManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
-	return nil, cloudprovider.ErrNotImplemented
+// GetICfelCloudImage 获取阿里云镜像
+func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.ICloudImage, error) {
+	images := make([]SImage, 0)
+	for {
+		parts, total, err := self.GetImages(ImageStatusType(""), ImageOwnerSystem, nil, "", len(images), 50)
+		if err != nil {
+			return nil, errors.Wrapf(err, "GetImages")
+		}
+		images = append(images, parts...)
+		if len(images) >= total {
+			break
+		}
+	}
+	ret := []cloudprovider.ICloudImage{}
+	for i := range images {
+		images[i].storageCache = self.getStoragecache()
+		ret = append(ret, &images[i])
+	}
+	return ret, nil
 }

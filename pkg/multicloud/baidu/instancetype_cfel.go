@@ -374,7 +374,3 @@ func (region *SRegion) GetPostPaidStatus(zoneID, instanceType string) (string, e
 func (region *SRegion) GetPrePaidStatus(zoneID, instanceType string) (string, error) {
 	return api.SkuStatusAvailable, nil
 }
-
-func (region *SRegion) CreateBareMetal(opts *cloudprovider.CfelSManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
-	return nil, cloudprovider.ErrNotImplemented
-}

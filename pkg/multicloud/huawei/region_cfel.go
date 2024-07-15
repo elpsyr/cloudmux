@@ -2,9 +2,9 @@ package huawei
 
 import (
 	"net/url"
-
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/jsonutils"
+	"yunion.io/x/pkg/errors"
 )
 
 type SCfelLoadbalancerSku struct {
@@ -59,4 +59,20 @@ func (region *SRegion) GetLoadbalancerSkus() ([]cloudprovider.ICfelLoadbalancerS
 		result = append(result, &res[i])
 	}
 	return result, nil
+}
+
+// GetICfelCloudImage 获取华为云镜像
+func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.ICloudImage, error) {
+	images := make([]SImage, 0)
+	images, err := self.GetImages("", "", "", "")
+	if err != nil {
+		return nil, errors.Wrapf(err, "GetImages")
+	}
+
+	ret := []cloudprovider.ICloudImage{}
+	for i := range images {
+		images[i].storageCache = self.getStoragecache()
+		ret = append(ret, &images[i])
+	}
+	return ret, nil
 }

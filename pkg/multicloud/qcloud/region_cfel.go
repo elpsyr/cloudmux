@@ -3,6 +3,7 @@ package qcloud
 import (
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
+	"yunion.io/x/pkg/errors"
 )
 
 // Verify that *SRegion implements ICfelCloudRegion
@@ -139,6 +140,23 @@ func (region *SRegion) GetPrePaidStatus(zoneID, instanceType string) (string, er
 	return api.SkuStatusSoldout, nil
 }
 
-func (region *SRegion) CreateBareMetal(opts *cloudprovider.CfelSManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
-	return nil, cloudprovider.ErrNotImplemented
+// GetICfelCloudImage 获取腾讯云镜像
+func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.ICloudImage, error) {
+	images := make([]SImage, 0)
+	for {
+		parts, total, err := self.GetImages("", "", nil, "", len(images), 50)
+		if err != nil {
+			return nil, errors.Wrapf(err, "GetImages")
+		}
+		images = append(images, parts...)
+		if len(images) >= total {
+			break
+		}
+	}
+	ret := []cloudprovider.ICloudImage{}
+	for i := range images {
+		images[i].storageCache = self.getStoragecache()
+		ret = append(ret, &images[i])
+	}
+	return ret, nil
 }

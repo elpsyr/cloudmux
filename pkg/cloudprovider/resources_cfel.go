@@ -39,6 +39,7 @@ type ICfelCloudRegion interface {
 
 	ICfelDeleteImage(id string) error
 	GetICfelCloudImage(withUserMeta bool) ([]ICloudImage, error)
+	GetInstanceMatchImage(instanceType string) ([]ICloudImage, error)
 	SetImageUserTag(*CfelSetImageUserTag) error
 
 	GetUsableIEip() ([]ICloudEIP, error)

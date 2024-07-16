@@ -88,6 +88,10 @@ func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.IClo
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetICfelCloudImage")
 }
 
+func (self *SRegion) GetInstanceMatchImage(instanceType string) ([]cloudprovider.ICloudImage, error) {
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetICfelCloudImage")
+}
+
 func (self *SRegion) SetImageUserTag(*cloudprovider.CfelSetImageUserTag) error {
 	return errors.Wrapf(cloudprovider.ErrNotImplemented, "SetImageUserTag")
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	alierr "github.com/aliyun/alibaba-cloud-sdk-go/sdk/errors"
+	"strings"
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/log"
@@ -271,4 +272,57 @@ func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.IClo
 		ret = append(ret, &images[i])
 	}
 	return ret, nil
+}
+
+// GetInstanceMatchImage  获取阿里云实例规格可用镜像
+func (self *SRegion) GetInstanceMatchImage(instancetype string) ([]cloudprovider.ICloudImage, error) {
+	images := make([]SImage, 0)
+	for {
+		parts, total, err := self.GetImagesByInstanceType(instancetype, ImageStatusType(""), ImageOwnerSystem, nil, "", len(images), 50)
+		if err != nil {
+			return nil, errors.Wrapf(err, "GetImages")
+		}
+		images = append(images, parts...)
+		if len(images) >= total {
+			break
+		}
+	}
+	ret := []cloudprovider.ICloudImage{}
+	for i := range images {
+		images[i].storageCache = self.getStoragecache()
+		ret = append(ret, &images[i])
+	}
+	return ret, nil
+}
+
+func (self *SRegion) GetImagesByInstanceType(instanceType string, status ImageStatusType, owner ImageOwnerType, imageId []string, name string, offset int, limit int) ([]SImage, int, error) {
+	if limit > 50 || limit <= 0 {
+		limit = 50
+	}
+	params := make(map[string]string)
+	params["RegionId"] = self.RegionId
+	params["PageSize"] = fmt.Sprintf("%d", limit)
+	params["PageNumber"] = fmt.Sprintf("%d", (offset/limit)+1)
+
+	if len(instanceType) > 0 {
+		params["instanceType"] = instanceType
+	}
+
+	if len(status) > 0 {
+		params["Status"] = string(status)
+	} else {
+		params["Status"] = "Creating,Available,UnAvailable,CreateFailed"
+	}
+	if imageId != nil && len(imageId) > 0 {
+		params["ImageId"] = strings.Join(imageId, ",")
+	}
+	if len(owner) > 0 {
+		params["ImageOwnerAlias"] = string(owner)
+	}
+
+	if len(name) > 0 {
+		params["ImageName"] = name
+	}
+
+	return self.getImages(params)
 }

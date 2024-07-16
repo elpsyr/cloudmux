@@ -2,6 +2,7 @@ package aliyun
 
 import (
 	"context"
+	"fmt"
 	"time"
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
@@ -15,6 +16,10 @@ func (self *SInstance) RebootVM(ctx context.Context) error {
 		return err
 	}
 	return cloudprovider.WaitStatus(self, api.VM_RUNNING, 10*time.Second, 300*time.Second) // 5mintues
+}
+
+func (self *SInstance) GetIHostId() string {
+	return fmt.Sprintf("-%s", self.ZoneId)
 }
 
 func (self *SRegion) doRebootVM(instanceId string) error {
@@ -83,19 +88,19 @@ type DescribeInstanceMonitorDataResponse struct {
 }
 
 type MonitorDataItem struct {
-	IOPSRead          float64    `json:"IOPSRead,omitempty"`
-	IntranetBandwidth float64    `json:"IntranetBandwidth"`
-	IOPSWrite         float64    `json:"IOPSWrite,omitempty"`
-	InstanceId        string `json:"InstanceId"`
-	IntranetTX        float64    `json:"IntranetTX"`
-	CPU               float64    `json:"CPU"`
-	BPSRead           float64    `json:"BPSRead,omitempty"`
-	IntranetRX        float64    `json:"IntranetRX"`
-	TimeStamp         string `json:"TimeStamp"`
-	InternetBandwidth float64    `json:"InternetBandwidth"`
-	InternetTX        float64    `json:"InternetTX"`
-	InternetRX        float64    `json:"InternetRX"`
-	BPSWrite          float64    `json:"BPSWrite,omitempty"`
+	IOPSRead          float64 `json:"IOPSRead,omitempty"`
+	IntranetBandwidth float64 `json:"IntranetBandwidth"`
+	IOPSWrite         float64 `json:"IOPSWrite,omitempty"`
+	InstanceId        string  `json:"InstanceId"`
+	IntranetTX        float64 `json:"IntranetTX"`
+	CPU               float64 `json:"CPU"`
+	BPSRead           float64 `json:"BPSRead,omitempty"`
+	IntranetRX        float64 `json:"IntranetRX"`
+	TimeStamp         string  `json:"TimeStamp"`
+	InternetBandwidth float64 `json:"InternetBandwidth"`
+	InternetTX        float64 `json:"InternetTX"`
+	InternetRX        float64 `json:"InternetRX"`
+	BPSWrite          float64 `json:"BPSWrite,omitempty"`
 }
 
 var _ cloudprovider.ICfelMonitorData = (*MonitorDataItem)(nil)

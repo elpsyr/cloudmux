@@ -67,6 +67,12 @@ type MonitorDataJSONOption struct {
 	Start    string
 	End      string
 	Interval string
+	GroupBy []GroupBy
+}
+
+type GroupBy struct {
+	Type string
+	Params []string
 }
 
 type FilterOption struct {

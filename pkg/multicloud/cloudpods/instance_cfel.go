@@ -258,6 +258,14 @@ func (self *SRegion) GetMonitorData(vmId, start, end, interval string) ([]cloudp
 }
 
 func (self *SRegion) GetMonitorDataJSON(opts *cloudprovider.MonitorDataJSONOption) (jsonutils.JSONObject, error) {
+	group := []monitor_input.MetricQueryPart{{
+		Type:   "tag",
+		Params: []string{"vm_id"},
+	}}
+	for _,val := range opts.GroupBy {
+		g := monitor_input.MetricQueryPart{Type: val.Type,Params: val.Params}
+		group = append(group, g)
+	}
 	params := monitor_input.MetricQueryInput{
 		From:     opts.Start,
 		To:       opts.End,
@@ -271,10 +279,7 @@ func (self *SRegion) GetMonitorDataJSON(opts *cloudprovider.MonitorDataJSONOptio
 					Operator: "=",
 					Value:    opts.GuestID,
 				}},
-				GroupBy: []monitor_input.MetricQueryPart{{
-					Type:   "tag",
-					Params: []string{"vm_id"},
-				}},
+				GroupBy: group,
 				Selects: []monitor_input.MetricQuerySelect{
 					[]monitor_input.MetricQueryPart{
 						{

@@ -212,7 +212,8 @@ func (self *SInstance) SetSecurityGroups(ids []string) error {
 }
 
 func (self *SInstance) GetHypervisor() string {
-	return api.HYPERVISOR_CLOUDPODS
+	//return api.HYPERVISOR_CLOUDPODS
+	return self.Hypervisor
 }
 
 func (self *SInstance) StartVM(ctx context.Context) error {

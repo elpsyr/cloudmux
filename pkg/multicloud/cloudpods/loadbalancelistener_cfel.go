@@ -100,7 +100,7 @@ func (s *SCloudLoadbalancerListener) Update(listener *cloudprovider.SLoadbalance
 		"tls_cipher_policy": listener.TLSCipherPolicy,
 		"x_forwarded_for":   listener.XForwardedFor,
 	}
-	if listener.ListenerType == "https" && s.CertificateID != listener.CertificateId {
+	if s.ListenerType == "https" && s.CertificateID != listener.CertificateId {
 		params["certificate_id"] = listener.CertificateId
 	}
 	if listener.AccessControlListStatus == "on" {

@@ -87,11 +87,12 @@ type FilterOption struct {
 }
 
 type GetNetworkOptions struct {
-	ZoneId       string `json:"zone_id,omitempty"`
-	WithUserMeta bool   `json:"with_user_meta,omitempty"`
-	ServerType   string `json:"server_type,omitempty"`
-	WireId       string `json:"wire_id,omitempty"`
-	VpcId        string `json:"vpc_id,omitempty"`
+	ZoneId       string   `json:"zone_id,omitempty"`
+	WithUserMeta bool     `json:"with_user_meta,omitempty"`
+	ServerType   string   `json:"server_type,omitempty"`
+	WireId       string   `json:"wire_id,omitempty"`
+	VpcId        string   `json:"vpc_id,omitempty"`
+	Ids          []string `json:"ids,omitempty"`
 }
 
 type CfelSManagedVMRebuildRootConfig struct {

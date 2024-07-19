@@ -48,6 +48,7 @@ type ICfelCloudRegion interface {
 
 	CfelCreateILoadBalancerCertificate(cert *SCfelLoadbalancerCertificate) (ICloudLoadbalancerCertificate, error)
 	GetSshKeypair(project string, isAdmin bool) (string, error)
+	CfelUpdateNetworkTags(id string,tags map[string]string) error
 }
 
 type ICfelCloudSku interface {

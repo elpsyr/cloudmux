@@ -145,6 +145,9 @@ func (self *SRegion) CfelGetINetworks(opts *cloudprovider.GetNetworkOptions) ([]
 		if len(opts.VpcId) > 0 {
 			params["vpc_id"] = opts.VpcId
 		}
+		if len(opts.Ids) > 0 {
+			params["id"] = opts.Ids
+		}
 	}
 	networks := []SNetwork{}
 	err := self.list(&modules.Networks, params, &networks)

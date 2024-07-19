@@ -111,3 +111,7 @@ func (self *SRegion) CfelCreateILoadBalancerCertificate(cert *cloudprovider.SCfe
 func (self *SRegion) GetSshKeypair(project string, isAdmin bool) (string, error) {
 	return "", errors.Wrapf(cloudprovider.ErrNotImplemented, "GetSshKeypair")
 }
+
+func (self *SRegion) CfelUpdateNetworkTags(id string,tags map[string]string) error {
+	return errors.Wrapf(cloudprovider.ErrNotImplemented, "CfelUpdateNetworkTags")
+}

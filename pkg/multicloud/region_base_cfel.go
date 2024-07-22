@@ -89,7 +89,7 @@ func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.IClo
 }
 
 func (self *SRegion) GetInstanceMatchImage(instanceType string) ([]cloudprovider.ICloudImage, error) {
-	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetICfelCloudImage")
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetInstanceMatchImage")
 }
 
 func (self *SRegion) SetImageUserTag(*cloudprovider.CfelSetImageUserTag) error {
@@ -112,6 +112,6 @@ func (self *SRegion) GetSshKeypair(project string, isAdmin bool) (string, error)
 	return "", errors.Wrapf(cloudprovider.ErrNotImplemented, "GetSshKeypair")
 }
 
-func (self *SRegion) CfelUpdateNetworkTags(id string,tags map[string]string) error {
+func (self *SRegion) CfelUpdateNetworkTags(id string, tags map[string]string) error {
 	return errors.Wrapf(cloudprovider.ErrNotImplemented, "CfelUpdateNetworkTags")
 }

@@ -1,6 +1,7 @@
 package qcloud
 
 import (
+	"fmt"
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/pkg/errors"
@@ -159,4 +160,75 @@ func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.IClo
 		ret = append(ret, &images[i])
 	}
 	return ret, nil
+}
+
+// GetInstanceMatchImage  获取腾讯云实例规格可用镜像
+func (self *SRegion) GetInstanceMatchImage(instancetype string) ([]cloudprovider.ICloudImage, error) {
+	images := make([]SImage, 0)
+	for {
+		parts, total, err := self.GetImagesByInstanceType(instancetype, "", "", nil, "", len(images), 50)
+		if err != nil {
+			return nil, errors.Wrapf(err, "GetImagesByInstanceType")
+		}
+		images = append(images, parts...)
+		if len(images) >= total {
+			break
+		}
+	}
+	ret := []cloudprovider.ICloudImage{}
+	for i := range images {
+		images[i].storageCache = self.getStoragecache()
+		ret = append(ret, &images[i])
+	}
+	return ret, nil
+}
+
+func (self *SRegion) GetImagesByInstanceType(instancetype, status string, owner string, imageIds []string, name string, offset int, limit int) ([]SImage, int, error) {
+	if limit > 50 || limit <= 0 {
+		limit = 50
+	}
+	params := make(map[string]string)
+	params["Limit"] = fmt.Sprintf("%d", limit)
+	params["Offset"] = fmt.Sprintf("%d", offset)
+	params["InstanceType"] = instancetype
+
+	for index, imageId := range imageIds {
+		params[fmt.Sprintf("ImageIds.%d", index)] = imageId
+	}
+
+	if len(imageIds) == 0 { // imageIds 不能和Filter同时查询
+		filter := 0
+		if len(status) > 0 {
+			params[fmt.Sprintf("Filters.%d.Name", filter)] = "image-state"
+			params[fmt.Sprintf("Filters.%d.Values.0", filter)] = status
+			filter++
+		}
+
+		if len(owner) > 0 {
+			params[fmt.Sprintf("Filters.%d.Name", filter)] = "image-type"
+			params[fmt.Sprintf("Filters.%d.Values.0", filter)] = owner
+			filter++
+		}
+
+		if len(name) > 0 {
+			params[fmt.Sprintf("Filters.%d.Name", filter)] = "image-name"
+			params[fmt.Sprintf("Filters.%d.Values.0", filter)] = name
+			filter++
+		}
+	}
+
+	images := make([]SImage, 0)
+	body, err := self.cvmRequest("DescribeImages", params, true)
+	if err != nil {
+		return nil, 0, err
+	}
+	err = body.Unmarshal(&images, "ImageSet")
+	if err != nil {
+		return nil, 0, err
+	}
+	for i := 0; i < len(images); i++ {
+		images[i].storageCache = self.getStoragecache()
+	}
+	total, _ := body.Float("TotalCount")
+	return images, int(total), nil
 }

@@ -212,7 +212,6 @@ func (self *SInstance) SetSecurityGroups(ids []string) error {
 }
 
 func (self *SInstance) GetHypervisor() string {
-	//return api.HYPERVISOR_CLOUDPODS
 	return self.Hypervisor
 }
 
@@ -296,7 +295,11 @@ func (self *SInstance) DeployVM(ctx context.Context, opts *cloudprovider.SInstan
 	if err != nil {
 		return errors.Wrapf(err, "deploy")
 	}
-	return cloudprovider.WaitMultiStatus(self, []string{api.VM_READY, api.VM_RUNNING}, time.Second*5, time.Minute*3)
+	timeout := time.Minute * 3
+	if self.Hypervisor == api.HYPERVISOR_BAREMETAL {
+		timeout = time.Minute * 10
+	}
+	return cloudprovider.WaitMultiStatus(self, []string{api.VM_READY, api.VM_RUNNING}, time.Second*5, timeout)
 }
 
 func (self *SInstance) ChangeConfig(ctx context.Context, opts *cloudprovider.SManagedVMChangeConfig) error {
@@ -304,7 +307,6 @@ func (self *SInstance) ChangeConfig(ctx context.Context, opts *cloudprovider.SMa
 	input.VmemSize = fmt.Sprintf("%dM", opts.MemoryMB)
 	input.VcpuCount = &opts.Cpu
 	input.InstanceType = opts.InstanceType
-	input.AutoStart = opts.AutoStart
 	_, err := self.host.zone.region.perform(&modules.Servers, self.Id, "change-config", input)
 	return err
 }
@@ -323,7 +325,7 @@ func (self *SRegion) GetInstanceVnc(id, name string) (*cloudprovider.ServerVncOu
 		Protocol:     "cloudpods",
 		InstanceId:   id,
 		InstanceName: name,
-		Hypervisor:   api.HYPERVISOR_CLOUDPODS,
+		Hypervisor:   api.HYPERVISOR_DEFAULT,
 	}
 	err = resp.Unmarshal(&result)
 	if err != nil {
@@ -484,6 +486,7 @@ func (self *SRegion) GetInstances(hostId string) ([]SInstance, error) {
 	if len(hostId) > 0 {
 		params["host_id"] = hostId
 	}
+	params["filter"] = fmt.Sprintf("hypervisor.in('kvm', 'baremetal')")
 	ret := []SInstance{}
 	return ret, self.list(&modules.Servers, params, &ret)
 }
@@ -513,9 +516,18 @@ func (self *SRegion) CreateInstance(hostId, hypervisor string, opts *cloudprovid
 	if opts.BillingCycle != nil {
 		input.Duration = opts.BillingCycle.String()
 	}
+	image, err := self.GetImage(opts.ExternalImageId)
+	if err != nil {
+		return nil, errors.Wrapf(err, "GetImage")
+	}
+	imageId := opts.ExternalImageId
+	if image.DiskFormat == "iso" {
+		input.Cdrom = opts.ExternalImageId
+		imageId = ""
+	}
 	input.Disks = append(input.Disks, &api.DiskConfig{
 		Index:    0,
-		ImageId:  opts.ExternalImageId,
+		ImageId:  imageId,
 		DiskType: api.DISK_TYPE_SYS,
 		SizeMb:   opts.SysDisk.SizeGB * 1024,
 		Backend:  opts.SysDisk.StorageType,

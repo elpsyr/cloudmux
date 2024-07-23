@@ -50,9 +50,11 @@ type ModelManager interface {
 	List(session *mcclient.ClientSession, params jsonutils.JSONObject) (*printutils.ListResult, error)
 	Create(session *mcclient.ClientSession, params jsonutils.JSONObject) (jsonutils.JSONObject, error)
 	Delete(session *mcclient.ClientSession, id string, param jsonutils.JSONObject) (jsonutils.JSONObject, error)
+	DeleteWithParam(session *mcclient.ClientSession, id string, query jsonutils.JSONObject, body jsonutils.JSONObject) (jsonutils.JSONObject, error)
 	PerformAction(session *mcclient.ClientSession, id string, action string, params jsonutils.JSONObject) (jsonutils.JSONObject, error)
 	Get(session *mcclient.ClientSession, id string, params jsonutils.JSONObject) (jsonutils.JSONObject, error)
 	Update(session *mcclient.ClientSession, id string, params jsonutils.JSONObject) (jsonutils.JSONObject, error)
+	GetKeyword() string
 }
 
 type CloudpodsClientConfig struct {
@@ -122,10 +124,11 @@ func (self *SCloudpodsClient) auth() error {
 			serviceRegion = region
 		}
 	}
-	// endpointType：
-	// https://www.cloudpods.org/en/docs/guides/climc/usage
-	// https://www.cloudpods.org/en/docs/development/apisdk/apigateway
-	self.s = client.NewSession(context.Background(), serviceRegion, "", "apigateway", token)
+	endpoint := "publicURL"
+	if strings.Contains(self.authURL, "api/s/identity/v3") {
+		endpoint = "apigateway"
+	}
+	self.s = client.NewSession(context.Background(), serviceRegion, "", endpoint, token)
 	if !self.s.GetToken().HasSystemAdminPrivilege() {
 		return fmt.Errorf("no system admin privilege")
 	}
@@ -162,7 +165,11 @@ func (self *SCloudpodsClient) get(manager ModelManager, id string, params map[st
 		}
 		return errors.Wrapf(err, "Get(%s)", id)
 	}
-	return resp.Unmarshal(retVal)
+	obj := resp.(*jsonutils.JSONDict)
+	if manager.GetKeyword() == compute.Servers.GetKeyword() {
+		obj.Remove("cdrom")
+	}
+	return obj.Unmarshal(retVal)
 }
 
 func (self *SCloudpodsClient) perform(manager ModelManager, id, action string, params interface{}) (jsonutils.JSONObject, error) {
@@ -174,7 +181,7 @@ func (self *SCloudpodsClient) delete(manager ModelManager, id string) error {
 		return nil
 	}
 	params := map[string]interface{}{"override_pending_delete": true}
-	_, err := manager.Delete(self.s, id, jsonutils.Marshal(params))
+	_, err := manager.DeleteWithParam(self.s, id, jsonutils.Marshal(params), nil)
 	return err
 }
 
@@ -210,7 +217,11 @@ func (self *SCloudpodsClient) create(manager ModelManager, params interface{}, r
 	if err != nil {
 		return err
 	}
-	return resp.Unmarshal(retVal)
+	obj := resp.(*jsonutils.JSONDict)
+	if manager.GetKeyword() == compute.Servers.GetKeyword() {
+		obj.Remove("cdrom")
+	}
+	return obj.Unmarshal(retVal)
 }
 
 func (self *SCloudpodsClient) list(manager ModelManager, params map[string]interface{}, retVal interface{}) error {
@@ -229,7 +240,13 @@ func (self *SCloudpodsClient) list(manager ModelManager, params map[string]inter
 		if err != nil {
 			return errors.Wrapf(err, "list")
 		}
-		ret = append(ret, part.Data...)
+		for i := range part.Data {
+			data := part.Data[i].(*jsonutils.JSONDict)
+			if manager.GetKeyword() == compute.Servers.GetKeyword() {
+				data.Remove("cdrom")
+			}
+			ret = append(ret, data)
+		}
 		if len(ret) >= part.Total {
 			break
 		}
@@ -251,22 +268,26 @@ func (self *SCloudpodsClient) GetIRegionById(id string) (cloudprovider.ICloudReg
 	return nil, errors.Wrapf(cloudprovider.ErrNotFound, id)
 }
 
-func (self *SCloudpodsClient) GetIRegions() []cloudprovider.ICloudRegion {
+func (self *SCloudpodsClient) GetIRegions() ([]cloudprovider.ICloudRegion, error) {
 	regions, err := self.GetRegions()
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	ret := []cloudprovider.ICloudRegion{}
 	for i := range regions {
 		regions[i].cli = self
 		ret = append(ret, &regions[i])
 	}
-	return ret
+	return ret, nil
 }
 
 func (self *SCloudpodsClient) GetRegions() ([]SRegion, error) {
 	ret := []SRegion{}
 	return ret, self.list(&compute.Cloudregions, nil, &ret)
+}
+
+func (self *SCloudpodsClient) GetCloudRegionExternalIdPrefix() string {
+	return fmt.Sprintf("%s/%s", api.CLOUD_PROVIDER_CLOUDPODS, self.cpcfg.Id)
 }
 
 func (self *SCloudpodsClient) GetCapabilities() []string {

@@ -22,7 +22,7 @@ import (
 	"yunion.io/x/jsonutils"
 	"yunion.io/x/pkg/errors"
 
-	"yunion.io/x/cloudmux/pkg/multicloud/cloudpods"
+	"yunion.io/x/onecloud/pkg/mcclient/cloudpods"
 )
 
 type SCloudpodsProviderFactory struct {
@@ -111,6 +111,10 @@ func (self *SCloudpodsProvider) GetAccountId() string {
 	return self.client.GetAccountId()
 }
 
+func (self *SCloudpodsProvider) GetCloudRegionExternalIdPrefix() string {
+	return self.client.GetCloudRegionExternalIdPrefix()
+}
+
 func (self *SCloudpodsProvider) GetBalance() (*cloudprovider.SBalanceInfo, error) {
 	return &cloudprovider.SBalanceInfo{
 		Currency: "CNY",
@@ -134,7 +138,7 @@ func (self *SCloudpodsProvider) GetIRegionById(extId string) (cloudprovider.IClo
 	return self.client.GetIRegionById(extId)
 }
 
-func (self *SCloudpodsProvider) GetIRegions() []cloudprovider.ICloudRegion {
+func (self *SCloudpodsProvider) GetIRegions() ([]cloudprovider.ICloudRegion, error) {
 	return self.client.GetIRegions()
 }
 

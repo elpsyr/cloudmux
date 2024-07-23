@@ -120,7 +120,7 @@ func (self *SHost) _createVM(name, hostname string, imgId string, sysDisk cloudp
 
 	if len(instanceType) > 0 {
 		log.Debugf("Try instancetype : %s", instanceType)
-		vmId, err := self.zone.region.CreateInstance(name, hostname, imgId, instanceType, secgroupIds, self.zone.Zone, desc, passwd, disks, networkId, ipAddr, keypair, userData, bc, projectId, publicIpBw, publicIpChargeType, tags, osType)
+		vmId, err := self.zone.region.CfelCreateInstance(name, hostname, imgId, instanceType, secgroupIds, self.zone.Zone, desc, passwd, disks, networkId, ipAddr, keypair, userData, bc, projectId, publicIpBw, publicIpChargeType, tags, osType)
 		if err != nil {
 			return "", errors.Wrapf(err, "Failed to create specification %s", instanceType)
 		}
@@ -139,7 +139,7 @@ func (self *SHost) _createVM(name, hostname string, imgId string, sysDisk cloudp
 	for _, instType := range instanceTypes {
 		instanceTypeId := instType.InstanceType
 		log.Debugf("Try instancetype : %s", instanceTypeId)
-		vmId, err = self.zone.region.CreateInstance(name, hostname, imgId, instanceTypeId, secgroupIds, self.zone.Zone, desc, passwd, disks, networkId, ipAddr, keypair, userData, bc, projectId, publicIpBw, publicIpChargeType, tags, osType)
+		vmId, err = self.zone.region.CfelCreateInstance(name, hostname, imgId, instanceTypeId, secgroupIds, self.zone.Zone, desc, passwd, disks, networkId, ipAddr, keypair, userData, bc, projectId, publicIpBw, publicIpChargeType, tags, osType)
 		if err != nil {
 			log.Errorf("Failed for %s: %s", instanceTypeId, err)
 		} else {

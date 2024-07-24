@@ -11,6 +11,10 @@ import (
 	"yunion.io/x/pkg/utils"
 )
 
+func (self *SInstance) GetIHostId() string {
+	return fmt.Sprintf("-%s", self.Placement.Zone)
+}
+
 func (self *SRegion) CfelCreateInstance(name, hostname string, imageId string, instanceType string, securityGroupIds []string,
 	zoneId string, desc string, passwd string, disks []SDisk, networkId string, ipAddr string,
 	keypair string, userData string, bc *billing.SBillingCycle, projectId string,

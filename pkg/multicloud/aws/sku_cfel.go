@@ -395,6 +395,30 @@ func (self *SRegion) DescribeInstanceTypeAvailable(instanceType, zone string) (b
 	return len(ret.InstanceTypeSet) > 0, nil
 }
 
+// DescribeReservedInstancesOfferings
+// 查询指定 instanceType 在 zone 预付费 是否售卖
+// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeReservedInstancesOfferings.html
+func (self *SRegion) DescribeReservedInstancesOfferings(instanceType, zone string) (bool, error) {
+	params := map[string]string{
+		"AvailabilityZone": zone,
+	}
+
+	params["Filter.1.Name"] = "availability-zone"
+	params["Filter.1.Value.1"] = zone
+	params["Filter.2.Name"] = "instance-type"
+	params["Filter.2.Value.1"] = instanceType
+
+	ret := struct {
+		InstanceTypeSet []InstanceTypeOffering `xml:"reservedInstancesOfferingsSet>item"`
+		NextToken       string                 `xml:"nextToken"`
+	}{}
+	err := self.ec2Request("DescribeReservedInstancesOfferings", params, &ret)
+	if err != nil {
+		return false, err
+	}
+	return len(ret.InstanceTypeSet) > 0, nil
+}
+
 func (self *SRegion) DescribeInstanceTypeOfferings(nextToken string) ([]InstanceTypeOffering, string, error) {
 	params := map[string]string{
 		"LocationType": "availability-zone",
@@ -526,15 +550,10 @@ func (self *SRegion) ListPriceLists() (*SInstanceType, error) {
 
 func (self *SRegion) GetInstanceTypePrice(instanceType string) (*SInstanceType, error) {
 	filters := map[string]string{
-		"regionCode":      self.RegionId,
-		"operatingSystem": "Linux",
-		"licenseModel":    "No License required",
-		"productFamily":   "Compute Instance",
-		"operation":       "RunInstances",
-		"preInstalledSw":  "NA",
-		"tenancy":         "Shared",
-		"capacitystatus":  "Used",
-		"instanceType":    instanceType,
+		"regionCode":     self.RegionId,
+		"operation":      "RunInstances",
+		"capacitystatus": "Used",
+		"instanceType":   instanceType,
 	}
 
 	params := []ProductFilter{}
@@ -702,9 +721,9 @@ func (self *SRegion) GetPostPaidStatus(zoneID, instanceType string) (string, err
 }
 
 func (self *SRegion) GetPrePaidStatus(zoneID, instanceType string) (string, error) {
-	available, err := self.DescribeInstanceTypeAvailable(instanceType, zoneID)
+	available, err := self.DescribeReservedInstancesOfferings(instanceType, zoneID)
 	if err != nil {
-		return api.SkuStatusSoldout, errors.Wrapf(err, "DescribeInstanceTypeAvailable")
+		return api.SkuStatusSoldout, errors.Wrapf(err, "DescribeReservedInstancesOfferings")
 	}
 	if available {
 		return api.SkuStatusAvailable, nil

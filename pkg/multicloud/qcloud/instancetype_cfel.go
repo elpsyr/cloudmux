@@ -2,7 +2,6 @@ package qcloud
 
 import (
 	"encoding/json"
-	"fmt"
 	"regexp"
 	"strconv"
 	"time"
@@ -150,8 +149,6 @@ func (self *SRegion) GetInstanceTypesPrice(zoneID, instanceType string) (*Descri
 		return nil, err
 	}
 
-	//err = body.Unmarshal(&instanceTypes, "InstanceTypeConfigSet")
-
 	allInfo := new(DescribeInstanceConfigInfosUnmarshal)
 	//err = json.Unmarshal([]byte(body.String()), &allInfo)
 	err = body.Unmarshal(&allInfo)
@@ -159,13 +156,6 @@ func (self *SRegion) GetInstanceTypesPrice(zoneID, instanceType string) (*Descri
 		log.Errorf("Unmarshal instance type details fail %s", err)
 		return nil, err
 	}
-
-	for _, info := range allInfo.InstanceTypeQuotaSet {
-
-		fmt.Println(info.InstanceChargeType, "-----", info.Price)
-
-	}
-
 	return allInfo, nil
 }
 

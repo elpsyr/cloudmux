@@ -168,7 +168,7 @@ func NewAliyunClient(cfg *AliyunClientConfig) (*SAliyunClient, error) {
 		nasEndpoints:       map[string]string{},
 		vpcEndpoints:       map[string]string{},
 	}
-	return &client, client.fetchRegions()
+	return &client, client.fetchRegionsCfel()
 }
 
 func jsonRequest(client *sdk.Client, domain, apiVersion, apiName string, params map[string]string, debug bool) (jsonutils.JSONObject, error) {

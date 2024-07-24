@@ -22,7 +22,7 @@ import (
 	"yunion.io/x/jsonutils"
 	"yunion.io/x/pkg/errors"
 
-	"yunion.io/x/onecloud/pkg/mcclient/cloudpods"
+	"yunion.io/x/cloudmux/pkg/multicloud/cloudpods"
 )
 
 type SCloudpodsProviderFactory struct {

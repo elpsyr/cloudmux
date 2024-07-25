@@ -1,11 +1,14 @@
 package qcloud
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
+	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/jsonutils"
+	"yunion.io/x/log"
 	"yunion.io/x/pkg/errors"
 	"yunion.io/x/pkg/util/billing"
 	"yunion.io/x/pkg/utils"
@@ -157,4 +160,30 @@ func (self *SRegion) CfelCreateInstance(name, hostname string, imageId string, i
 		return instanceIdSet[0], nil
 	}
 	return "", fmt.Errorf("Failed to create instance")
+}
+
+func (self *SInstance) RebootVM(ctx context.Context) error {
+	err := self.host.zone.region.RebootVM(self.InstanceId)
+	if err != nil {
+		return err
+	}
+	return cloudprovider.WaitStatus(self, api.VM_RUNNING, 10*time.Second, 300*time.Second) // 5mintues
+}
+
+func (self *SRegion) RebootVM(instanceId string) error {
+	status, err := self.GetInstanceStatus(instanceId)
+	if err != nil {
+		log.Errorf("Fail to get instance status on StartVM: %s", err)
+		return err
+	}
+	if status != InstanceStatusRunning {
+		log.Errorf("RebootVM: vm status is %s expect %s", status, InstanceStatusRunning)
+		return cloudprovider.ErrInvalidStatus
+	}
+	return self.doRebootVM(instanceId)
+
+}
+
+func (self *SRegion) doRebootVM(instanceId string) error {
+	return self.instanceOperation(instanceId, "RebootInstances", nil, true)
 }

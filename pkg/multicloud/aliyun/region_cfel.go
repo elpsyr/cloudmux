@@ -274,6 +274,11 @@ func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.IClo
 	return ret, nil
 }
 
+// GetICfelCloudImageById 获取阿里云镜像
+func (self *SRegion) GetICfelCloudImageById(id string) (cloudprovider.ICloudImage, error) {
+	return self.GetImage(id)
+}
+
 // GetInstanceMatchImage  获取阿里云实例规格可用镜像
 func (self *SRegion) GetInstanceMatchImage(instancetype string) ([]cloudprovider.ICloudImage, error) {
 	images := make([]SImage, 0)

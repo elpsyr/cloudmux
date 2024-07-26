@@ -55,7 +55,7 @@ func (self *SHost) GetInstanceById(instanceId string) (*SInstance, error) {
 }
 
 func (self *SHost) CreateVM(desc *cloudprovider.SManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
-	vmId, err := self._createVM(desc.Name, desc.Hostname, desc.ExternalImageId,
+	vmId, err := self._createVMCfel(desc.Name, desc.Hostname, desc.ExternalImageId,
 		desc.SysDisk, desc.Cpu, desc.MemoryMB,
 		desc.InstanceType, desc.ExternalNetworkId,
 		desc.IpAddr, desc.Description, desc.Password,

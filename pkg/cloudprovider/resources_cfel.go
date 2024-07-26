@@ -39,6 +39,7 @@ type ICfelCloudRegion interface {
 
 	ICfelDeleteImage(id string) error
 	GetICfelCloudImage(withUserMeta bool) ([]ICloudImage, error)
+	GetICfelCloudImageById(id string) (ICloudImage, error)
 	GetInstanceMatchImage(instanceType string) ([]ICloudImage, error)
 	SetImageUserTag(*CfelSetImageUserTag) error
 
@@ -48,7 +49,7 @@ type ICfelCloudRegion interface {
 
 	CfelCreateILoadBalancerCertificate(cert *SCfelLoadbalancerCertificate) (ICloudLoadbalancerCertificate, error)
 	GetSshKeypair(project string, isAdmin bool) (string, error)
-	CfelUpdateNetworkTags(id string,tags map[string]string) error
+	CfelUpdateNetworkTags(id string, tags map[string]string) error
 }
 
 type ICfelCloudSku interface {

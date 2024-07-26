@@ -256,6 +256,11 @@ func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.IClo
 
 }
 
+// GetICfelCloudImageById 获取 cloudpods 镜像
+func (self *SRegion) GetICfelCloudImageById(id string) (cloudprovider.ICloudImage, error) {
+	return self.GetImage(id)
+}
+
 func (self *SRegion) SetImageUserTag(opts *cloudprovider.CfelSetImageUserTag) error {
 	_, err := image.Images.PerformAction(self.cli.s, opts.ImageId, "set-user-metadata", jsonutils.Marshal(opts.Tags))
 	return err
@@ -280,23 +285,23 @@ func (self *SRegion) GetUsableIEip() ([]cloudprovider.ICloudEIP, error) {
 
 func (self *SRegion) GetSshKeypair(project string, isAdmin bool) (string, error) {
 	query := jsonutils.NewDict()
-		if isAdmin {
-			query.Add(jsonutils.JSONTrue, "admin")
+	if isAdmin {
+		query.Add(jsonutils.JSONTrue, "admin")
+	}
+	var keys jsonutils.JSONObject
+	if len(project) == 0 {
+		listResult, err := modules.Sshkeypairs.List(self.cli.s, query)
+		if err != nil {
+			return "", err
 		}
-		var keys jsonutils.JSONObject
-		if len(project) == 0 {
-			listResult, err := modules.Sshkeypairs.List(self.cli.s, query)
-			if err != nil {
-				return "", err
-			}
-			keys = listResult.Data[0]
-		} else {
-			result, err := modules.Sshkeypairs.GetById(self.cli.s, project, query)
-			if err != nil {
-				return "", err
-			}
-			keys = result
+		keys = listResult.Data[0]
+	} else {
+		result, err := modules.Sshkeypairs.GetById(self.cli.s, project, query)
+		if err != nil {
+			return "", err
 		}
-		privKey, _ := keys.GetString("private_key")
-		return privKey, nil
+		keys = result
+	}
+	privKey, _ := keys.GetString("private_key")
+	return privKey, nil
 }

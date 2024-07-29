@@ -97,13 +97,13 @@ func (instance *SInstanceBase) GetError() error {
 }
 
 func (self *SInstanceBase) GetPrepaidStatus() string {
-	return api.SkuStatusSoldout
+	return api.SkuStatusAvailable
 }
 
 func (self *SInstanceBase) GetPostpaidStatus() string {
-	return api.SkuStatusSoldout
+	return api.SkuStatusAvailable
 }
 
 func (self *SInstanceBase) GetSpotpaidStatus() string {
-	return api.SkuStatusSoldout
+	return api.SkuStatusAvailable
 }

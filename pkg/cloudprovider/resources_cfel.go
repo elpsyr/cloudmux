@@ -56,6 +56,7 @@ type ICfelCloudSku interface {
 	GetZoneID() string
 	GetGPUMemorySizeMB() int // GPU 显存
 	GetIsBareMetal() bool    // 获取是否为裸金属
+	GetSpotpaidStatus() string
 	ICloudSku
 }
 

@@ -5,6 +5,7 @@ import (
 	"time"
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
+	"yunion.io/x/cloudmux/pkg/multicloud"
 	"yunion.io/x/pkg/errors"
 )
 
@@ -26,6 +27,7 @@ type FlavorGroups struct {
 
 // SFlavors  实例规格 （instanceType）
 type SFlavors struct {
+	multicloud.SInstanceBase
 	CpuCount            int    `json:"cpuCount"`           // cpu数量
 	MemoryCapacityInGB  int    `json:"memoryCapacityInGB"` // 内存容量（单位：GB）
 	EphemeralDiskInGb   int    `json:"ephemeralDiskInGb"`  // 本地数据盘容量（单位：GB）

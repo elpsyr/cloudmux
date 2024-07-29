@@ -17,12 +17,14 @@ package huawei
 import (
 	"net/url"
 	"strconv"
+	"yunion.io/x/cloudmux/pkg/multicloud"
 
 	"yunion.io/x/pkg/errors"
 )
 
 type SInstanceType struct {
 	SCfelInstanceType
+	multicloud.SInstanceBase
 	ID           string       `json:"id"`
 	Name         string       `json:"name"`
 	Vcpus        string       `json:"vcpus"`

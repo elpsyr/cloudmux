@@ -1,6 +1,7 @@
 package aliyun
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"unicode"
@@ -38,13 +39,14 @@ type SInstanceTypeCFEL struct {
 	QueuePairNumber             int     // 单块弹性RDMA网卡（ERI）的QP（QueuePair）队列数上限。
 	InitialCredit               int     // 突发性能实例t5、t6的初始vCPU积分值。
 	NetworkCardQuantity         int     // 实例规格支持的物理网卡数量。
-	PostpaidStatus              string
-	PrepaidStatus               string
+	PostPaidStatus              string
+	SpotPaidStatus              string
+	PrePaidStatus               string
 }
 
 // GetICfelSkus 获取 aliyun ICfelCloudSku
 func (self *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
-	skus, err := self.GetRegionAvailableInstanceTypes()
+	skus, err := self.GetAvailableInstanceTypes()
 	if err != nil {
 		return nil, errors.Wrapf(err, "GetInstanceTypes")
 	}
@@ -155,12 +157,12 @@ func (self *SRegion) GetRegionAvailableInstanceTypes() ([]SInstanceType, error) 
 				_instanceType, ok := instanceTypeMap[resource.Value]
 				if ok {
 					_instanceType.ZoneID = zone.ZoneID
-					_instanceType.PostpaidStatus = resource.Status
+					_instanceType.PostPaidStatus = resource.Status
 
 					// set PrepaidStatus
 					prePaidAvailableStatus, ok := prePaidAvailableResourceMap[zone.ZoneID][resource.Value]
 					if ok {
-						_instanceType.PrepaidStatus = prePaidAvailableStatus
+						_instanceType.PrePaidStatus = prePaidAvailableStatus
 					}
 					zonesInstanceType = append(zonesInstanceType, _instanceType)
 				}
@@ -169,6 +171,135 @@ func (self *SRegion) GetRegionAvailableInstanceTypes() ([]SInstanceType, error) 
 		}
 	}
 	return zonesInstanceType, nil
+}
+
+// GetAvailableInstanceTypes 获取实力规格的
+// 抢占、按量、预付费 售卖情况
+func (self *SRegion) GetAvailableInstanceTypes() ([]SInstanceType, error) {
+	// 0. 获取 region 层级下所有 InstanceTypes
+	params := make(map[string]string)
+	params["RegionId"] = self.RegionId
+
+	body, err := self.ecsRequest("DescribeInstanceTypes", params)
+	if err != nil {
+		log.Errorf("GetInstanceTypes fail %s", err)
+		return nil, err
+	}
+
+	instanceTypes := make([]SInstanceType, 0)
+	err = body.Unmarshal(&instanceTypes, "InstanceTypes", "InstanceType")
+	if err != nil {
+		log.Errorf("Unmarshal instance type details fail %s", err)
+		return nil, err
+	}
+	// 0. instanceTypes列表 转存map[SInstanceType.InstanceTypeId] SInstanceType
+	instanceTypeMap := make(map[string]SInstanceType, 0)
+	for _, instanceType := range instanceTypes {
+		instanceType.PostPaidStatus = AliyunResourceSoldOut
+		instanceType.SpotPaidStatus = AliyunResourceSoldOut
+		instanceType.PrePaidStatus = AliyunResourceSoldOut
+		instanceTypeMap[instanceType.InstanceTypeId] = instanceType
+	}
+	// 1. 获取 region->zone 层级下 可用资源 DescribeAvailableResource
+
+	// etc.  cn-shanghai-k-ecs.u1-c1m8.large ---> SInstanceType
+	zoneInstanceTypeMap := make(map[string]SInstanceType, 0)
+
+	// 1.1 PostPaid
+	postPaidAvailableResource, err := self.GetAvailableResource(DestinationResourceInstanceType, POSTPAID, "", "", false)
+	if err != nil {
+		log.Errorf("GetAvailableResource PostPaid fail %s", err)
+		return nil, err
+	}
+	for _, availableZone := range postPaidAvailableResource.AvailableZones.AvailableZone {
+		if availableZone.Status == AliyunResourceAvailable {
+			tmpZoneId := availableZone.ZoneID
+			for _, availableResource := range availableZone.AvailableResources.AvailableResource {
+				for _, supportedResource := range availableResource.SupportedResources.SupportedResource {
+
+					if supportedResource.Status == AliyunResourceAvailable {
+						instanceType, ok := instanceTypeMap[supportedResource.Value]
+						if ok {
+							tmpKey := fmt.Sprintf("%s/%s", tmpZoneId, supportedResource.Value)
+							zoneInstanceType, zok := zoneInstanceTypeMap[tmpKey]
+							if zok {
+								instanceType = zoneInstanceType
+							}
+							instanceType.PostPaidStatus = AliyunResourceAvailable
+							instanceType.ZoneID = tmpZoneId
+							zoneInstanceTypeMap[fmt.Sprintf("%s/%s", tmpZoneId, supportedResource.Value)] = instanceType
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// 1.2 PrePaid
+	prePaidAvailableResource, err := self.GetAvailableResource(DestinationResourceInstanceType, PREPAID, "", "", false)
+	if err != nil {
+		log.Errorf("GetAvailableResource PrePaid fail %s", err)
+		return nil, err
+	}
+	for _, availableZone := range prePaidAvailableResource.AvailableZones.AvailableZone {
+		if availableZone.Status == AliyunResourceAvailable {
+			tmpZoneId := availableZone.ZoneID
+			for _, availableResource := range availableZone.AvailableResources.AvailableResource {
+				for _, supportedResource := range availableResource.SupportedResources.SupportedResource {
+
+					if supportedResource.Status == AliyunResourceAvailable {
+						instanceType, ok := instanceTypeMap[supportedResource.Value]
+						if ok {
+							tmpKey := fmt.Sprintf("%s/%s", tmpZoneId, supportedResource.Value)
+							zoneInstanceType, zok := zoneInstanceTypeMap[tmpKey]
+							if zok {
+								instanceType = zoneInstanceType
+							}
+							instanceType.PrePaidStatus = AliyunResourceAvailable
+							instanceType.ZoneID = tmpZoneId
+							zoneInstanceTypeMap[fmt.Sprintf("%s/%s", tmpZoneId, supportedResource.Value)] = instanceType
+						}
+					}
+				}
+			}
+		}
+	}
+
+	spotPaidAvailableResource, err := self.GetAvailableResource(DestinationResourceInstanceType, SPOTPOSTPAID, "", "", false)
+	if err != nil {
+		log.Errorf("GetAvailableResource SPOTPOSTPAID fail %s", err)
+		return nil, err
+	}
+	for _, availableZone := range spotPaidAvailableResource.AvailableZones.AvailableZone {
+		if availableZone.Status == AliyunResourceAvailable {
+			tmpZoneId := availableZone.ZoneID
+			for _, availableResource := range availableZone.AvailableResources.AvailableResource {
+				for _, supportedResource := range availableResource.SupportedResources.SupportedResource {
+
+					if supportedResource.Status == AliyunResourceAvailable {
+						instanceType, ok := instanceTypeMap[supportedResource.Value]
+						if ok {
+							tmpKey := fmt.Sprintf("%s/%s", tmpZoneId, supportedResource.Value)
+							zoneInstanceType, zok := zoneInstanceTypeMap[tmpKey]
+							if zok {
+								instanceType = zoneInstanceType
+							}
+							instanceType.SpotPaidStatus = AliyunResourceAvailable
+							instanceType.ZoneID = tmpZoneId
+							zoneInstanceTypeMap[fmt.Sprintf("%s/%s", tmpZoneId, supportedResource.Value)] = instanceType
+						}
+					}
+				}
+			}
+		}
+	}
+
+	zonesInstanceTypes := make([]SInstanceType, 0)
+	for _, v := range zoneInstanceTypeMap {
+		zonesInstanceTypes = append(zonesInstanceTypes, v)
+	}
+
+	return zonesInstanceTypes, nil
 }
 
 const (
@@ -191,6 +322,13 @@ func (self *SRegion) GetAvailableResource(DestinationResource, InstanceChargeTyp
 	if ZoneID != "" {
 		params["ZoneId"] = ZoneID
 	}
+
+	switch InstanceChargeType {
+	case SPOTPOSTPAID:
+		params["InstanceChargeType"] = POSTPAID
+		params["SpotStrategy"] = SpotStrategySpotAsPriceGo
+	}
+
 	if spot {
 		params["InstanceChargeType"] = POSTPAID
 		params["SpotStrategy"] = SpotStrategySpotAsPriceGo
@@ -265,18 +403,27 @@ func (self *SInstanceType) GetInstanceTypeCategory() string {
 }
 
 func (self *SInstanceType) GetPrepaidStatus() string {
-	if self.PrepaidStatus == AliyunResourceAvailable {
+	if self.PrePaidStatus == AliyunResourceAvailable {
 		return api.SkuStatusAvailable
-	} else if self.PrepaidStatus == AliyunResourceSoldOut {
+	} else if self.PrePaidStatus == AliyunResourceSoldOut {
 		return api.SkuStatusSoldout
 	}
 	return api.SkuStatusSoldout
 }
 
 func (self *SInstanceType) GetPostpaidStatus() string {
-	if self.PostpaidStatus == AliyunResourceAvailable {
+	if self.PostPaidStatus == AliyunResourceAvailable {
 		return api.SkuStatusAvailable
-	} else if self.PostpaidStatus == AliyunResourceSoldOut {
+	} else if self.PostPaidStatus == AliyunResourceSoldOut {
+		return api.SkuStatusSoldout
+	}
+	return api.SkuStatusSoldout
+}
+
+func (self *SInstanceType) GetSpotpaidStatus() string {
+	if self.SpotPaidStatus == AliyunResourceAvailable {
+		return api.SkuStatusAvailable
+	} else if self.SpotPaidStatus == AliyunResourceSoldOut {
 		return api.SkuStatusSoldout
 	}
 	return api.SkuStatusSoldout

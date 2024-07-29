@@ -16,8 +16,6 @@ package multicloud
 
 import (
 	"context"
-	api "yunion.io/x/cloudmux/pkg/apis/compute"
-
 	"yunion.io/x/pkg/errors"
 
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
@@ -97,13 +95,13 @@ func (instance *SInstanceBase) GetError() error {
 }
 
 func (self *SInstanceBase) GetPrepaidStatus() string {
-	return api.SkuStatusAvailable
+	return ""
 }
 
 func (self *SInstanceBase) GetPostpaidStatus() string {
-	return api.SkuStatusAvailable
+	return ""
 }
 
 func (self *SInstanceBase) GetSpotpaidStatus() string {
-	return api.SkuStatusAvailable
+	return ""
 }

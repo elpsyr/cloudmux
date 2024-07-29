@@ -2,6 +2,7 @@ package qcloud
 
 import (
 	"encoding/json"
+	"fmt"
 	"regexp"
 	"strconv"
 	"time"
@@ -18,15 +19,18 @@ var _ cloudprovider.ICloudSku = (*SInstanceType)(nil)
 type SCfelInstanceType struct {
 	// cfel information
 	multicloud.SInstanceBase
-	TypeName   string
-	CPUType    float64
-	GPUDesc    string
-	GpuCount   float64 // GPU 数量
-	Hypervisor string  // 用于判断是否为裸金属
+	TypeName       string
+	CPUType        float64
+	GPUDesc        string
+	GpuCount       float64 // GPU 数量
+	Hypervisor     string  // 用于判断是否为裸金属
+	PostPaidStatus string
+	SpotPaidStatus string
+	PrePaidStatus  string
 }
 
 func (self *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
-	skus, err := self.GetCfelInstanceTypes()
+	skus, err := self.GetAvailableInstanceTypes()
 	if err != nil {
 		return nil, errors.Wrapf(err, "GetCfelInstanceTypes")
 	}
@@ -134,6 +138,111 @@ func (self *SRegion) GetCfelInstanceTypes() ([]SInstanceType, error) {
 	return instanceTypes, nil
 }
 
+const (
+	QcloudResourceAvailable = "SELL"
+	QcloudResourceSoldOut   = "SOLD_OUT"
+)
+
+// GetAvailableInstanceTypes 获取实例规格的
+// 抢占、按量、预付费 售卖情况
+func (self *SRegion) GetAvailableInstanceTypes() ([]SInstanceType, error) {
+	params := make(map[string]string)
+	params["Region"] = self.Region
+	params["Filters.0.Name"] = "instance-charge-type"
+
+	instanceTypeMap := make(map[string]SInstanceType, 0)
+	chargeTypeList := []string{PrePaid, SpotPaid, PostPaidByHour}
+	for _, chargeType := range chargeTypeList {
+		params["Filters.0.Values.0"] = chargeType
+
+		//body, err := self.cvmRequest("DescribeInstanceTypeConfigs", params, true)
+		body, err := self.cvmRequest("DescribeUserAvailableInstanceTypes", params, true)
+		if err != nil {
+			log.Errorf("DescribeUserAvailableInstanceTypes fail %s", err)
+			// 目前 可用 zone 数据不一定真实
+			return nil, err
+		}
+
+		//err = body.Unmarshal(&instanceTypes, "InstanceTypeConfigSet")
+
+		allInfo := new(DescribeInstanceConfigInfosUnmarshal)
+		err = json.Unmarshal([]byte(body.String()), &allInfo)
+		//err = body.Unmarshal(&allInfo)
+		if err != nil {
+			log.Errorf("Unmarshal instance type details fail %s", err)
+			return nil, err
+		}
+
+		for _, info := range allInfo.InstanceTypeQuotaSet {
+
+			instanceType := SInstanceType{
+				Zone:              info.Zone,
+				InstanceType:      info.InstanceType,
+				InstanceFamily:    info.InstanceFamily,
+				GPU:               info.Gpu,
+				CPU:               info.CPU,
+				Memory:            info.Memory,
+				CbsSupport:        "TRUE",
+				InstanceTypeState: info.Status,
+				SCfelInstanceType: SCfelInstanceType{
+					TypeName:   info.TypeName,
+					GpuCount:   float64(info.GpuCount),
+					GPUDesc:    info.Externals.GPUDesc,
+					Hypervisor: info.Externals.Hypervisor,
+				},
+			}
+
+			// 判断使用有 GPU
+			if info.GpuCount != 0 {
+				// 普通类型从 Externals.GPUDesc 取数据
+				if info.Externals.GPUDesc != "" {
+					instanceType.GPUDesc = info.Externals.GPUDesc
+				} else {
+					// 目前 baremetal 类型主机 GPU 存储在 Remark 字段
+					instanceType.GPUDesc = info.Remark
+				}
+
+				// todo:
+				// 裁剪数据：
+				// 1 * NVIDIA V100
+				// 8 颗 NVIDIA V100
+
+				// 定义正则表达式，匹配 * 或者 颗 前后的空格
+				re := regexp.MustCompile(`\s*[*颗]\s*`)
+
+				// 使用正则表达式分割字符串
+				parts := re.Split(instanceType.GPUDesc, -1)
+
+				// 输出提取出的数据（目标数据在切片的最后一个元素）
+				instanceType.GPUDesc = parts[len(parts)-1]
+
+			}
+			tmpInstanceType, ok := instanceTypeMap[info.Zone+info.InstanceType]
+			if !ok {
+				tmpInstanceType = instanceType
+			}
+			// update
+			switch info.InstanceChargeType {
+			case PostPaidByHour:
+				tmpInstanceType.PostPaidStatus = info.Status
+			case SpotPaid:
+				tmpInstanceType.SpotPaidStatus = info.Status
+			case PrePaid:
+				tmpInstanceType.PrePaidStatus = info.Status
+			}
+			instanceTypeMap[info.Zone+info.InstanceType] = tmpInstanceType
+
+		}
+	}
+
+	instanceTypes := make([]SInstanceType, 0)
+	for _, v := range instanceTypeMap {
+		instanceTypes = append(instanceTypes, v)
+	}
+
+	return instanceTypes, nil
+}
+
 // GetInstanceTypesPrice 获取 instanceType 价格
 // 获取 zone 下对应 instance-type 的 规格以及价格信息
 func (self *SRegion) GetInstanceTypesPrice(zoneID, instanceType string) (*DescribeInstanceConfigInfosUnmarshal, error) {
@@ -219,11 +328,33 @@ func (self *SInstanceType) GetInstanceTypeCategory() string {
 }
 
 func (self *SInstanceType) GetPrepaidStatus() string {
-	return ""
+	if self.InstanceType == "SA3.12XLARGE96" {
+		fmt.Println(self.PrePaidStatus)
+	}
+	if self.PrePaidStatus == QcloudResourceAvailable {
+		return api.SkuStatusAvailable
+	} else if self.PrePaidStatus == QcloudResourceSoldOut {
+		return api.SkuStatusSoldout
+	}
+	return api.SkuStatusSoldout
 }
 
 func (self *SInstanceType) GetPostpaidStatus() string {
-	return ""
+	if self.PostPaidStatus == QcloudResourceAvailable {
+		return api.SkuStatusAvailable
+	} else if self.PostPaidStatus == QcloudResourceSoldOut {
+		return api.SkuStatusSoldout
+	}
+	return api.SkuStatusSoldout
+}
+
+func (self *SInstanceType) GetSpotpaidStatus() string {
+	if self.SpotPaidStatus == QcloudResourceAvailable {
+		return api.SkuStatusAvailable
+	} else if self.SpotPaidStatus == QcloudResourceSoldOut {
+		return api.SkuStatusSoldout
+	}
+	return api.SkuStatusSoldout
 }
 
 func (self *SInstanceType) GetCpuArch() string {
@@ -364,7 +495,7 @@ type DescribeInstanceConfigInfosUnmarshal struct {
 	InstanceTypeQuotaSet []struct {
 		Zone               string `json:"Zone"`
 		InstanceType       string `json:"InstanceType"`
-		InstanceChargeType string `json:"InstanceChargeType"`
+		InstanceChargeType string `json:"InstanceChargeType"` // 付费方式 	POSTPAID_BY_HOUR  SPOTPAID  PREPAID
 		NetworkCard        int    `json:"NetworkCard"`
 		Externals          struct {
 			GpuAttr struct {

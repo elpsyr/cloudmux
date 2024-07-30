@@ -2,6 +2,13 @@ package cloudprovider
 
 import "yunion.io/x/onecloud/pkg/apis"
 
+const (
+	InstanceChargeTypeTag      = "instanceChargeType"
+	InstanceChargeTypeSpotPaid = "SpotPaid"
+	InstanceChargeTypePostPaid = "PostPaid"
+	InstanceChargeTypePrePaid  = "PrePaid"
+)
+
 type CfelSManagedVMCreateConfig struct {
 	SManagedVMCreateConfig
 	IsolatedDevice       []*IsolatedDeviceConfig
@@ -67,11 +74,11 @@ type MonitorDataJSONOption struct {
 	Start    string
 	End      string
 	Interval string
-	GroupBy []GroupBy
+	GroupBy  []GroupBy
 }
 
 type GroupBy struct {
-	Type string
+	Type   string
 	Params []string
 }
 
@@ -101,10 +108,10 @@ type CfelSManagedVMRebuildRootConfig struct {
 	// 重置指定密码
 	Password string `json:"password"`
 
-	
-	AutoStart bool `json:"auto_start"`
+	AutoStart      bool `json:"auto_start"`
 	DeployTelegraf bool `json:"deploy_telegraf"`
 }
+
 // ServerSSHInfo
 // copy from ServerRemoteConsoleResponse
 type ServerSSHInfo struct {

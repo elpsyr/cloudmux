@@ -234,7 +234,7 @@ func (self *SHost) _createVM(name, hostname string, imgId string,
 
 	if len(instanceType) > 0 {
 		log.Debugf("Try instancetype : %s", instanceType)
-		vmId, err := self.zone.region.CreateInstance(name, hostname, imgId, instanceType, secgroupIds, self.zone.ZoneId, desc, passwd, disks, vswitchId, ipAddr, keypair, userData, bc, projectId, osType, tags, publicIp)
+		vmId, err := self.zone.region.CreateInstanceCfel(name, hostname, imgId, instanceType, secgroupIds, self.zone.ZoneId, desc, passwd, disks, vswitchId, ipAddr, keypair, userData, bc, projectId, osType, tags, publicIp)
 		if err != nil {
 			log.Errorf("Failed for %s: %s", instanceType, err)
 			return "", fmt.Errorf("Failed to create specification %s.%s", instanceType, err.Error())
@@ -254,7 +254,7 @@ func (self *SHost) _createVM(name, hostname string, imgId string,
 	for _, instType := range instanceTypes {
 		instanceTypeId := instType.InstanceTypeId
 		log.Debugf("Try instancetype : %s", instanceTypeId)
-		vmId, err = self.zone.region.CreateInstance(name, hostname, imgId, instanceTypeId, secgroupIds, self.zone.ZoneId, desc, passwd, disks, vswitchId, ipAddr, keypair, userData, bc, projectId, osType, tags, publicIp)
+		vmId, err = self.zone.region.CreateInstanceCfel(name, hostname, imgId, instanceTypeId, secgroupIds, self.zone.ZoneId, desc, passwd, disks, vswitchId, ipAddr, keypair, userData, bc, projectId, osType, tags, publicIp)
 		if err != nil {
 			log.Errorf("Failed for %s: %s", instanceTypeId, err)
 		} else {

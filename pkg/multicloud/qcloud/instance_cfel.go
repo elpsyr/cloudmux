@@ -100,6 +100,10 @@ func (self *SRegion) CfelCreateInstance(name, hostname string, imageId string, i
 	} else {
 		params["InstanceChargeType"] = "POSTPAID_BY_HOUR"
 	}
+	ct, ok := tags[cloudprovider.InstanceChargeTypeTag]
+	if ok && ct == cloudprovider.InstanceChargeTypeSpotPaid {
+		params["InstanceChargeType"] = "SPOTPAID"
+	}
 
 	// tags
 	if len(tags) > 0 {

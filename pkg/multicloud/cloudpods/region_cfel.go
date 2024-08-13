@@ -236,6 +236,15 @@ func (self *SRegion) ICfelDeleteImage(id string) error {
 	return err
 }
 
+func (self *SRegion) ICfelSetImageCanDelete(id string) error {
+	params := map[string]interface{}{
+		"disable_delete": false,
+		"protected": false,
+	  }
+	_, err := image.Images.Update(self.cli.s,id,jsonutils.Marshal(params))
+	return err
+}
+
 func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.ICloudImage, error) {
 	var params = map[string]interface{}{
 		"is_public":      true,

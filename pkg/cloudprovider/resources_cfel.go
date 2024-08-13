@@ -38,6 +38,7 @@ type ICfelCloudRegion interface {
 	GetGeneralUsage() (ICfelGeneralUsage, error)
 
 	ICfelDeleteImage(id string) error
+	ICfelSetImageCanDelete(id string) error
 	GetICfelCloudImage(withUserMeta bool) ([]ICloudImage, error)
 	GetICfelCloudImageById(id string) (ICloudImage, error)
 	GetInstanceMatchImage(instanceType string) ([]ICloudImage, error)

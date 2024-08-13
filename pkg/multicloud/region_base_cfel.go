@@ -119,3 +119,7 @@ func (self *SRegion) GetSshKeypair(project string, isAdmin bool) (string, error)
 func (self *SRegion) CfelUpdateNetworkTags(id string, tags map[string]string) error {
 	return errors.Wrapf(cloudprovider.ErrNotImplemented, "CfelUpdateNetworkTags")
 }
+
+func (self *SRegion) ICfelSetImageCanDelete(id string) error {
+	return errors.Wrapf(cloudprovider.ErrNotImplemented, "ICfelSetImageCanDelete")
+}

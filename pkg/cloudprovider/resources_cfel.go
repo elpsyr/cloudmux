@@ -144,3 +144,8 @@ type ICfelLoadbalancerSku interface {
 	GetType() string
 	GetID() string
 }
+
+type ICfelCloudHostNetInterface interface {
+	ICloudHostNetInterface
+	GetNetId() string
+}

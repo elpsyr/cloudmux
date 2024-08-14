@@ -17,3 +17,7 @@ package cloudpods
 func (host *SHost) GetTags() (map[string]string, error) {
 	return host.Metadata, nil
 }
+
+func (hn *SHostNic) GetNetId() string {
+	return hn.nic.NetId
+}

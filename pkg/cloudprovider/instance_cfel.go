@@ -16,7 +16,8 @@ type CfelSManagedVMCreateConfig struct {
 	BaremetalDiskConfigs []*BaremetalDiskConfig
 	EipBw                int
 	EipAutoDellocate     bool
-	Count                int // 数量
+	Count                int    // 数量
+	PreferHostId         string // 调度使用指定宿主机
 }
 type Network struct {
 	NetworkId      string

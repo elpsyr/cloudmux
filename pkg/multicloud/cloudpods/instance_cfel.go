@@ -11,11 +11,11 @@ import (
 	"yunion.io/x/pkg/errors"
 
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
-	input "yunion.io/x/onecloud/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/jsonutils"
 	"yunion.io/x/log"
 	compute "yunion.io/x/onecloud/pkg/apis/compute"
+	input "yunion.io/x/onecloud/pkg/apis/compute"
 	monitor_input "yunion.io/x/onecloud/pkg/apis/monitor"
 	modules "yunion.io/x/onecloud/pkg/mcclient/modules/compute"
 	monitor "yunion.io/x/onecloud/pkg/mcclient/modules/monitor"
@@ -262,8 +262,8 @@ func (self *SRegion) GetMonitorDataJSON(opts *cloudprovider.MonitorDataJSONOptio
 		Type:   "tag",
 		Params: []string{"vm_id"},
 	}}
-	for _,val := range opts.GroupBy {
-		g := monitor_input.MetricQueryPart{Type: val.Type,Params: val.Params}
+	for _, val := range opts.GroupBy {
+		g := monitor_input.MetricQueryPart{Type: val.Type, Params: val.Params}
 		group = append(group, g)
 	}
 	params := monitor_input.MetricQueryInput{
@@ -305,7 +305,7 @@ func (self *SRegion) GetMonitorDataJSON(opts *cloudprovider.MonitorDataJSONOptio
 
 func (self *SRegion) CreateBareMetal(opts *cloudprovider.CfelSManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
 	hypervisor := api.HYPERVISOR_BAREMETAL
-	ins, err := self.cfelCreateInstance("", hypervisor, opts)
+	ins, err := self.cfelCreateInstance(opts.PreferHostId, hypervisor, opts)
 	if err != nil {
 		return nil, err
 	}

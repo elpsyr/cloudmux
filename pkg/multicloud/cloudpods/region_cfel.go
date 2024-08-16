@@ -232,8 +232,7 @@ func (self *SRegion) GetGeneralUsage() (cloudprovider.ICfelGeneralUsage, error) 
 }
 
 func (self *SRegion) ICfelDeleteImage(id string) error {
-	_, err := image.Images.Delete(self.cli.s, id, nil)
-	return err
+	return self.cli.delete(&image.Images,id)
 }
 
 func (self *SRegion) ICfelSetImageCanDelete(id string) error {

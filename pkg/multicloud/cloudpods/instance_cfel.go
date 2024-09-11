@@ -15,7 +15,6 @@ import (
 	"yunion.io/x/jsonutils"
 	"yunion.io/x/log"
 	compute "yunion.io/x/onecloud/pkg/apis/compute"
-	input "yunion.io/x/onecloud/pkg/apis/compute"
 	monitor_input "yunion.io/x/onecloud/pkg/apis/monitor"
 	modules "yunion.io/x/onecloud/pkg/mcclient/modules/compute"
 	monitor "yunion.io/x/onecloud/pkg/mcclient/modules/monitor"
@@ -32,12 +31,13 @@ func (self *SInstance) RebootVM(ctx context.Context) error {
 }
 
 func (self *SInstance) CfelRebuildRoot(ctx context.Context, opts *cloudprovider.CfelSManagedVMRebuildRootConfig) (string, error) {
-	input := input.ServerRebuildRootInput{}
+	input := cloudprovider.CfelServerRebuildRootInput{}
 	input.ImageId = opts.ImageId
 	input.Password = opts.Password
 	input.AutoStart = &opts.AutoStart
 	input.ResetPassword = opts.ResetPassword
 	input.DeployTelegraf = opts.DeployTelegraf
+	input.UserData = opts.UserData
 	if len(opts.PublicKey) > 0 {
 		keypairId, err := self.host.zone.region.syncKeypair(self.Name, opts.PublicKey)
 		if err != nil {

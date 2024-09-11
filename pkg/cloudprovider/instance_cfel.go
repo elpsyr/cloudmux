@@ -1,6 +1,8 @@
 package cloudprovider
 
-import "yunion.io/x/onecloud/pkg/apis"
+import (
+	"yunion.io/x/onecloud/pkg/apis"
+)
 
 const (
 	InstanceChargeTypeTag      = "instanceChargeType"
@@ -8,6 +10,58 @@ const (
 	InstanceChargeTypePostPaid = "PostPaid"
 	InstanceChargeTypePrePaid  = "PrePaid"
 )
+
+type CfelServerRebuildRootInput struct {
+	apis.Meta
+
+	// swagger: ignore
+	Image string `json:"image" yunion-deprecated-by:"image_id"`
+	// 关机且停机不收费情况下不允许重装系统
+	// 镜像 id
+	// required: true
+	ImageId string `json:"image_id"`
+	// swagger: ignore
+	// Keypair string `json:"keypair" yunion-deprecated-by:"keypair_id"`
+	// 秘钥Id
+	// KeypairId     string `json:"keypair_id"`
+	// ResetPassword *bool  `json:"reset_password"`
+	// Password      string `json:"password"`
+
+	AutoStart *bool `json:"auto_start"`
+
+	AllDisks *bool `json:"all_disks"`
+
+	CfelServerDeployInputBase
+}
+
+type CfelServerDeployInputBase struct {
+	// swagger: ignore
+	Keypair string `json:"keypair,omitempty" yunion-deprecated-by:"keypair_id"`
+	// 秘钥Id
+	KeypairId string `json:"keypair_id,omitempty"`
+
+	// 清理指定公钥
+	// 若指定的秘钥Id和虚拟机的秘钥Id不相同, 则清理旧的公钥
+	DeletePublicKey string `json:"delete_public_key,omitempty"`
+	// 解绑当前虚拟机秘钥, 并清理公钥信息
+	DeleteKeypair bool `json:"__delete_keypair__,omitempty"`
+	// 生成随机密码, 优先级低于password
+	ResetPassword bool `json:"reset_password,omitempty"`
+	// 重置指定密码
+	Password string `json:"password,omitempty"`
+	// swagger: ignore
+	LoginAccount string `json:"login_account,omitempty"`
+
+	// swagger: ignore
+	Restart bool `json:"restart,omitempty"`
+
+	// swagger: ignore
+	//DeployConfigs []*DeployConfig `json:"deploy_configs"`
+	// swagger: ignore
+	DeployTelegraf bool `json:"deploy_telegraf,omitempty"`
+
+	UserData string `json:"user_data,omitempty"`
+}
 
 type CfelSManagedVMCreateConfig struct {
 	SManagedVMCreateConfig

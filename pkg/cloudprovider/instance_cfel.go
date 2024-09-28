@@ -72,6 +72,7 @@ type CfelSManagedVMCreateConfig struct {
 	EipAutoDellocate     bool
 	Count                int    // 数量
 	PreferHostId         string // 调度使用指定宿主机
+	Machine              string // emulate: pc, q35
 }
 type Network struct {
 	NetworkId      string

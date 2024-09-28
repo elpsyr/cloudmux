@@ -505,6 +505,10 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 	}
 	input.BaremetalDiskConfigs = ebmDiskConfig
 
+	if opts.Machine != "" {
+		input.Machine = opts.Machine
+	}
+
 	ins := &SInstance{}
 	return ins, self.create(&modules.Servers, input, ins)
 }

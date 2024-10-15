@@ -17,6 +17,7 @@ package cloudprovider
 type SNetworkCreateOptions struct {
 	Name           string
 	Desc           string
+	ZoneId         string   // for Huawei
 	ProjectId      string
 	Cidr           string
 	AssignPublicIp bool

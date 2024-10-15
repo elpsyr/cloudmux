@@ -16,6 +16,7 @@ package huawei
 
 import (
 	"fmt"
+	"strings"
 	"net/url"
 
 	"yunion.io/x/jsonutils"
@@ -307,6 +308,9 @@ func (self *SRegion) GetNetworks(vpcId string) ([]SNetwork, error) {
 func (self *SRegion) deleteNetwork(vpcId string, networkId string) error {
 	res := fmt.Sprintf("vpcs/%s/subnets/%s", vpcId, networkId)
 	_, err := self.delete(SERVICE_VPC, res)
+	if err != nil && strings.Contains(err.Error(), "empty response") {
+		return nil
+	}
 	return err
 }
 

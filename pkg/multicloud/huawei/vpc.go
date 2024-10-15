@@ -16,6 +16,7 @@ package huawei
 
 import (
 	"net/url"
+	"strings"
 
 	"yunion.io/x/jsonutils"
 	"yunion.io/x/pkg/errors"
@@ -268,6 +269,9 @@ func (self *SRegion) GetVpc(vpcId string) (*SVpc, error) {
 // https://console.huaweicloud.com/apiexplorer/#/openapi/VPC/doc?version=v2&api=DeleteVpc
 func (self *SRegion) DeleteVpc(vpcId string) error {
 	_, err := self.delete(SERVICE_VPC, "vpcs/"+vpcId)
+	if err != nil && strings.Contains(err.Error(), "empty response") {
+		err = nil
+	}
 	return err
 }
 

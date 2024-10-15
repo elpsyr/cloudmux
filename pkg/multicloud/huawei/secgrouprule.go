@@ -19,10 +19,11 @@ import (
 	"net/url"
 	"strings"
 
-	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/pkg/errors"
 	"yunion.io/x/pkg/util/netutils"
 	"yunion.io/x/pkg/util/secrules"
+
+	"yunion.io/x/cloudmux/pkg/cloudprovider"
 )
 
 type SecurityGroupRule struct {
@@ -34,6 +35,7 @@ type SecurityGroupRule struct {
 	Description     string
 	PortRangeMax    int64
 	PortRangeMin    int64
+	Multiport       string // for v3 api
 	Protocol        string
 	RemoteGroupId   string
 	RemoteIPPrefix  string
@@ -73,6 +75,9 @@ func (self *SecurityGroupRule) GetProtocol() string {
 }
 
 func (self *SecurityGroupRule) GetPorts() string {
+	if self.Multiport != "" {
+		return self.Multiport
+	}
 	if self.PortRangeMax > 0 && self.PortRangeMin > 0 {
 		if self.PortRangeMax == self.PortRangeMin {
 			return fmt.Sprintf("%d", self.PortRangeMax)
@@ -177,5 +182,22 @@ func (self *SRegion) CreateSecurityGroupRule(groupId string, opts *cloudprovider
 }
 
 func (self *SecurityGroupRule) Update(opts *cloudprovider.SecurityGroupRuleUpdateOptions) error {
-	return cloudprovider.ErrNotSupported
+	rule, err := self.secgroup.CreateRule(&cloudprovider.SecurityGroupRuleCreateOptions{
+		Desc:      opts.Desc,
+		Priority:  opts.Priority,
+		Protocol:  opts.Protocol,
+		Ports:     opts.Ports,
+		Direction: secrules.TSecurityRuleDirection(self.Direction),
+		CIDR:      opts.CIDR,
+		Action:    opts.Action,
+	})
+	if err != nil {
+		return err
+	}
+
+	self.Delete()
+
+	*self = *rule.(*SecurityGroupRule)
+
+	return nil
 }

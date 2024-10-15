@@ -29,17 +29,17 @@ var regionList = map[string]string{
 	"guangzhou-2": "华南-广州2",
 	"beijing-1":   "华北-北京1",
 	"hunan-1":     "华中-长沙1",
-	"wuxi-1":      "华东-苏州",
-	"dongguan-1":  "华南-广州3",
-	"yaan-1":      "西南-成都",
-	"zhengzhou-1": "华中-郑州",
-	"beijing-2":   "华北-北京3",
-	"zhuzhou-1":   "华中-长沙2",
-	"jinan-1":     "华东-济南",
-	"xian-1":      "西北-西安",
-	"shanghai-1":  "华东-上海1",
-	"chongqing-1": "西南-重庆",
-	"ningbo-1":    "华东-杭州",
+	"wuxi-1":      "华东-苏州",  //
+	"dongguan-1":  "华南-广州3", //
+	"yaan-1":      "西南-成都",  //
+	"zhengzhou-1": "华中-郑州",  //
+	"beijing-2":   "华北-北京3", //
+	"zhuzhou-1":   "华中-长沙2", //
+	"jinan-1":     "华东-济南",  //
+	"xian-1":      "西北-西安",  //
+	"shanghai-1":  "华东-上海1", //
+	"chongqing-1": "西南-重庆",  //
+	"ningbo-1":    "华东-杭州",  //
 	"tianjin-1":   "天津-天津",
 	"jilin-1":     "吉林-长春",
 	"hubei-1":     "湖北-襄阳",
@@ -47,13 +47,18 @@ var regionList = map[string]string{
 	"gansu-1":     "甘肃-兰州",
 	"shanxi-1":    "山西-太原",
 	"liaoning-1":  "辽宁-沈阳",
-	"yunnan-2":    "云南-昆明2",
+	"yunnan-2":    "云南-昆明1", //
 	"hebei-1":     "河北-石家庄",
 	"fujian-1":    "福建-厦门",
 	"guangxi-1":   "广西-南宁",
 	"anhui-1":     "安徽-淮南",
 	"huhehaote-1": "华北-呼和浩特",
 	"guiyang-1":   "西南-贵阳",
+
+	// "qinghai-1":      "西藏-青海1", // qq
+	// "hainan-1":       "华南-海南",
+	// "xinjiang-1":     "",
+	// "heilongjiang-1": "东北-黑龙江",
 }
 
 type SRegion struct {

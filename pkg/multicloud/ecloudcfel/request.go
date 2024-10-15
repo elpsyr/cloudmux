@@ -211,7 +211,10 @@ func (br *SBaseRequest) GetVersion() string {
 }
 
 func (br *SBaseRequest) GetTimestamp() string {
-	sh, _ := time.LoadLocation("Asia/Shanghai")
+	sh, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		sh = time.FixedZone("CST", 8*3600)
+	}
 	return time.Now().In(sh).Format("2006-01-02T15:04:05Z")
 }
 

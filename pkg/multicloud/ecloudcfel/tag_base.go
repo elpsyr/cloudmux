@@ -12,15 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package loader
+package ecloudcfel
 
 import (
-	"yunion.io/x/log" // on-premise virtualization technologies
+	"yunion.io/x/pkg/errors"
 
-	_ "yunion.io/x/cloudmux/pkg/multicloud/cloudpods/provider" // private clouds
-	_ "yunion.io/x/cloudmux/pkg/multicloud/ecloudcfel/provider" // private clouds
+	"yunion.io/x/cloudmux/pkg/cloudprovider"
 )
 
-func init() {
-	log.Infof("Loading cfel cloud providers ...")
+type EcloudTags struct {
+}
+
+func (self *EcloudTags) GetTags() (map[string]string, error) {
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetTags")
+}
+
+func (self *EcloudTags) GetSysTags() map[string]string {
+	return nil
+}
+
+func (self *EcloudTags) SetTags(tags map[string]string, replace bool) error {
+	return errors.Wrap(cloudprovider.ErrNotImplemented, "SetTags")
 }

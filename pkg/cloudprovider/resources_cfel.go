@@ -15,6 +15,7 @@ type ICfelCloudRegion interface {
 	GetSpotPostPaidStatus(zoneID, instanceType string) (string, error) //  抢占付费 售卖状态
 	GetPostPaidStatus(zoneID, instanceType string) (string, error)     //  按量付费 售卖状态
 	GetPrePaidStatus(zoneID, instanceType string) (string, error)      //  包年包月 售卖状态
+	GetICfelDiskType() (string, error)      //  包年包月 售卖状态
 
 	CreateBareMetal(desc *CfelSManagedVMCreateConfig) (ICloudVM, error)
 	CreateVM(desc *CfelSManagedVMCreateConfig) (ICloudVM, error)

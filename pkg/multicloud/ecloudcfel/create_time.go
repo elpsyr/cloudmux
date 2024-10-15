@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package loader
+package ecloudcfel
 
-import (
-	"yunion.io/x/log" // on-premise virtualization technologies
+import "time"
 
-	_ "yunion.io/x/cloudmux/pkg/multicloud/cloudpods/provider" // private clouds
-	_ "yunion.io/x/cloudmux/pkg/multicloud/ecloudcfel/provider" // private clouds
-)
+type SCreateTime struct {
+	CreatedTime string
+}
 
-func init() {
-	log.Infof("Loading cfel cloud providers ...")
+func (c *SCreateTime) GetCreatedAt() time.Time {
+	t, _ := time.Parse("2006-01-02 15:04:05", c.CreatedTime)
+	return t
 }

@@ -12,15 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package loader
-
-import (
-	"yunion.io/x/log" // on-premise virtualization technologies
-
-	_ "yunion.io/x/cloudmux/pkg/multicloud/cloudpods/provider" // private clouds
-	_ "yunion.io/x/cloudmux/pkg/multicloud/ecloudcfel/provider" // private clouds
-)
-
-func init() {
-	log.Infof("Loading cfel cloud providers ...")
-}
+package shell // import "yunion.io/x/cloudmux/pkg/multicloud/ecloud/shell"

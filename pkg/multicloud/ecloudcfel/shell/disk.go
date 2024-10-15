@@ -12,15 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package loader
+package shell
 
 import (
-	"yunion.io/x/log" // on-premise virtualization technologies
+	"yunion.io/x/pkg/util/shellutils"
 
-	_ "yunion.io/x/cloudmux/pkg/multicloud/cloudpods/provider" // private clouds
-	_ "yunion.io/x/cloudmux/pkg/multicloud/ecloudcfel/provider" // private clouds
+	"yunion.io/x/cloudmux/pkg/multicloud/ecloud"
 )
 
 func init() {
-	log.Infof("Loading cfel cloud providers ...")
+	type VDiskListOptions struct {
+	}
+	shellutils.R(&VDiskListOptions{}, "disk-list", "List disks", func(cli *ecloud.SRegion, args *VDiskListOptions) error {
+		disks, e := cli.GetDisks()
+		if e != nil {
+			return e
+		}
+		printList(disks, 0, 0, 0, nil)
+		return nil
+	})
 }

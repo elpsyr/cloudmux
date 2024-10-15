@@ -6,6 +6,28 @@ import (
 	"yunion.io/x/pkg/errors"
 )
 
+func (self *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetICfelSkus")
+}
+func (self *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) (float64, error) {
+	return 0, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetSpotPostPaidPrice")
+}
+func (self *SRegion) GetPostPaidPrice(zoneID, instanceType string) (float64, error) {
+	return 0, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetPostPaidPrice")
+}
+func (self *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, error) {
+	return 0, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetPrePaidPrice")
+}
+func (self *SRegion) GetSpotPostPaidStatus(zoneID, instanceType string) (string, error) {
+	return "", errors.Wrapf(cloudprovider.ErrNotImplemented, "GetSpotPostPaidStatus")
+}
+func (self *SRegion) GetPostPaidStatus(zoneID, instanceType string) (string, error) {
+	return "", errors.Wrapf(cloudprovider.ErrNotImplemented, "GetPostPaidStatus")
+}
+func (self *SRegion) GetPrePaidStatus(zoneID, instanceType string) (string, error) {
+	return "", errors.Wrapf(cloudprovider.ErrNotImplemented, "GetPrePaidStatus")
+}
+
 func (self *SRegion) CreateBareMetal(opts *cloudprovider.CfelSManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "CreateBareMetal")
 
@@ -122,4 +144,8 @@ func (self *SRegion) CfelUpdateNetworkTags(id string, tags map[string]string) er
 
 func (self *SRegion) ICfelSetImageCanDelete(id string) error {
 	return errors.Wrapf(cloudprovider.ErrNotImplemented, "ICfelSetImageCanDelete")
+}
+
+func (self *SRegion) GetICfelDiskType() (string, error) {
+	return "",errors.Wrapf(cloudprovider.ErrNotImplemented, "GetICfelDiskType")
 }

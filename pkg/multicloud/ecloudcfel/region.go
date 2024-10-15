@@ -26,9 +26,9 @@ import (
 )
 
 var regionList = map[string]string{
-	"guangzhou-2": "华南-广州2",
-	"beijing-1":   "华北-北京1",
-	"hunan-1":     "华中-长沙1",
+	// "guangzhou-2": "华南-广州2",
+	// "beijing-1":   "华北-北京1",
+	// "hunan-1":     "华中-长沙1",
 	"wuxi-1":      "华东-苏州",  //
 	"dongguan-1":  "华南-广州3", //
 	"yaan-1":      "西南-成都",  //

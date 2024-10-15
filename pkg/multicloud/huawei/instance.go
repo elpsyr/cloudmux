@@ -912,6 +912,9 @@ func (self *SRegion) StartVM(instanceId string) error {
 		"os-start": map[string]string{},
 	}
 	_, err := self.post(SERVICE_ECS_V2_1, fmt.Sprintf("servers/%s/action", instanceId), params)
+	if err != nil && strings.Contains(err.Error(), "empty response") {
+		err = nil
+	}
 	return err
 }
 
@@ -927,6 +930,9 @@ func (self *SRegion) StopVM(instanceId string, isForce bool) error {
 		},
 	}
 	_, err := self.post(SERVICE_ECS_V2_1, fmt.Sprintf("servers/%s/action", instanceId), params)
+	if err != nil && strings.Contains(err.Error(), "empty response") {
+		err = nil
+	}
 	return err
 }
 
@@ -1034,7 +1040,7 @@ func (self *SRegion) AttachDisk(instanceId string, diskId string, device string)
 // https://console.huaweicloud.com/apiexplorer/#/openapi/ECS/doc?api=DetachServerVolume
 func (self *SRegion) DetachDisk(instanceId string, diskId string) error {
 	_, err := self.delete(SERVICE_ECS, fmt.Sprintf("cloudservers/%s/detachvolume/%s", instanceId, diskId))
-	//volume a2091934-2669-4fca-8eb4-a950c1836b3c is not in server 49b053d2-f798-432f-af55-76eb6ef2c769 attach volume list => 磁盘已经被卸载了
+	// volume a2091934-2669-4fca-8eb4-a950c1836b3c is not in server 49b053d2-f798-432f-af55-76eb6ef2c769 attach volume list => 磁盘已经被卸载了
 	if err != nil && strings.Contains(err.Error(), fmt.Sprintf("is not in server")) && strings.Contains(err.Error(), fmt.Sprintf("attach volume list")) {
 		return nil
 	}

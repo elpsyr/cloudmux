@@ -337,6 +337,9 @@ func (self *SRegion) GetIEipById(eipId string) (cloudprovider.ICloudEIP, error) 
 
 func (self *SRegion) DeleteSecurityGroup(id string) error {
 	_, err := self.delete(SERVICE_VPC_V3, "vpc/security-groups/"+id)
+	if err != nil && strings.Contains(err.Error(), "empty response") {
+		err = nil
+	}
 	return err
 }
 

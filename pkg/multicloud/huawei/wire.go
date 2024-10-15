@@ -119,11 +119,12 @@ func (self *SRegion) CreateNetwork(vpcId string, opts *cloudprovider.SNetworkCre
 	}
 
 	params := map[string]interface{}{
-		"name":        opts.Name,
-		"description": opts.Desc,
-		"vpc_id":      vpcId,
-		"cidr":        opts.Cidr,
-		"gateway_ip":  gateway,
+		"name":              opts.Name,
+		"description":       opts.Desc,
+		"vpc_id":            vpcId,
+		"cidr":              opts.Cidr,
+		"gateway_ip":        gateway,
+		"availability_zone": opts.ZoneId,
 	}
 	resp, err := self.post(SERVICE_VPC, "subnets", map[string]interface{}{"subnet": params})
 	if err != nil {

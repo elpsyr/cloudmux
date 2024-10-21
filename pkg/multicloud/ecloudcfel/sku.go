@@ -39,10 +39,15 @@ func (self *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
 	var wg sync.WaitGroup
 
 	var res []cloudprovider.ICfelCloudSku
+	var tmp = make(map[string]struct{})
 	go func() {
 		for sku := range skuChan {
 			for _, val := range sku {
-				res = append(res, &val)
+				id := val.FlavorId + val.ZoneId
+				if _, ok := tmp[id]; !ok {
+					res = append(res, &val)
+					tmp[id] = struct{}{}
+				}
 			}
 		}
 	}()
@@ -130,9 +135,9 @@ func (self *SServerSku) GetGpuAttachable() bool {
 
 // GetGpuCount implements cloudprovider.ICfelCloudSku.
 func (self *SServerSku) GetGpuCount() string {
-	if info,ok := self.gpuInfo[self.SpecsName];ok {
-		arr := strings.Split(info,"*")
-		return strings.Trim(arr[0]," ")
+	if info, ok := self.gpuInfo[self.SpecsName]; ok {
+		arr := strings.Split(info, "*")
+		return strings.Trim(arr[0], " ")
 	}
 	return ""
 }
@@ -144,16 +149,16 @@ func (self *SServerSku) GetGpuMaxCount() int {
 
 // GetGpuSpec implements cloudprovider.ICfelCloudSku.
 func (self *SServerSku) GetGpuSpec() string {
-	if info,ok := self.gpuInfo[self.SpecsName];ok {
-		arr := strings.Split(info,"*")
-		return strings.Trim(arr[1]," ")
+	if info, ok := self.gpuInfo[self.SpecsName]; ok {
+		arr := strings.Split(info, "*")
+		return strings.Trim(arr[1], " ")
 	}
 	return ""
 }
 
 // GetId implements cloudprovider.ICfelCloudSku.
 func (self *SServerSku) GetId() string {
-	return self.FlavorId
+	return self.SpecsName
 }
 
 // GetInstanceTypeCategory implements cloudprovider.ICfelCloudSku.

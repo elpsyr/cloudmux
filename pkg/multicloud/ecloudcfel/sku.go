@@ -42,10 +42,10 @@ func (self *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
 	var tmp = make(map[string]struct{})
 	go func() {
 		for sku := range skuChan {
-			for _, val := range sku {
-				id := val.FlavorId + val.ZoneId
+			for i := range sku {
+				id := sku[i].SpecsName + sku[i].ZoneId
 				if _, ok := tmp[id]; !ok {
-					res = append(res, &val)
+					res = append(res, &sku[i])
 					tmp[id] = struct{}{}
 				}
 			}

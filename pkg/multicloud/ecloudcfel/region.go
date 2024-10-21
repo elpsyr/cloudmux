@@ -54,7 +54,7 @@ var regionList = map[string]string{
 	"guangxi-1":   "广西-南宁",
 	"anhui-1":     "安徽-淮南",
 	"huhehaote-1": "华北-呼和浩特",
-	"guiyang-1":   "西南-贵阳",
+	// "guiyang-1":   "西南-贵阳",
 
 	// "qinghai-1":      "西藏-青海1", // 
 	// "hainan-1":       "华南-海南",

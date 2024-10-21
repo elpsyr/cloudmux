@@ -25,6 +25,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"yunion.io/x/jsonutils"
 	"yunion.io/x/pkg/errors"
@@ -78,7 +79,7 @@ func NewEcloudClient(cfg *SEcloudClientConfig) (*SEcloudClient, error) {
 	// httpClient := cfg.cpcfg.AdaptiveTimeoutHttpClient()
 	return &SEcloudClient{
 		SEcloudClientConfig: cfg,
-		httpClient:          httputils.GetDefaultClient(),
+		httpClient:          httputils.GetTimeoutClient(30 * time.Second),
 	}, nil
 }
 
@@ -102,7 +103,6 @@ func (ec *SEcloudClient) fetchRegions() {
 	ec.iregions = iregions
 	return
 }
-
 
 func (ec *SEcloudClient) TryConnect() error {
 	iregions, _ := ec.GetIRegions()

@@ -48,7 +48,7 @@ var regionList = map[string]string{
 	"gansu-1":     "甘肃-兰州",
 	"shanxi-1":    "山西-太原",
 	"liaoning-1":  "辽宁-沈阳",
-	"yunnan-1":    "云南-昆明1", //
+	// "yunnan-1":    "云南-昆明1", //
 	"hebei-1":     "河北-石家庄",
 	"fujian-1":    "福建-厦门",
 	"guangxi-1":   "广西-南宁",

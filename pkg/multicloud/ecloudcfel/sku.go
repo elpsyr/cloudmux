@@ -2,6 +2,8 @@ package ecloudcfel
 
 import (
 	"context"
+	"strings"
+	"sync"
 
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/cloudmux/pkg/multicloud"
@@ -21,27 +23,64 @@ type SServerSku struct {
 	SpecsName string
 	SpecsType string
 	VmType    string
+	ZoneId    string
+
+	gpuInfo map[string]string
 }
 
 var _ cloudprovider.ICfelCloudSku = (*SServerSku)(nil)
 
 func (self *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
-	query := map[string]string{"vmType": "common"}
-	request := NewNovaRequest(NewApiRequest(self.ID, "/api/openapi-ecs/acl/v3/server/serverSpecs", query, nil))
-	skus := make([]SServerSku, 0, 5)
-	err := self.client.doList(context.Background(), request, &skus)
+	err := self.fetchZones()
 	if err != nil {
 		return nil, err
 	}
+	var skuChan = make(chan []SServerSku)
+	var wg sync.WaitGroup
+
 	var res []cloudprovider.ICfelCloudSku
-	for _, val := range skus {
-		res = append(res, &val)
+	go func() {
+		for sku := range skuChan {
+			for _, val := range sku {
+				res = append(res, &val)
+			}
+		}
+	}()
+
+	vmTypes := []string{"memImprove", "common", "gpu", "commonIntroductory", "commonNetImprove", "compute", "computeNetImprove", "memNetImprove", "localStorage", "xlargeMemory", "highFrequency", "vgpu", "fpga", "highIO", "exclusive", "normalComputeImprove", "normalNetEnhance", "storeEnhance", "computeEnhance", "npu", "universal"}
+	for _, zone := range self.izones {
+		for _, vmType := range vmTypes {
+			wg.Add(1)
+			go func(vmType string, region *SZone) {
+				query := map[string]string{
+					"vmType": vmType,
+					"region": region.Region,
+				}
+				request := NewConsoleRequest(self.ID, "/api/openapi-ecs/acl/v3/server/serverSpecs", query, nil)
+				// request := NewNovaRequest(NewApiRequest(self.ID, "/api/openapi-ecs/acl/v3/server/serverSpecs", query, nil))
+				skus := make([]SServerSku, 0)
+				err := self.client.doList(context.Background(), request, &skus)
+				if len(skus) == 0 || err != nil {
+					wg.Done()
+					return
+				}
+				for i := range skus {
+					skus[i].ZoneId = region.GetGlobalId()
+					skus[i].gpuInfo = self.gpuSkuInfo
+				}
+				skuChan <- skus
+				wg.Done()
+			}(vmType, zone.(*SZone))
+		}
 	}
+	wg.Wait()
+	close(skuChan)
+
 	return res, nil
 }
 
 func (self *SServerSku) GetZoneID() string {
-	return ""
+	return self.ZoneId
 }
 
 // GetAttachedDiskCount implements cloudprovider.ICfelCloudSku.
@@ -91,6 +130,10 @@ func (self *SServerSku) GetGpuAttachable() bool {
 
 // GetGpuCount implements cloudprovider.ICfelCloudSku.
 func (self *SServerSku) GetGpuCount() string {
+	if info,ok := self.gpuInfo[self.SpecsName];ok {
+		arr := strings.Split(info,"*")
+		return strings.Trim(arr[0]," ")
+	}
 	return ""
 }
 
@@ -101,6 +144,10 @@ func (self *SServerSku) GetGpuMaxCount() int {
 
 // GetGpuSpec implements cloudprovider.ICfelCloudSku.
 func (self *SServerSku) GetGpuSpec() string {
+	if info,ok := self.gpuInfo[self.SpecsName];ok {
+		arr := strings.Split(info,"*")
+		return strings.Trim(arr[1]," ")
+	}
 	return ""
 }
 

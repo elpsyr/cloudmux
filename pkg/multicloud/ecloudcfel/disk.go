@@ -23,6 +23,7 @@ import (
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/cloudmux/pkg/multicloud"
+	"yunion.io/x/jsonutils"
 )
 
 type SDisk struct {
@@ -200,7 +201,13 @@ func (s *SDisk) GetAccessPath() string {
 }
 
 func (s *SDisk) Delete(ctx context.Context) error {
-	return cloudprovider.ErrNotImplemented
+	params := map[string]interface{}{
+		"resourceId":   s.ID,
+		"resourceType": "VOLUME",
+	}
+	req := NewConsoleRequest(s.storage.zone.region.ID, "/api/ebs/acl/v3/common/resource/preDelete", nil, jsonutils.Marshal(params))
+	_, err := s.storage.zone.region.client.doPost(req)
+	return err
 }
 
 func (s *SDisk) CreateISnapshot(ctx context.Context, name string, desc string) (cloudprovider.ICloudSnapshot, error) {

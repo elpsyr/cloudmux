@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	"yunion.io/x/jsonutils"
 	"yunion.io/x/pkg/errors"
 	"yunion.io/x/pkg/util/billing"
 	"yunion.io/x/pkg/util/sets"
@@ -97,8 +98,12 @@ func (i *SInstance) GetName() string {
 	return i.Name
 }
 
+func (i *SInstance) GetIHostId() string {
+	return i.host.GetGlobalId()
+}
+
 func (i *SInstance) GetHostname() string {
-	return ""
+	return i.Name
 }
 
 func (i *SInstance) GetGlobalId() string {
@@ -164,6 +169,7 @@ func (i *SInstance) GetOsType() cloudprovider.TOsType {
 }
 
 func (i *SInstance) GetFullOsName() string {
+	return i.ImageName
 	image, err := i.GetImage()
 	if err != nil {
 		return ""
@@ -172,6 +178,7 @@ func (i *SInstance) GetFullOsName() string {
 }
 
 func (i *SInstance) GetBios() cloudprovider.TBiosType {
+	return ""
 	image, err := i.GetImage()
 	if err != nil {
 		return cloudprovider.BIOS
@@ -180,6 +187,7 @@ func (i *SInstance) GetBios() cloudprovider.TBiosType {
 }
 
 func (i *SInstance) GetOsArch() string {
+	return "x86"
 	image, err := i.GetImage()
 	if err != nil {
 		return ""
@@ -188,6 +196,7 @@ func (i *SInstance) GetOsArch() string {
 }
 
 func (i *SInstance) GetOsDist() string {
+	return i.ImageOsType
 	image, err := i.GetImage()
 	if err != nil {
 		return ""
@@ -196,6 +205,7 @@ func (i *SInstance) GetOsDist() string {
 }
 
 func (i *SInstance) GetOsVersion() string {
+	return ""
 	image, err := i.GetImage()
 	if err != nil {
 		return ""
@@ -204,6 +214,7 @@ func (i *SInstance) GetOsVersion() string {
 }
 
 func (i *SInstance) GetOsLang() string {
+	return ""
 	image, err := i.GetImage()
 	if err != nil {
 		return ""
@@ -307,19 +318,25 @@ func (in *SInstance) SetSecurityGroups(ids []string) error {
 }
 
 func (in *SInstance) GetHypervisor() string {
-	return api.HYPERVISOR_ECLOUD
+	return CLOUD_PROVIDER_ECLOUD
 }
 
 func (in *SInstance) StartVM(ctx context.Context) error {
-	return cloudprovider.ErrNotImplemented
+	req := NewConsoleRequest(in.host.zone.region.ID, fmt.Sprintf("/api/openapi-ecs/acl/v3/server/%s/start", in.Id), nil, nil)
+	_, err := in.host.zone.region.client.doPut(req)
+	return err
 }
 
 func (self *SInstance) StopVM(ctx context.Context, opts *cloudprovider.ServerStopOptions) error {
-	return cloudprovider.ErrNotImplemented
+	req := NewConsoleRequest(self.host.zone.region.ID, fmt.Sprintf("/api/openapi-ecs/acl/v3/server/%s/stop", self.Id), nil, nil)
+	_, err := self.host.zone.region.client.doPut(req)
+	return err
 }
 
 func (self *SInstance) DeleteVM(ctx context.Context) error {
-	return cloudprovider.ErrNotImplemented
+	req := NewConsoleRequest(self.host.zone.region.ID, fmt.Sprintf("/api/openapi-ecs/acl/v3/server/order/%s", self.Id), nil, nil)
+	err := self.host.zone.region.client.doDelete(req)
+	return err
 }
 
 func (self *SInstance) UpdateVM(ctx context.Context, input cloudprovider.SInstanceUpdateOptions) error {
@@ -331,11 +348,25 @@ func (self *SInstance) UpdateUserData(userData string) error {
 }
 
 func (self *SInstance) RebuildRoot(ctx context.Context, config *cloudprovider.SManagedVMRebuildRootConfig) (string, error) {
-	return "", cloudprovider.ErrNotImplemented
+	param := map[string]interface{}{
+		"adminPass": config.Password,
+		"imageId":   config.ImageId,
+		"serverId":  self.Id,
+		"userData":  config.UserData,
+	}
+	req := NewConsoleRequest(self.host.zone.region.ID, "/api/openapi-ecs/acl/v3/server/rebuild", nil, jsonutils.Marshal(param))
+	_, err := self.host.zone.region.client.doPut(req)
+	return "", err
 }
 
 func (self *SInstance) DeployVM(ctx context.Context, opts *cloudprovider.SInstanceDeployOptions) error {
-	return cloudprovider.ErrNotImplemented
+	params := map[string]string{
+		"password": opts.Password,
+		"serverId": self.Id,
+	}
+	req := NewConsoleRequest(self.host.zone.region.ID, "/api/openapi-ecs/acl/v3/server/password", nil, jsonutils.Marshal(params))
+	_, err := self.host.zone.region.client.doPut(req)
+	return err
 }
 
 func (in *SInstance) ChangeConfig(ctx context.Context, config *cloudprovider.SManagedVMChangeConfig) error {
@@ -357,11 +388,23 @@ func (in *SInstance) GetVNCInfo(input *cloudprovider.ServerVncInput) (*cloudprov
 }
 
 func (in *SInstance) AttachDisk(ctx context.Context, diskId string) error {
-	return cloudprovider.ErrNotImplemented
+	params := map[string]interface{}{
+		"serverId": in.Id,
+		"volumeId": diskId,
+	}
+	req := NewConsoleRequest(in.host.zone.region.ID, "/api/ebs/acl/v3/volume/mount", nil, jsonutils.Marshal(params))
+	_, err := in.host.zone.region.client.doPut(req)
+	return err
 }
 
 func (in *SInstance) DetachDisk(ctx context.Context, diskId string) error {
-	return cloudprovider.ErrNotImplemented
+	params := map[string]interface{}{
+		"serverId": in.Id,
+		"volumeId": diskId,
+	}
+	req := NewConsoleRequest(in.host.zone.region.ID, "/api/ebs/acl/v3/volume/unmount", nil, jsonutils.Marshal(params))
+	_, err := in.host.zone.region.client.doPut(req)
+	return err
 }
 
 func (self *SInstance) Renew(bc billing.SBillingCycle) error {
@@ -370,6 +413,28 @@ func (self *SInstance) Renew(bc billing.SBillingCycle) error {
 
 func (self *SInstance) GetError() error {
 	return nil
+}
+
+func (self *SInstance) SaveImage(opts *cloudprovider.SaveImageOptions) (cloudprovider.ICloudImage, error) {
+	// https://ecloud.10086.cn/op-help-center/doc/article/83348
+	param := map[string]interface{}{
+		"imageName":      opts.Name,
+		"note":           opts.Notes,
+		"serverId":       self.Id,
+		"serverTypeEnum": "VM",
+		// "tags":[
+		// 	{
+		// 		"key":"key_123",
+		// 		"value":"value_123"
+		// 	}
+		// ]
+	}
+	req := NewConsoleRequest(self.host.zone.region.ID, "/api/openapi-ims/acl/v5/image", nil, jsonutils.Marshal(param))
+	res, err := self.host.zone.region.client.doPost(req)
+	if err != nil {
+		return nil, err
+	}
+	return &SImage{ImageId: res.Interface().(string)}, nil
 }
 
 func (in *SInstance) fetchSysDisk() {
@@ -419,32 +484,23 @@ func (in *SInstance) fetchDataDisks() error {
 }
 
 func (in *SInstance) makeNicComplete() error {
-	routerIds := sets.NewString()
-	nics := make(map[string]*SInstanceNic, len(in.PortDetail))
+	portIds := sets.NewString()
+
 	for i := range in.PortDetail {
-		nic := &in.PortDetail[i]
-		routerIds.Insert(nic.RouterId)
-		nics[nic.PortId] = nic
+		portIds.Insert(in.PortDetail[i].PortId)
 	}
-	for _, routerId := range routerIds.UnsortedList() {
-		request := NewConsoleRequest(in.host.zone.region.ID, fmt.Sprintf("/api/vpc/%s/nic", routerId),
-			map[string]string{
-				"resourceId": in.Id,
-			}, nil,
+	for i, portId := range portIds.UnsortedList() {
+		request := NewConsoleRequest(in.host.zone.region.ID, fmt.Sprintf("/api/openapi-vpc/customer/v3/port/%s/PortDetailResp", portId),
+			nil, nil,
 		)
-		completeNics := make([]SInstanceNic, 0, len(nics)/2)
-		err := in.host.zone.region.client.doList(context.Background(), request, &completeNics)
+		completeNic := SInstanceNic{}
+		err := in.host.zone.region.client.doGet(context.Background(), request, &completeNic)
 		if err != nil {
-			return errors.Wrapf(err, "unable to get nics with instance %s in vpc %s", in.Id, routerId)
+			return errors.Wrapf(err, "unable to get nics with instance %s in vpc %s", in.Id, portId)
 		}
-		for i := range completeNics {
-			id := completeNics[i].Id
-			nic, ok := nics[id]
-			if !ok {
-				continue
-			}
-			nic.SInstanceNicDetail = completeNics[i].SInstanceNicDetail
-		}
+		in.PortDetail[i].SgIds = completeNic.SgIds
+		in.PortDetail[i].MacAddress = completeNic.MacAddress
+		in.PortDetail[i].NetworkId = completeNic.NetworkId
 	}
 	return nil
 }

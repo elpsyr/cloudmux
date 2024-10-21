@@ -34,6 +34,7 @@ type SInstanceNic struct {
 	PortName         string
 	FixedIpDetails   []SFixedIpDetail
 	RouterId         string
+	SgIds            []string `json:"sgIds"`
 }
 
 type SInstanceNicDetail struct {
@@ -60,6 +61,7 @@ type SFixedIpDetail struct {
 	BandWidthType string
 	SubnetId      string
 	SubnetName    string
+	SubnetCidr    string `json:"subnetCidr"`
 }
 
 func (in *SInstanceNic) GetIP() string {

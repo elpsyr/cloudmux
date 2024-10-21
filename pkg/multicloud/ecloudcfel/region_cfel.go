@@ -8,8 +8,16 @@ import (
 
 var _ cloudprovider.ICfelCloudRegion = (*SRegion)(nil)
 
+func (self *SRegion) SetSkuExtInfo(info map[string]string) error {
+	self.gpuSkuInfo = info
+	return nil
+}
 func (r *SRegion) GetInstanceMatchImage(instancetype string) ([]cloudprovider.ICloudImage, error) {
-	query := map[string]string{"specsName": instancetype}
+	query := map[string]string{
+		"specsName": instancetype,
+		"pageSize":  "100",
+		"page":      "1",
+	}
 	request := NewNovaRequest(NewApiRequest(r.ID, "/api/openapi-ims/user/v5/image/public", query, nil))
 	images := make([]SImage, 0)
 	err := r.client.doList(context.Background(), request, &images)
@@ -35,11 +43,4 @@ func (r *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.ICloudI
 		img = append(img, &val)
 	}
 	return img, nil
-}
-
-func (r *SRegion) GetICfelDiskType() (string, error) {
-	req := NewConsoleRequest(r.ID, "/api/v2/volume/customer/volumeType/list", nil, nil)
-	var res map[string]interface{}
-	_ = r.client.doGet(context.Background(), req, &res)
-	return "", nil
 }

@@ -8,6 +8,7 @@ import (
 
 type ICfelCloudRegion interface {
 	ICloudRegion
+	SetSkuExtInfo(map[string]string) error
 	GetICfelSkus() ([]ICfelCloudSku, error)
 	GetSpotPostPaidPrice(zoneID, instanceType string) (float64, error) //  抢占付费 价格
 	GetPostPaidPrice(zoneID, instanceType string) (float64, error)     //  按量付费 价格
@@ -15,7 +16,6 @@ type ICfelCloudRegion interface {
 	GetSpotPostPaidStatus(zoneID, instanceType string) (string, error) //  抢占付费 售卖状态
 	GetPostPaidStatus(zoneID, instanceType string) (string, error)     //  按量付费 售卖状态
 	GetPrePaidStatus(zoneID, instanceType string) (string, error)      //  包年包月 售卖状态
-	GetICfelDiskType() (string, error)      //  包年包月 售卖状态
 
 	CreateBareMetal(desc *CfelSManagedVMCreateConfig) (ICloudVM, error)
 	CreateVM(desc *CfelSManagedVMCreateConfig) (ICloudVM, error)
@@ -65,6 +65,7 @@ type ICfelCloudSku interface {
 type ICfelZone interface {
 	ICloudZone
 	GetCapability() (jsonutils.JSONObject, error)
+	GetICfelDiskType() (map[string]interface{}, error) //  包年包月 售卖状态
 }
 
 // ICfelCloudVM vm接口

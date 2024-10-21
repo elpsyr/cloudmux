@@ -33,11 +33,22 @@ var storageTypes = []string{
 	api.STORAGE_ECLOUD_SYSTEM,
 }
 
+// var storageTypes = []string{
+// 	"ebs_ceph_cache",
+// 	"ebs_ceph_ssd",
+// 	"ebs_ceph_data",
+// 	// api.STORAGE_ECLOUD_SSDEBS,
+// 	// special storage
+// 	// api.STORAGE_ECLOUD_SYSTEM,
+// }
+
 type SStorage struct {
 	multicloud.SStorageBase
 	EcloudTags
 	zone        *SZone
 	storageType string
+
+	ID string `json:"resourceId"` //创建磁盘返回的磁盘id
 }
 
 func (s *SStorage) GetId() string {
@@ -127,7 +138,26 @@ func (s *SStorage) GetEnabled() bool {
 }
 
 func (s *SStorage) CreateIDisk(conf *cloudprovider.DiskCreateConfig) (cloudprovider.ICloudDisk, error) {
-	return nil, cloudprovider.ErrNotImplemented
+	volumeType := conf.ProjectId
+	params := map[string]interface{}{
+		"cinderType":  volumeType,
+		"name":        conf.Name,
+		"size":        conf.SizeGb,
+		"share":       false,
+		"productType": "NORMAL",
+		"region":      s.zone.Region,
+	}
+	req := NewConsoleRequest(s.zone.region.ID, "/api/ebs/acl/v3/volume/order/volume", nil, jsonutils.Marshal(params))
+	res, err := s.zone.region.client.doPost(req)
+	if err != nil {
+		return nil, err
+	}
+	err = res.Unmarshal(&s)
+	if err != nil {
+		return nil, err
+	}
+	var ret = &SDisk{ID: s.ID, Name: conf.Name, Type: s.storageType, VolumeType: volumeType, SizeGB: conf.SizeGb, Status: "creating"}
+	return ret, nil
 }
 
 func (s *SStorage) GetIDiskById(idStr string) (cloudprovider.ICloudDisk, error) {

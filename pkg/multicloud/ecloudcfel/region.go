@@ -24,6 +24,7 @@ import (
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/cloudmux/pkg/multicloud"
 )
+// https://ecloud.10086.cn/op-help-center/doc/article/67742
 
 var regionList = map[string]string{
 	// "guangzhou-2": "华南-广州2",
@@ -47,7 +48,7 @@ var regionList = map[string]string{
 	"gansu-1":     "甘肃-兰州",
 	"shanxi-1":    "山西-太原",
 	"liaoning-1":  "辽宁-沈阳",
-	"yunnan-2":    "云南-昆明1", //
+	"yunnan-1":    "云南-昆明1", //
 	"hebei-1":     "河北-石家庄",
 	"fujian-1":    "福建-厦门",
 	"guangxi-1":   "广西-南宁",
@@ -55,7 +56,7 @@ var regionList = map[string]string{
 	"huhehaote-1": "华北-呼和浩特",
 	"guiyang-1":   "西南-贵阳",
 
-	// "qinghai-1":      "西藏-青海1", // qq
+	// "qinghai-1":      "西藏-青海1", // 
 	// "hainan-1":       "华南-海南",
 	// "xinjiang-1":     "",
 	// "heilongjiang-1": "东北-黑龙江",
@@ -69,17 +70,14 @@ type SRegion struct {
 	client       *SEcloudClient
 	storageCache *SStoragecache
 
-	Id        int    `json:"id"`
-	ID        string `json:"id1"`
-	Region    string `json:"region"`
+	ID        string `json:"id"`
 	Name      string `json:"name"`
-	Component string `json:"component"`
-	PoolId    string `json:"poolId"`
-	Deleted   bool   `json:"deleted"`
-	Visible   bool   `json:"visible"`
+	
 
 	izones []cloudprovider.ICloudZone
 	ivpcs  []cloudprovider.ICloudVpc
+
+	gpuSkuInfo map[string]string
 }
 
 func (r *SRegion) GetId() string {

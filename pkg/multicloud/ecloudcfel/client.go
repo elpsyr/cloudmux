@@ -252,6 +252,15 @@ func (ec *SEcloudClient) doPost(r IRequest) (jsonutils.JSONObject, error) {
 	return r.ForMateResponseBody(body)
 }
 
+func (ec *SEcloudClient) doPut(r IRequest) (jsonutils.JSONObject, error) {
+	r.SetMethod("PUT")
+	body, err := ec.doRequest(context.Background(), r)
+	if err != nil {
+		return nil, err
+	}
+	return r.ForMateResponseBody(body)
+}
+
 func (ec *SEcloudClient) doDelete(r IRequest) error {
 	r.SetMethod("DELETE")
 	_, err := ec.doRequest(context.Background(), r)

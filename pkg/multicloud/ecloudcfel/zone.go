@@ -34,7 +34,7 @@ type SZone struct {
 	Region  string `json:"region"`
 	Deleted bool
 	Visible bool
-	PoolId string `json:"poolId"`
+	PoolId  string `json:"poolId"`
 }
 
 func (z *SZone) GetId() string {

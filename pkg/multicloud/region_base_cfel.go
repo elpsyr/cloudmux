@@ -6,6 +6,9 @@ import (
 	"yunion.io/x/pkg/errors"
 )
 
+func (self *SRegion) SetSkuExtInfo(map[string]string) error {
+	return errors.Wrapf(cloudprovider.ErrNotImplemented, "SetSkuExtInfo")
+}
 func (self *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetICfelSkus")
 }
@@ -147,5 +150,5 @@ func (self *SRegion) ICfelSetImageCanDelete(id string) error {
 }
 
 func (self *SRegion) GetICfelDiskType() (string, error) {
-	return "",errors.Wrapf(cloudprovider.ErrNotImplemented, "GetICfelDiskType")
+	return "", errors.Wrapf(cloudprovider.ErrNotImplemented, "GetICfelDiskType")
 }

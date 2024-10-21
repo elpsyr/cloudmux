@@ -15,7 +15,9 @@
 package ecloudcfel
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"yunion.io/x/jsonutils"
 	"yunion.io/x/pkg/errors"
@@ -151,8 +153,56 @@ func (h *SHost) GetVersion() string {
 	return CLOUD_API_VERSION
 }
 
+type createResp struct {
+	OrderId string `json:"orderId"`
+}
+
+type orderInfo struct {
+	InstanceId string `json:"instanceId"`
+}
+
 func (h *SHost) CreateVM(desc *cloudprovider.SManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
-	return nil, cloudprovider.ErrNotImplemented
+	params := map[string]interface{}{
+		"region":      h.zone.Region,
+		"billingType": "HOUR",
+		"vmType":      "common",
+		"cpu":         desc.Cpu,
+		"ram":         desc.MemoryMB / 1024,
+		// "disk":        40,
+		"specsName": desc.InstanceType,
+		"bootVolume": map[string]interface{}{
+			"size":       desc.SysDisk.SizeGB,
+			"volumeType": desc.SysDisk.StorageType,
+		},
+		"imageName": desc.ExternalImageId,
+		"networks": map[string]interface{}{
+			"networkId": desc.ExternalNetworkId,
+		},
+		"name":             desc.Name,
+		"quantity":         1,
+		"securityGroupIds": desc.ExternalSecgroupIds,
+		"userData":         desc.UserData,
+		"password":         desc.Password,
+	}
+	req := NewConsoleRequest(h.zone.region.ID, "/api/openapi-ecs/acl/v3/server/order", nil, jsonutils.Marshal(params))
+	res, err := h.zone.region.client.doPost(req)
+	if err != nil {
+		return nil, err
+	}
+	var ret createResp
+	if err := res.Unmarshal(&ret); err != nil {
+		return nil, err
+	}
+	time.Sleep(3 * time.Second)
+	query := map[string]string{
+		"orderId": ret.OrderId,
+	}
+	req = NewConsoleRequest(h.zone.region.ID, "/api/openapi-ecs/acl/v3/server/order/relation/info", query, nil)
+	var order orderInfo
+	if err := h.zone.region.client.doGet(context.Background(), req, &order); err != nil {
+		return nil, err
+	}
+	return &SInstance{Id: order.InstanceId}, nil
 }
 
 func (h *SHost) GetIHostNics() ([]cloudprovider.ICloudHostNetInterface, error) {

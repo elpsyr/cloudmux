@@ -361,7 +361,20 @@ func (self *SRegion) GetISecurityGroups() ([]cloudprovider.ICloudSecurityGroup, 
 }
 
 func (self *SRegion) CreateISecurityGroup(opts *cloudprovider.SecurityGroupCreateInput) (cloudprovider.ICloudSecurityGroup, error) {
-	return self.CreateSecurityGroup(opts)
+	group, err := self.CreateSecurityGroup(opts)
+	if err != nil {
+		return group, err
+	}
+
+	// 删除自动创建的规则
+	rules, err := group.GetRules()
+	if err == nil {
+		for _, rule := range rules {
+			_ = rule.Delete()
+		}
+	}
+
+	return group, nil
 }
 
 func (self *SRegion) CreateIVpc(opts *cloudprovider.VpcCreateOptions) (cloudprovider.ICloudVpc, error) {

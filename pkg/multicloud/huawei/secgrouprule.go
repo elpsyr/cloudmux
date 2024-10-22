@@ -152,6 +152,10 @@ func (self *SRegion) CreateSecurityGroupRule(groupId string, opts *cloudprovider
 		"action":            "allow",
 		"priority":          opts.Priority,
 	}
+	// 没有protocol表示支持所有协议，不支持空字符串
+	if rule["protocol"] == "all" || rule["protocol"] == "any" {
+		delete(rule, "protocol")
+	}
 	if len(opts.CIDR) > 0 {
 		rule["remote_ip_prefix"] = opts.CIDR
 		if _, err := netutils.NewIPV6Prefix(opts.CIDR); err == nil {

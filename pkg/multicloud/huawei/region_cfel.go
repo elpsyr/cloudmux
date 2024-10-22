@@ -64,7 +64,7 @@ func (region *SRegion) GetLoadbalancerSkus() ([]cloudprovider.ICfelLoadbalancerS
 // GetICfelCloudImage 获取华为云镜像
 func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.ICloudImage, error) {
 	images := make([]SImage, 0)
-	images, err := self.GetImages("", "", "", "")
+	images, err := self.GetImages("", "", "gold", "")
 	if err != nil {
 		return nil, errors.Wrapf(err, "GetImages")
 	}

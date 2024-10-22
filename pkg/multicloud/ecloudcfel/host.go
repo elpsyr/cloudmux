@@ -194,15 +194,23 @@ func (h *SHost) CreateVM(desc *cloudprovider.SManagedVMCreateConfig) (cloudprovi
 		return nil, err
 	}
 	time.Sleep(3 * time.Second)
-	query := map[string]string{
-		"orderId": ret.OrderId,
-	}
-	req = NewConsoleRequest(h.zone.region.ID, "/api/openapi-ecs/acl/v3/server/order/relation/info", query, nil)
-	var order orderInfo
-	if err := h.zone.region.client.doGet(context.Background(), req, &order); err != nil {
+	id, err := h.zone.region.getOrderInfo(ret.OrderId)
+	if err != nil {
 		return nil, err
 	}
-	return &SInstance{Id: order.InstanceId}, nil
+	return &SInstance{Id: id}, nil
+}
+
+func (r *SRegion) getOrderInfo(orderId string) (string, error) {
+	query := map[string]string{
+		"orderId": orderId,
+	}
+	req := NewConsoleRequest(r.ID, "/api/openapi-ecs/acl/v3/server/order/relation/info", query, nil)
+	var order orderInfo
+	if err := r.client.doGet(context.Background(), req, &order); err != nil {
+		return "", err
+	}
+	return order.InstanceId, nil
 }
 
 func (h *SHost) GetIHostNics() ([]cloudprovider.ICloudHostNetInterface, error) {

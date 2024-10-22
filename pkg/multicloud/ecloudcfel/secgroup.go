@@ -44,6 +44,7 @@ type SSecurityGroup struct {
 	VpoolId     string `json:"vpoolId"`
 	Vaz         string `json:"vaz"`
 	CountEcs    int    `json:"countEcs"`
+	Status      string
 }
 
 func (self *SSecurityGroup) GetName() string {
@@ -180,9 +181,9 @@ func (self *SSecurityGroup) CreateRule(opts *cloudprovider.SecurityGroupRuleCrea
 	// ret.String()
 	// id, _ := ret.GetString("body")
 	rule := SecurityGroupRule{
-		region: self.region, 
-		Id: ret.Interface().(string),
-		Direction: string(opts.Direction),
+		region:         self.region,
+		Id:             ret.Interface().(string),
+		Direction:      string(opts.Direction),
 		RemoteIpPrefix: opts.CIDR,
 	}
 	return &rule, err
@@ -222,7 +223,7 @@ func (self *SRegion) CreateISecurityGroup(opts *cloudprovider.SecurityGroupCreat
 	if err != nil {
 		return nil, err
 	}
-	secgroup := &SSecurityGroup{region: self, Id: ret.Interface().(string)}
+	secgroup := &SSecurityGroup{region: self, Id: ret.Interface().(string),Status: "ready"}
 	return secgroup, nil
 }
 

@@ -15,6 +15,8 @@
 package ecloudcfel
 
 import (
+	"time"
+
 	"yunion.io/x/jsonutils"
 	"yunion.io/x/pkg/errors"
 
@@ -41,18 +43,7 @@ type SVpc struct {
 	Scale    string
 	UserId   string
 	UserName string
-}
-
-type RootEntity struct {
-	OrderId       string                `json:"orderId"`
-	OrderExtResps []OrderExtRespsEntity `json:"orderExtResps"`
-}
-
-type OrderExtRespsEntity struct {
-	ProductType    string `json:"productType"`
-	OrderExtId     string `json:"orderExtId"`
-	OrderExtStatus int64  `json:"orderExtStatus"`
-	ResInstanceId  string `json:"resInstanceId"`
+	Cidr     string
 }
 
 func (v *SVpc) GetId() string {
@@ -69,6 +60,8 @@ func (v *SVpc) GetGlobalId() string {
 
 func (v *SVpc) GetStatus() string {
 	switch v.EcStatus {
+	case "ready":
+		return "ready"
 	case "ACTIVE":
 		return api.VPC_STATUS_AVAILABLE
 	case "DOWN", "BUILD", "ERROR":
@@ -104,7 +97,7 @@ func (v *SVpc) GetIsDefault() bool {
 }
 
 func (v *SVpc) GetCidrBlock() string {
-	return ""
+	return v.Cidr
 }
 
 func (v *SVpc) GetIWires() ([]cloudprovider.ICloudWire, error) {
@@ -205,10 +198,19 @@ func (self *SRegion) CreateIVpc(opts *cloudprovider.VpcCreateOptions) (cloudprov
 		"networkTypeEnum": "VM",
 	}
 	req := NewConsoleRequest(self.ID, "/api/openapi-vpc/customer/v3/order/create/vpc", nil, jsonutils.Marshal(params))
-	_, err := self.client.doPost(req)
+	res, err := self.client.doPost(req)
 	if err != nil {
 		return nil, err
 	}
-	res := &SVpc{}
-	return res, nil
+	var ret createResp
+	if err := res.Unmarshal(&ret); err != nil {
+		return nil, err
+	}
+	time.Sleep(3 * time.Second)
+	id, err := self.getOrderInfo(ret.OrderId)
+	if err != nil {
+		return nil, err
+	}
+	vpc := &SVpc{region: self, Id: id, Name: opts.NAME, EcStatus: "ready", Cidr: opts.CIDR}
+	return vpc, nil
 }

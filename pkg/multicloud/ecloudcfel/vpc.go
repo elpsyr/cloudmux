@@ -15,6 +15,8 @@
 package ecloudcfel
 
 import (
+	"context"
+	"fmt"
 	"time"
 
 	"yunion.io/x/jsonutils"
@@ -207,10 +209,18 @@ func (self *SRegion) CreateIVpc(opts *cloudprovider.VpcCreateOptions) (cloudprov
 		return nil, err
 	}
 	time.Sleep(3 * time.Second)
-	id, err := self.getOrderInfo(ret.OrderId)
-	if err != nil {
+	query := map[string]string{
+		"orderId": ret.OrderId,
+	}
+	req = NewConsoleRequest(self.ID, "/api/openapi-ecs/acl/v3/server/order/relation/info", query, nil)
+	var order []orderInfo
+	if err := self.client.doGet(context.Background(), req, &order); err != nil {
 		return nil, err
 	}
-	vpc := &SVpc{region: self, Id: id, Name: opts.NAME, EcStatus: "ready", Cidr: opts.CIDR}
+	if len(order) == 0 {
+		return nil, fmt.Errorf("order info is empty, orderId:%s", ret.OrderId)
+	}
+
+	vpc := &SVpc{region: self, Id: order[0].InstanceId, Name: opts.NAME, EcStatus: "ready", Cidr: opts.CIDR}
 	return vpc, nil
 }

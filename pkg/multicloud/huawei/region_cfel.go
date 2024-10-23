@@ -2,9 +2,14 @@ package huawei
 
 import (
 	"net/url"
-	"yunion.io/x/cloudmux/pkg/cloudprovider"
+	"strings"
+
 	"yunion.io/x/jsonutils"
 	"yunion.io/x/pkg/errors"
+	"yunion.io/x/pkg/util/netutils"
+	"yunion.io/x/pkg/util/secrules"
+
+	"yunion.io/x/cloudmux/pkg/cloudprovider"
 )
 
 type SCfelLoadbalancerSku struct {
@@ -75,4 +80,48 @@ func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.IClo
 		ret = append(ret, &images[i])
 	}
 	return ret, nil
+}
+
+func (self *SRegion) DryCreateSecurityGroupRule(groupId string, opts *cloudprovider.SecurityGroupRuleCreateOptions) error {
+	rule := map[string]interface{}{
+		"security_group_id": groupId,
+		"description":       opts.Desc,
+		"direction":         "ingress",
+		"ethertype":         "IPv4",
+		"protocol":          strings.ToLower(opts.Protocol),
+		"action":            "allow",
+		"priority":          opts.Priority,
+	}
+	// 没有protocol表示支持所有协议，不支持空字符串
+	if rule["protocol"] == "all" || rule["protocol"] == "any" {
+		delete(rule, "protocol")
+	}
+	if len(opts.CIDR) > 0 {
+		rule["remote_ip_prefix"] = opts.CIDR
+		if _, err := netutils.NewIPV6Prefix(opts.CIDR); err == nil {
+			rule["ethertype"] = "IPv6"
+		}
+	}
+	if opts.Action == secrules.SecurityRuleDeny {
+		rule["action"] = "deny"
+	}
+	if opts.Protocol == secrules.PROTO_ANY {
+		delete(rule, "protocol")
+	}
+	if len(opts.Ports) > 0 {
+		rule["multiport"] = opts.Ports
+	}
+	if opts.Direction == secrules.DIR_OUT {
+		rule["direction"] = "egress"
+	}
+	params := map[string]interface{}{
+		"dry_run":             true,
+		"security_group_rule": rule,
+	}
+	_, err := self.post(SERVICE_VPC_V3, "vpc/security-group-rules", params)
+	if err != nil {
+		return errors.Wrapf(err, "dry create rule")
+	}
+
+	return nil
 }

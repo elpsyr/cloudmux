@@ -110,6 +110,9 @@ func (self *SecurityGroupRule) Delete() error {
 // https://console.huaweicloud.com/apiexplorer/#/openapi/VPC/doc?version=v3&api=DeleteSecurityGroupRule
 func (self *SRegion) DeleteSecurityGroupRule(id string) error {
 	_, err := self.delete(SERVICE_VPC_V3, "vpc/security-group-rules/"+id)
+	if err != nil && strings.Contains(err.Error(), "empty response") {
+		err = nil
+	}
 	return err
 }
 
@@ -186,7 +189,7 @@ func (self *SRegion) CreateSecurityGroupRule(groupId string, opts *cloudprovider
 }
 
 func (self *SecurityGroupRule) Update(opts *cloudprovider.SecurityGroupRuleUpdateOptions) error {
-	rule, err := self.secgroup.CreateRule(&cloudprovider.SecurityGroupRuleCreateOptions{
+	createOpts := &cloudprovider.SecurityGroupRuleCreateOptions{
 		Desc:      opts.Desc,
 		Priority:  opts.Priority,
 		Protocol:  opts.Protocol,
@@ -194,14 +197,25 @@ func (self *SecurityGroupRule) Update(opts *cloudprovider.SecurityGroupRuleUpdat
 		Direction: secrules.TSecurityRuleDirection(self.Direction),
 		CIDR:      opts.CIDR,
 		Action:    opts.Action,
-	})
+	}
+
+	err := self.secgroup.region.DryCreateSecurityGroupRule(self.secgroup.Id, createOpts)
 	if err != nil {
 		return err
 	}
 
-	self.Delete()
+	err = self.secgroup.region.DeleteSecurityGroupRule(self.Id)
+	if err != nil {
+		return err
+	}
 
-	*self = *rule.(*SecurityGroupRule)
+	rule, err := self.secgroup.region.CreateSecurityGroupRule(self.secgroup.Id, createOpts)
+	if err != nil {
+		return err
+	}
+	rule.secgroup = self.secgroup
+
+	*self = *rule
 
 	return nil
 }

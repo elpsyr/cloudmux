@@ -151,14 +151,12 @@ func (self *SSecurityGroup) CreateRule(opts *cloudprovider.SecurityGroupRuleCrea
 	if opts.Direction == "in" {
 		directon = "ingress"
 	}
-	var minPort, maxPort int
+	var minPort, maxPort string
 	if strings.Contains(opts.Ports, "-") {
 		arr := strings.Split(opts.Ports, "-")
-		minPort, _ = strconv.Atoi(arr[0])
-		maxPort, _ = strconv.Atoi(arr[1])
+		minPort,maxPort = arr[0],arr[1]
 	} else {
-		minPort, _ = strconv.Atoi(opts.Ports)
-		maxPort = minPort
+		minPort,maxPort = opts.Ports,opts.Ports
 	}
 	// https://ecloud.10086.cn/op-help-center/doc/article/73827
 	params := map[string]interface{}{
@@ -223,7 +221,7 @@ func (self *SRegion) CreateISecurityGroup(opts *cloudprovider.SecurityGroupCreat
 	if err != nil {
 		return nil, err
 	}
-	secgroup := &SSecurityGroup{region: self, Id: ret.Interface().(string),Status: "ready"}
+	secgroup := &SSecurityGroup{region: self, Id: ret.Interface().(string), Status: "ready"}
 	return secgroup, nil
 }
 

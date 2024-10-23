@@ -9,6 +9,6 @@ func (s *SZone) GetCapability() (jsonutils.JSONObject, error) {
 	return modules.Zones.GetSpecific(s.region.cli.s, s.Id, "capability", nil)
 }
 
-func (s *SZone) GetICfelDiskType() (map[string]interface{}, error) {
+func (s *SZone) GetICfelDiskType(string) (map[string]interface{}, error) {
 	return nil, nil
 }

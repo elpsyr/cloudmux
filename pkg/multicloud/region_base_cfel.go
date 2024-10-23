@@ -148,7 +148,3 @@ func (self *SRegion) CfelUpdateNetworkTags(id string, tags map[string]string) er
 func (self *SRegion) ICfelSetImageCanDelete(id string) error {
 	return errors.Wrapf(cloudprovider.ErrNotImplemented, "ICfelSetImageCanDelete")
 }
-
-func (self *SRegion) GetICfelDiskType() (string, error) {
-	return "", errors.Wrapf(cloudprovider.ErrNotImplemented, "GetICfelDiskType")
-}

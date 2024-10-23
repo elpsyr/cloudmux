@@ -17,11 +17,39 @@ type DiskType struct {
 	OnlineMode        string   `json:"onlineMode"`
 }
 
+type SysDiskType struct {
+	BootVolumeType     string `json:"bootVolumeType"`
+	BootVolumeTypeName string `json:"bootVolumeTypeName"`
+	SoldOut            string `json:"soldOut"`
+	ZoneDesc           string `json:"zoneDesc"`
+	ZoneName           string `json:"zoneName"`
+}
+
 func (r *SZone) GetCapability() (jsonutils.JSONObject, error) {
 	return nil, cloudprovider.ErrNotImplemented
 }
 
-func (r *SZone) GetICfelDiskType() (map[string]interface{}, error) {
+func (r *SZone) GetICfelDiskType(diskType string) (map[string]interface{}, error) {
+	if diskType == "sys" {
+		// https://ecloud.10086.cn/op-help-center/doc/article/75582
+		query := map[string]string{
+			"region":r.Region,
+		}
+		req := NewConsoleRequest(r.region.ID, "/api/openapi-ecs/acl/v3/server/system/disk/type", query, nil)
+		var res []SysDiskType
+		err := r.region.client.doList(context.Background(), req, &res)
+		if err != nil {
+			return nil, nil
+		}
+		var ret = make(map[string]interface{})
+		for _, val := range res {
+			if val.SoldOut == "0" {
+				ret[val.BootVolumeType] = val.BootVolumeTypeName
+			}
+		}
+		return ret, nil
+	}
+	
 	req := NewConsoleRequest(r.region.ID, "/api/v2/volume/customer/volumeType/list", nil, nil)
 	var res []DiskType
 	err := r.region.client.doList(context.Background(), req, &res)

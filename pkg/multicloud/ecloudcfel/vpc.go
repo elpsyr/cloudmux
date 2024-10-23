@@ -208,19 +208,33 @@ func (self *SRegion) CreateIVpc(opts *cloudprovider.VpcCreateOptions) (cloudprov
 	if err := res.Unmarshal(&ret); err != nil {
 		return nil, err
 	}
-	time.Sleep(3 * time.Second)
-	query := map[string]string{
-		"orderId": ret.OrderId,
+	
+	var ids []string
+	for i := 1; i < 4; i++ {
+		time.Sleep(3 * time.Second)
+		ids, err = self.getOrderInfo(ret.OrderId)
+		if err != nil {
+			fmt.Printf("getOrderInfo [%d] err: %v", i, err)
+		}
+		if len(ids) > 0 {
+			break
+		}
 	}
-	req = NewConsoleRequest(self.ID, "/api/openapi-ecs/acl/v3/server/order/relation/info", query, nil)
-	var order []orderInfo
-	if err := self.client.doGet(context.Background(), req, &order); err != nil {
-		return nil, err
+	
+	var vpc SVpc
+	if len(ids) > 0 {
+		req = NewConsoleRequest(self.ID, "/api/openapi-vpc/customer/v3/vpc/router/"+ids[0], nil, nil)
+		err = self.client.doGet(context.Background(), req, &vpc)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		vpc.Id = ret.OrderId
 	}
-	if len(order) == 0 {
-		return nil, fmt.Errorf("order info is empty, orderId:%s", ret.OrderId)
-	}
-
-	vpc := &SVpc{region: self, Id: order[0].InstanceId, Name: opts.NAME, EcStatus: "ready", Cidr: opts.CIDR}
-	return vpc, nil
+	
+	vpc.region = self
+	vpc.EcStatus = "ready"
+	vpc.Cidr = opts.CIDR
+	// vpc := &SVpc{region: self, Id: order[0].InstanceId, Name: opts.NAME, EcStatus: "ready", Cidr: opts.CIDR}
+	return &vpc, nil
 }

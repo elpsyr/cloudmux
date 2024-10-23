@@ -16,6 +16,11 @@ package ecloudcfel
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/pem"
 	"fmt"
 	"time"
 
@@ -162,6 +167,10 @@ type orderInfo struct {
 }
 
 func (h *SHost) CreateVM(desc *cloudprovider.SManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {
+	password, err := rsaEncryptPassword(desc.Password)
+	if err != nil {
+		return nil, err
+	}
 	params := map[string]interface{}{
 		"region":      h.zone.Region,
 		"billingType": "HOUR",
@@ -182,7 +191,7 @@ func (h *SHost) CreateVM(desc *cloudprovider.SManagedVMCreateConfig) (cloudprovi
 		"quantity":         1,
 		"securityGroupIds": desc.ExternalSecgroupIds,
 		"userData":         desc.UserData,
-		"password":         desc.Password,
+		"password":         password,
 	}
 	req := NewConsoleRequest(h.zone.region.ID, "/api/openapi-ecs/acl/v3/server/order", nil, jsonutils.Marshal(params))
 	res, err := h.zone.region.client.doPost(req)
@@ -193,24 +202,54 @@ func (h *SHost) CreateVM(desc *cloudprovider.SManagedVMCreateConfig) (cloudprovi
 	if err := res.Unmarshal(&ret); err != nil {
 		return nil, err
 	}
-	time.Sleep(3 * time.Second)
-	id, err := h.zone.region.getOrderInfo(ret.OrderId)
-	if err != nil {
-		return nil, err
+	
+	var ids []string
+	for i := 1; i < 10; i++ {
+		time.Sleep(6 * time.Second)
+		ids, err = h.zone.region.getOrderInfo(ret.OrderId)
+		if err != nil {
+			fmt.Printf("getOrderInfo [%d] err: %v", i, err)
+		}
+		if len(ids) > 0 {
+			break
+		}
 	}
-	return &SInstance{Id: id}, nil
+	var ins []SInstance
+	for _,id := range ids {
+		ins,err = h.zone.region.getInstances(h.zone.Region,id)
+		if len(ins) > 0 {
+			break
+		}
+	}
+	var vm SInstance
+	if len(ins) != 0 {
+		vm = ins[0]
+	} else {
+		vm.Id = ret.OrderId
+	}
+	return &vm, nil
 }
 
-func (r *SRegion) getOrderInfo(orderId string) (string, error) {
+func (r *SRegion) getOrderInfo(orderId string) ([]string, error) {
 	query := map[string]string{
 		"orderId": orderId,
 	}
 	req := NewConsoleRequest(r.ID, "/api/openapi-ecs/acl/v3/server/order/relation/info", query, nil)
-	var order orderInfo
+	var order []orderInfo
 	if err := r.client.doGet(context.Background(), req, &order); err != nil {
-		return "", err
+		return nil, err
 	}
-	return order.InstanceId, nil
+	if len(order) == 0 {
+		return nil, fmt.Errorf("order info is empty, orderId:%s", orderId)
+	}
+	var res []string
+	for i,val := range order {
+		if len(val.InstanceId) == 0 {
+			return nil,fmt.Errorf("[%d] instanceId is empty",i + 1)
+		}
+		res = append(res, val.InstanceId)
+	}
+	return res, nil
 }
 
 func (h *SHost) GetIHostNics() ([]cloudprovider.ICloudHostNetInterface, error) {
@@ -223,4 +262,35 @@ func (h *SRegion) GetVMs() ([]SInstance, error) {
 
 func (h *SRegion) GetVMById(vmId string) (*SInstance, error) {
 	return nil, cloudprovider.ErrNotImplemented
+}
+
+var ecloudPubKey = `-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC/VpRysi0bPRLS7sbgQDJHo1MAt9/bK+nwK5Pe
+3z0/O4cH5I/8kFNYy4yFsLMM+zyFvVw9C4wzjHaRcmEuF3ziJMC9PD5ufUWgfO5nSGgZW1cmgjqn
+hcWJ3i+Azj72RnhKQRCn9DgJduEC9MiKfbyTICGd6FXf9cxb21nkxI7vtwIDAQAB
+-----END PUBLIC KEY-----
+`
+
+func rsaEncryptPassword(data string) (string, error) {
+	if len(data) == 0 {
+		return data, nil
+	}
+	// 解析 PEM 公钥
+	block, _ := pem.Decode([]byte(ecloudPubKey))
+	if block == nil || block.Type != "PUBLIC KEY" {
+		fmt.Println("failed to decode PEM block containing public key")
+		return "", fmt.Errorf("failed to decode PEM block containing public key")
+	}
+
+	// 解析 PKIX 格式的公钥
+	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		fmt.Println("failed to parse public key:", err)
+		return "", err
+	}
+	cipherText, err := rsa.EncryptPKCS1v15(rand.Reader, pub.(*rsa.PublicKey), []byte(data))
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(cipherText), nil
 }

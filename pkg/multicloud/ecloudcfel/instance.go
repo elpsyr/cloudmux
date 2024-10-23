@@ -348,24 +348,32 @@ func (self *SInstance) UpdateUserData(userData string) error {
 }
 
 func (self *SInstance) RebuildRoot(ctx context.Context, config *cloudprovider.SManagedVMRebuildRootConfig) (string, error) {
+	password, err := rsaEncryptPassword(config.Password)
+	if err != nil {
+		return "", err
+	}
 	param := map[string]interface{}{
-		"adminPass": config.Password,
+		"adminPass": password,
 		"imageId":   config.ImageId,
 		"serverId":  self.Id,
 		"userData":  config.UserData,
 	}
 	req := NewConsoleRequest(self.host.zone.region.ID, "/api/openapi-ecs/acl/v3/server/rebuild", nil, jsonutils.Marshal(param))
-	_, err := self.host.zone.region.client.doPut(req)
+	_, err = self.host.zone.region.client.doPut(req)
 	return "", err
 }
 
 func (self *SInstance) DeployVM(ctx context.Context, opts *cloudprovider.SInstanceDeployOptions) error {
+	password, err := rsaEncryptPassword(opts.Password)
+	if err != nil {
+		return err
+	}
 	params := map[string]string{
-		"password": opts.Password,
+		"password": password,
 		"serverId": self.Id,
 	}
 	req := NewConsoleRequest(self.host.zone.region.ID, "/api/openapi-ecs/acl/v3/server/password", nil, jsonutils.Marshal(params))
-	_, err := self.host.zone.region.client.doPut(req)
+	_, err = self.host.zone.region.client.doPut(req)
 	return err
 }
 

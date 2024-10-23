@@ -65,7 +65,7 @@ type ICfelCloudSku interface {
 type ICfelZone interface {
 	ICloudZone
 	GetCapability() (jsonutils.JSONObject, error)
-	GetICfelDiskType() (map[string]interface{}, error) //  包年包月 售卖状态
+	GetICfelDiskType(diskType string) (map[string]interface{}, error) //  包年包月 售卖状态
 }
 
 // ICfelCloudVM vm接口

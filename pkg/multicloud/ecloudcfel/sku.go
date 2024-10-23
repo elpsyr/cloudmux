@@ -30,6 +30,27 @@ type SServerSku struct {
 
 var _ cloudprovider.ICfelCloudSku = (*SServerSku)(nil)
 
+
+type vmSpecs struct {
+	SpecsName string `json:"specsName"`
+	SoldOut   string `json:"soldOut"`
+}
+
+// 规格类型 https://ecloud.10086.cn/op-help-center/doc/article/71795
+var vmTypes = map[string]string{
+	"1ab7650b904cef5ac2078a00fc2eca60": "commonNetImprove",
+	"5691272bb306174e7b2ed84210a28fd3": "memNetImprove",
+	"762db914c221ddb9fd8ce7f456e8bcf8": "gpu",
+	"795ed2017b3f26a49e34b1cb2bd0ac3d": "commonIntroductory",
+	"a715136ad3147ceb0bc0ba005b8e8897": "computeNetImprove",
+	"aa40a113d03520947e613bae515c21ad": "highFrequency",
+	"bbcb90abefd93fb38ce994be310e0854": "compute",
+	"bf81ee49b985f547233726b3fbbad3a6": "memImprove",
+	"d0a7122eacdd7f997285ff20f0301519": "xlargeMemory",
+	"ebd890c0712a4b42bb147a55ef16057e": "storeEnhance",
+	"fe0ca5a14938cfab007929bce91e06b9": "common",
+}
+
 func (self *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
 	err := self.fetchZones()
 	if err != nil {
@@ -52,30 +73,51 @@ func (self *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
 		}
 	}()
 
-	vmTypes := []string{"memImprove", "common", "gpu", "commonIntroductory", "commonNetImprove", "compute", "computeNetImprove", "memNetImprove", "localStorage", "xlargeMemory", "highFrequency", "vgpu", "fpga", "highIO", "exclusive", "normalComputeImprove", "normalNetEnhance", "storeEnhance", "computeEnhance", "npu", "universal"}
+	// vmTypes := []string{"memImprove", "common", "gpu", "commonIntroductory", "commonNetImprove", "compute", "computeNetImprove", "memNetImprove", "localStorage", "xlargeMemory", "highFrequency", "vgpu", "fpga", "highIO", "exclusive", "normalComputeImprove", "normalNetEnhance", "storeEnhance", "computeEnhance", "npu", "universal"}
 	for _, zone := range self.izones {
-		for _, vmType := range vmTypes {
+		for offerId, vmType := range vmTypes {
 			wg.Add(1)
-			go func(vmType string, region *SZone) {
+			go func(vmType, offerId string, region *SZone) {
 				query := map[string]string{
+					"offerId": offerId,
+					"region":  region.Region,
+				}
+				req := NewConsoleRequest(self.ID, "/api/openapi-ecs/acl/v3/server/specsName", query, nil)
+				var vmSpecs []vmSpecs
+				err := self.client.doGet(context.Background(), req, &vmSpecs)
+				if err != nil {
+					wg.Done()
+				}
+				var tmp = make(map[string]struct{}) //已售罄规格
+				for _, val := range vmSpecs {
+					if val.SoldOut == "1" {
+						tmp[val.SpecsName] = struct{}{}
+					}
+				}
+				query = map[string]string{
 					"vmType": vmType,
 					"region": region.Region,
 				}
 				request := NewConsoleRequest(self.ID, "/api/openapi-ecs/acl/v3/server/serverSpecs", query, nil)
 				// request := NewNovaRequest(NewApiRequest(self.ID, "/api/openapi-ecs/acl/v3/server/serverSpecs", query, nil))
 				skus := make([]SServerSku, 0)
-				err := self.client.doList(context.Background(), request, &skus)
+				err = self.client.doList(context.Background(), request, &skus)
 				if len(skus) == 0 || err != nil {
 					wg.Done()
 					return
 				}
+				var ret = make([]SServerSku, 0)
 				for i := range skus {
+					if _,ok := tmp[skus[i].SpecsName];ok {
+						continue
+					}
 					skus[i].ZoneId = region.GetGlobalId()
 					skus[i].gpuInfo = self.gpuSkuInfo
+					ret = append(ret, skus[i])
 				}
-				skuChan <- skus
+				skuChan <- ret
 				wg.Done()
-			}(vmType, zone.(*SZone))
+			}(vmType, offerId, zone.(*SZone))
 		}
 	}
 	wg.Wait()
@@ -173,7 +215,7 @@ func (self *SServerSku) GetInstanceTypeFamily() string {
 
 // GetMemorySizeMB implements cloudprovider.ICfelCloudSku.
 func (self *SServerSku) GetMemorySizeMB() int {
-	return self.MemorySize
+	return self.MemorySize * 1024
 }
 
 // GetName implements cloudprovider.ICfelCloudSku.

@@ -139,6 +139,9 @@ func (s *SStorage) GetEnabled() bool {
 
 func (s *SStorage) CreateIDisk(conf *cloudprovider.DiskCreateConfig) (cloudprovider.ICloudDisk, error) {
 	volumeType := conf.ProjectId
+	if len(conf.Name) > 22 {
+		conf.Name = conf.Name[:22]
+	}
 	params := map[string]interface{}{
 		"cinderType":  volumeType,
 		"name":        conf.Name,

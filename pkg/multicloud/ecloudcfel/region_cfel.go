@@ -44,3 +44,7 @@ func (r *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.ICloudI
 	}
 	return img, nil
 }
+
+func (r *SRegion) GetICfelCloudImageById(id string) (cloudprovider.ICloudImage, error) {
+	return nil, nil
+}

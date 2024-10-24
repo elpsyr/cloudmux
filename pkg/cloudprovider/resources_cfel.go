@@ -8,7 +8,7 @@ import (
 
 type ICfelCloudRegion interface {
 	ICloudRegion
-	SetSkuExtInfo(map[string]string) error
+	SetSkuExtInfo(string) error
 	GetICfelSkus() ([]ICfelCloudSku, error)
 	GetSpotPostPaidPrice(zoneID, instanceType string) (float64, error) //  抢占付费 价格
 	GetPostPaidPrice(zoneID, instanceType string) (float64, error)     //  按量付费 价格

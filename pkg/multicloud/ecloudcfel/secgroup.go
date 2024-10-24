@@ -16,7 +16,6 @@ package ecloudcfel
 
 import (
 	"context"
-	"strconv"
 	"strings"
 
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
@@ -120,23 +119,22 @@ func (self *SRegion) CreateSecRule(secId string, opts *cloudprovider.SecurityGro
 	if opts.Direction == "in" {
 		directon = "ingress"
 	}
-	var minPort, maxPort int
+	var minPort, maxPort string
 	if strings.Contains(opts.Ports, "-") {
 		arr := strings.Split(opts.Ports, "-")
-		minPort, _ = strconv.Atoi(arr[0])
-		maxPort, _ = strconv.Atoi(arr[1])
+		minPort, maxPort = arr[0], arr[1]
 	} else {
-		minPort, _ = strconv.Atoi(opts.Ports)
-		maxPort = minPort
+		minPort, maxPort = opts.Ports, opts.Ports
 	}
 	// https://ecloud.10086.cn/op-help-center/doc/article/73827
 	params := map[string]interface{}{
-		"description":  opts.Desc,
-		"direction":    directon,
-		"etherType":    "IPv4",
-		"maxPortRange": maxPort,
-		"minPortRange": minPort,
-		"protocol":     opts.Protocol,
+		"description":    opts.Desc,
+		"direction":      directon,
+		"etherType":      "IPv4",
+		"maxPortRange":   maxPort,
+		"minPortRange":   minPort,
+		"protocol":       strings.ToUpper(opts.Protocol),
+		"remoteIpPrefix": opts.CIDR,
 		// "remoteSecurityGroupId":"83da3346-8bb8-4e69-b614-3cd9bcb762ed",
 		"remoteType":      "cidr",
 		"securityGroupId": secId,
@@ -154,9 +152,9 @@ func (self *SSecurityGroup) CreateRule(opts *cloudprovider.SecurityGroupRuleCrea
 	var minPort, maxPort string
 	if strings.Contains(opts.Ports, "-") {
 		arr := strings.Split(opts.Ports, "-")
-		minPort,maxPort = arr[0],arr[1]
+		minPort, maxPort = arr[0], arr[1]
 	} else {
-		minPort,maxPort = opts.Ports,opts.Ports
+		minPort, maxPort = opts.Ports, opts.Ports
 	}
 	// https://ecloud.10086.cn/op-help-center/doc/article/73827
 	params := map[string]interface{}{

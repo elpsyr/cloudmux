@@ -2,17 +2,22 @@ package ecloudcfel
 
 import (
 	"context"
+	"encoding/json"
+	"strings"
 
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 )
 
 var _ cloudprovider.ICfelCloudRegion = (*SRegion)(nil)
 
-func (self *SRegion) SetSkuExtInfo(info map[string]string) error {
-	self.gpuSkuInfo = info
-	return nil
+func (self *SRegion) SetSkuExtInfo(info string) error {
+	return json.Unmarshal([]byte(info), &self.gpuSkuInfo)
 }
+
 func (r *SRegion) GetInstanceMatchImage(instancetype string) ([]cloudprovider.ICloudImage, error) {
+	if !strings.HasSuffix(instancetype, ".8") {// 移动云的bug
+		instancetype = instancetype + ".8"
+	}
 	query := map[string]string{
 		"specsName": instancetype,
 		"pageSize":  "100",

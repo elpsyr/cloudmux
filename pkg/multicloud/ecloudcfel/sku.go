@@ -2,7 +2,6 @@ package ecloudcfel
 
 import (
 	"context"
-	"strings"
 	"sync"
 
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
@@ -25,11 +24,10 @@ type SServerSku struct {
 	VmType    string
 	ZoneId    string
 
-	gpuInfo map[string]string
+	gpuInfo map[string]*gpuInfo
 }
 
 var _ cloudprovider.ICfelCloudSku = (*SServerSku)(nil)
-
 
 type vmSpecs struct {
 	SpecsName string `json:"specsName"`
@@ -108,7 +106,7 @@ func (self *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
 				}
 				var ret = make([]SServerSku, 0)
 				for i := range skus {
-					if _,ok := tmp[skus[i].SpecsName];ok {
+					if _, ok := tmp[skus[i].SpecsName]; ok {
 						continue
 					}
 					skus[i].ZoneId = region.GetGlobalId()
@@ -178,8 +176,7 @@ func (self *SServerSku) GetGpuAttachable() bool {
 // GetGpuCount implements cloudprovider.ICfelCloudSku.
 func (self *SServerSku) GetGpuCount() string {
 	if info, ok := self.gpuInfo[self.SpecsName]; ok {
-		arr := strings.Split(info, "*")
-		return strings.Trim(arr[0], " ")
+		return info.GpuCount
 	}
 	return ""
 }
@@ -192,8 +189,7 @@ func (self *SServerSku) GetGpuMaxCount() int {
 // GetGpuSpec implements cloudprovider.ICfelCloudSku.
 func (self *SServerSku) GetGpuSpec() string {
 	if info, ok := self.gpuInfo[self.SpecsName]; ok {
-		arr := strings.Split(info, "*")
-		return strings.Trim(arr[1], " ")
+		return info.Spec
 	}
 	return ""
 }
@@ -269,6 +265,9 @@ func (self *SServerSku) Delete() error {
 }
 
 func (self *SServerSku) GetGPUMemorySizeMB() int {
+	if info, ok := self.gpuInfo[self.SpecsName]; ok {
+		return info.GPUMemorySizeGB * 1024
+	}
 	return 0
 }
 

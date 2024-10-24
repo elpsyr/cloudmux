@@ -29,6 +29,8 @@ var storageTypes = []string{
 	api.STORAGE_ECLOUD_EBS,
 	api.STORAGE_ECLOUD_SSD,
 	api.STORAGE_ECLOUD_SSDEBS,
+	"ssdebsyc",
+	"ssdyc",
 	// special storage
 	api.STORAGE_ECLOUD_SYSTEM,
 }

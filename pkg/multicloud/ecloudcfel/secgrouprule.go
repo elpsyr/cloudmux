@@ -17,9 +17,11 @@ package ecloudcfel
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/cloudmux/pkg/multicloud"
+	"yunion.io/x/jsonutils"
 	"yunion.io/x/pkg/util/secrules"
 )
 
@@ -83,10 +85,31 @@ func (self *SecurityGroupRule) GetPriority() int {
 }
 
 func (self *SecurityGroupRule) Delete() error {
-	req := NewConsoleRequest(self.region.ID,"/api/openapi-vpc/customer/v3/SecurityGroupRule/" + self.Id,nil,nil)
+	req := NewConsoleRequest(self.region.ID, "/api/openapi-vpc/customer/v3/SecurityGroupRule/"+self.Id, nil, nil)
 	return self.region.client.doDelete(req)
 }
 
 func (self *SecurityGroupRule) Update(opts *cloudprovider.SecurityGroupRuleUpdateOptions) error {
-	return nil
+
+	var minPort, maxPort string
+	if strings.Contains(opts.Ports, "-") {
+		arr := strings.Split(opts.Ports, "-")
+		minPort, maxPort = arr[0], arr[1]
+	} else {
+		minPort, maxPort = opts.Ports, opts.Ports
+	}
+	params := map[string]interface{}{
+		"direction":       self.Direction,
+		"description":     opts.Desc,
+		"etherType":       "IPv4",
+		"maxPortRange":    maxPort,
+		"minPortRange":    minPort,
+		"protocol":        strings.ToUpper(opts.Protocol),
+		"remoteType":      "cidr",
+		"remoteIpPrefix":  opts.CIDR,
+		"securityGroupId": self.SecgroupId,
+	}
+	req := NewConsoleRequest(self.region.ID, "/api/openapi-vpc/customer/v3/SecurityGroupRule/update/"+self.Id, nil, jsonutils.Marshal(params))
+	_, err := self.region.client.doPut(req)
+	return err
 }

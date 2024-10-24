@@ -6,7 +6,7 @@ import (
 	"yunion.io/x/pkg/errors"
 )
 
-func (self *SRegion) SetSkuExtInfo(map[string]string) error {
+func (self *SRegion) SetSkuExtInfo(string) error {
 	return errors.Wrapf(cloudprovider.ErrNotImplemented, "SetSkuExtInfo")
 }
 func (self *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {

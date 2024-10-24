@@ -24,6 +24,7 @@ import (
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/cloudmux/pkg/multicloud"
 )
+
 // https://ecloud.10086.cn/op-help-center/doc/article/67742
 
 var regionList = map[string]string{
@@ -56,7 +57,7 @@ var regionList = map[string]string{
 	"huhehaote-1": "华北-呼和浩特",
 	// "guiyang-1":   "西南-贵阳",
 
-	// "qinghai-1":      "西藏-青海1", // 
+	// "qinghai-1":      "西藏-青海1", //
 	// "hainan-1":       "华南-海南",
 	// "xinjiang-1":     "",
 	// "heilongjiang-1": "东北-黑龙江",
@@ -70,14 +71,19 @@ type SRegion struct {
 	client       *SEcloudClient
 	storageCache *SStoragecache
 
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	
+	ID   string `json:"id"`
+	Name string `json:"name"`
 
 	izones []cloudprovider.ICloudZone
 	ivpcs  []cloudprovider.ICloudVpc
 
-	gpuSkuInfo map[string]string
+	gpuSkuInfo map[string]*gpuInfo
+}
+
+type gpuInfo struct {
+	GpuCount        string `json:"gpuCount,omitempty"`
+	Spec            string `json:"spec,omitempty"`
+	GPUMemorySizeGB int    `json:"gpuMem,omitempty"`
 }
 
 func (r *SRegion) GetId() string {

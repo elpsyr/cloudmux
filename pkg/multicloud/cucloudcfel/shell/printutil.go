@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package loader
+package shell
 
 import (
-	"yunion.io/x/log" // on-premise virtualization technologies
-
-	_ "yunion.io/x/cloudmux/pkg/multicloud/cloudpods/provider" // private clouds
-	_ "yunion.io/x/cloudmux/pkg/multicloud/ecloudcfel/provider" // private clouds
-	_ "yunion.io/x/cloudmux/pkg/multicloud/cucloudcfel/provider" // private clouds
+	"yunion.io/x/pkg/util/printutils"
 )
 
-func init() {
-	log.Infof("Loading cfel cloud providers ...")
+func printList(data interface{}, total, offset, limit int, columns []string) {
+	printutils.PrintInterfaceList(data, total, offset, limit, columns)
+}
+
+func printObject(obj interface{}) {
+	printutils.PrintInterfaceObject(obj)
 }

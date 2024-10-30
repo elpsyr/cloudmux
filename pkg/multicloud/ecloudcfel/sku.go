@@ -239,6 +239,18 @@ func (self *SServerSku) GetStatus() string {
 	return "ready"
 }
 
+func (self *SServerSku) GetPrepaidStatus() string {
+	return "available"
+}
+
+func (self *SServerSku) GetPostpaidStatus() string {
+	return "available"
+}
+
+func (self *SServerSku) GetSpotpaidStatus() string {
+	return "soldout"
+}
+
 // GetSysDiskMaxSizeGB implements cloudprovider.ICfelCloudSku.
 func (self *SServerSku) GetSysDiskMaxSizeGB() int {
 	return 0

@@ -10,6 +10,7 @@ type ICfelCloudRegion interface {
 	ICloudRegion
 	SetSkuExtInfo(string) error
 	GetICfelSkus() ([]ICfelCloudSku, error)
+	GetICfelSkuPrice(opt *CfelSkuPriceOptions) (map[string]string, error)
 	GetSpotPostPaidPrice(zoneID, instanceType string) (float64, error) //  抢占付费 价格
 	GetPostPaidPrice(zoneID, instanceType string) (float64, error)     //  按量付费 价格
 	GetPrePaidPrice(zoneID, instanceType string) (float64, error)      //  包年包月 价格

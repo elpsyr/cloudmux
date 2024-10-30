@@ -148,3 +148,7 @@ func (self *SRegion) CfelUpdateNetworkTags(id string, tags map[string]string) er
 func (self *SRegion) ICfelSetImageCanDelete(id string) error {
 	return errors.Wrapf(cloudprovider.ErrNotImplemented, "ICfelSetImageCanDelete")
 }
+
+func (self *SRegion) GetICfelSkuPrice(opt *cloudprovider.CfelSkuPriceOptions) (map[string]string, error) {
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetICfelSkuPrice")
+}

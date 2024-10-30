@@ -12,16 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package loader
+package shell
 
 import (
-	"yunion.io/x/log" // on-premise virtualization technologies
+	"yunion.io/x/pkg/util/shellutils"
 
-	_ "yunion.io/x/cloudmux/pkg/multicloud/cloudpods/provider" // private clouds
-	_ "yunion.io/x/cloudmux/pkg/multicloud/ecloudcfel/provider" // private clouds
-	_ "yunion.io/x/cloudmux/pkg/multicloud/cucloudcfel/provider" // private clouds
+	"yunion.io/x/cloudmux/pkg/multicloud/cucloud"
 )
 
 func init() {
-	log.Infof("Loading cfel cloud providers ...")
+	type BalanceOptions struct {
+	}
+	shellutils.R(&BalanceOptions{}, "balance", "show balance", func(cli *cucloud.SRegion, args *BalanceOptions) error {
+		balance, err := cli.GetClient().QueryBalance()
+		if err != nil {
+			return err
+		}
+		printObject(balance)
+		return nil
+	})
+
 }

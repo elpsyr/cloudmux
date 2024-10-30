@@ -12,16 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package loader
+package shell
 
 import (
-	"yunion.io/x/log" // on-premise virtualization technologies
+	"yunion.io/x/pkg/util/shellutils"
 
-	_ "yunion.io/x/cloudmux/pkg/multicloud/cloudpods/provider" // private clouds
-	_ "yunion.io/x/cloudmux/pkg/multicloud/ecloudcfel/provider" // private clouds
-	_ "yunion.io/x/cloudmux/pkg/multicloud/cucloudcfel/provider" // private clouds
+	"yunion.io/x/cloudmux/pkg/multicloud/cucloud"
 )
 
 func init() {
-	log.Infof("Loading cfel cloud providers ...")
+	type RegionListOptions struct {
+	}
+	shellutils.R(&RegionListOptions{}, "region-list", "list regions", func(cli *cucloud.SRegion, args *RegionListOptions) error {
+		regions, err := cli.GetClient().GetRegions()
+		if err != nil {
+			return err
+		}
+		printList(regions, 0, 0, 0, []string{})
+		return nil
+	})
+
 }

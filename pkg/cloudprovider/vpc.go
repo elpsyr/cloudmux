@@ -19,4 +19,5 @@ type VpcCreateOptions struct {
 	CIDR                string
 	GlobalVpcExternalId string
 	Desc                string
+	Zone                string // add by zhaeng
 }

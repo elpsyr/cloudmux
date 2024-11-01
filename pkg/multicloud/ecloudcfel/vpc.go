@@ -46,6 +46,8 @@ type SVpc struct {
 	UserId   string
 	UserName string
 	Cidr     string
+
+	FirstNetworkId string `json:"firstNetworkId"`
 }
 
 func (v *SVpc) GetId() string {
@@ -177,6 +179,11 @@ func (v *SVpc) Delete() error {
 	return err
 }
 
+// 用来返回创建vpc时默认创建的网络id
+func (v *SVpc) GetAuthorityOwnerId() string {
+	return v.FirstNetworkId
+}
+
 func (v *SVpc) GetIWireById(wireId string) (cloudprovider.ICloudWire, error) {
 	iwires, err := v.GetIWires()
 	if err != nil {
@@ -191,12 +198,21 @@ func (v *SVpc) GetIWireById(wireId string) (cloudprovider.ICloudWire, error) {
 }
 
 func (self *SRegion) CreateIVpc(opts *cloudprovider.VpcCreateOptions) (cloudprovider.ICloudVpc, error) {
+	var zone *SZone
+	for _, z := range self.izones {
+		if opts.Zone == z.GetGlobalId() {
+			zone = z.(*SZone)
+		}
+	}
+	if zone == nil {
+		return nil, fmt.Errorf("zone: %s not exist", opts.Zone)
+	}
 	params := map[string]interface{}{
 		"name":            opts.NAME,
 		"specs":           "high", //enum(normal,high,middle,mega)
-		"networkName":     opts.NAME + "-" + "network",
+		"networkName":     opts.NAME + "-" + "first-network",
 		"cidr":            opts.CIDR,
-		"region":          self.izones[0].(*SZone).Region,
+		"region":          zone.Region,
 		"networkTypeEnum": "VM",
 	}
 	req := NewConsoleRequest(self.ID, "/api/openapi-vpc/customer/v3/order/create/vpc", nil, jsonutils.Marshal(params))
@@ -208,7 +224,7 @@ func (self *SRegion) CreateIVpc(opts *cloudprovider.VpcCreateOptions) (cloudprov
 	if err := res.Unmarshal(&ret); err != nil {
 		return nil, err
 	}
-	
+
 	var ids []string
 	for i := 1; i < 4; i++ {
 		time.Sleep(3 * time.Second)
@@ -220,7 +236,7 @@ func (self *SRegion) CreateIVpc(opts *cloudprovider.VpcCreateOptions) (cloudprov
 			break
 		}
 	}
-	
+
 	var vpc SVpc
 	if len(ids) > 0 {
 		req = NewConsoleRequest(self.ID, "/api/openapi-vpc/customer/v3/vpc/router/"+ids[0], nil, nil)
@@ -231,7 +247,7 @@ func (self *SRegion) CreateIVpc(opts *cloudprovider.VpcCreateOptions) (cloudprov
 	} else {
 		vpc.Id = ret.OrderId
 	}
-	
+
 	vpc.region = self
 	vpc.EcStatus = "ready"
 	vpc.Cidr = opts.CIDR

@@ -80,7 +80,7 @@ func (self *SRegion) getPrice(instanceType, feeUnit string) (float64, error) {
 	if err := res.Unmarshal(&ret); err != nil {
 		return 0, err
 	}
-	price, err := strconv.ParseFloat(ret.ServerPrice, 64)
+	price, err := strconv.ParseFloat(strings.ReplaceAll(ret.ServerPrice, ",", ""), 64)
 	if err != nil {
 		return 0, err
 	}

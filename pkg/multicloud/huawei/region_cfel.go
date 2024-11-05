@@ -1,6 +1,7 @@
 package huawei
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -78,6 +79,48 @@ func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.IClo
 	for i := range images {
 		images[i].storageCache = self.getStoragecache()
 		ret = append(ret, &images[i])
+	}
+	return ret, nil
+}
+
+func (self *SRegion) GetInstanceOSExtraSpecs(id string) (*OSExtraSpecs, error) {
+	resp, err := self.list(SERVICE_ECS_V2_1, fmt.Sprintf("flavors/%s/os-extra_specs", id), nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "get flavors os-extra_specs")
+	}
+	ret := OSExtraSpecs{}
+	err = resp.Unmarshal(&ret, "extra_specs")
+	if err != nil {
+		return nil, errors.Wrapf(err, "Unmarshal")
+	}
+	return &ret, nil
+}
+
+func (self *SRegion) GetInstanceMatchImage(instanceType string) ([]cloudprovider.ICloudImage, error) {
+	specs, err := self.GetInstanceOSExtraSpecs(instanceType)
+	if err != nil {
+		return nil, errors.Wrapf(err, "GetInstanceOSExtraSpecs")
+	}
+
+	var isArm bool
+	if specs.CfelOSExtraSpecs.EcsInstanceArchitecture == "arm" ||
+		specs.CfelOSExtraSpecs.EcsInstanceArchitecture == "arm64" {
+		isArm = true
+	} else {
+		isArm = false
+	}
+
+	images, err := self.GetImages("", "", "gold", "")
+	if err != nil {
+		return nil, errors.Wrapf(err, "GetImages")
+	}
+
+	var ret []cloudprovider.ICloudImage
+	for i := range images {
+		if isArm == (strings.ToLower(images[i].SupportArm) == "true") {
+			images[i].storageCache = self.getStoragecache()
+			ret = append(ret, &images[i])
+		}
 	}
 	return ret, nil
 }

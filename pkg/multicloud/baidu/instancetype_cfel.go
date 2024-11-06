@@ -2,6 +2,7 @@ package baidu
 
 import (
 	"strconv"
+	"strings"
 	"time"
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
@@ -119,7 +120,13 @@ func (S SFlavors) GetPostpaidStatus() string {
 }
 
 func (S SFlavors) GetCpuArch() string {
-	return ""
+	// api 无法和页面一样获取架构
+	// 这里通过 CpuModel 判断
+	// - Ampere Altra
+	if strings.Contains(S.CpuModel, "Ampere Altra") {
+		return "ARM"
+	}
+	return "X86"
 }
 
 func (S SFlavors) GetCpuCoreCount() int {

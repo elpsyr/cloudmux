@@ -186,6 +186,10 @@ func (S SInstanceType) GetPostpaidStatus() string {
 }
 
 func (S SInstanceType) GetCpuArch() string {
+	// 该规格对应的CPU架构，且仅鲲鹏实例架构规格返回该字段。
+	if len(S.OSExtraSpecs.EcsInstanceArchitecture) == 0 {
+		return "X86"
+	}
 	return S.OSExtraSpecs.EcsInstanceArchitecture
 }
 

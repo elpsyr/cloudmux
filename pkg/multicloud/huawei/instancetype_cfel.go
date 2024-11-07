@@ -604,3 +604,136 @@ func (self *SRegion) GetInstanceTypeStatus(zoneId, instanceTypeName string) (str
 	// 没有查询到对应 zone instanceType
 	return api.SkuStatusSoldout, nil
 }
+
+// GetICfelSkuPrice 实例询价
+func (self *SRegion) GetICfelSkuPrice(opt *cloudprovider.CfelSkuPriceOptions) (map[string]string, error) {
+
+	projectId := ""
+	project, ok := self.client.projects[self.Id]
+	if ok {
+		projectId = project.Id
+	}
+	// init
+	params := map[string]interface{}{}
+	route := "bills/ratings/on-demand-resources"
+
+	switch opt.ChargeType {
+	case "PayAsYouGo":
+		params = map[string]interface{}{
+			"project_id": projectId,
+			"product_infos": []interface{}{
+				map[string]interface{}{ // 实例
+					"id":                 "1",
+					"cloud_service_type": "hws.service.type.ec2",
+					"resource_type":      "hws.resource.type.vm",
+					"resource_spec":      opt.InstanceType + ".linux",
+					"region":             self.Id,
+					"available_zone":     opt.ZoneId,
+					"usage_factor":       "Duration",
+					"usage_value":        1,            // 使用量值。 例如按小时询价，使用量值为1，使用量单位为小时。
+					"usage_measure_id":   4,            // 4 代表小时为单位
+					"subscription_num":   opt.Quantity, // 订购数量。
+				},
+				map[string]interface{}{ // 系统盘
+					"id":                 "2",
+					"cloud_service_type": "hws.service.type.ebs",
+					"resource_type":      "hws.resource.type.volume",
+					"resource_spec":      opt.SysDiskType,
+					"region":             self.Id,
+					"usage_factor":       "Duration",
+					"usage_value":        1,
+					"usage_measure_id":   4,               // 4 代表小时为单位
+					"subscription_num":   1,               // 订购数量。
+					"resource_size":      opt.SysDiskSize, // 资源容量大小，例如购买的卷大小或带宽大小。 线性产品时此参数必填。线性产品为包括硬盘，带宽等在订购时需要指定大小的产品。例如硬盘在订购时需选择10G、20G等不同大小。
+					"size_measure_id":    17,              // 资源容量度量标识，枚举值,17：GB（购买云硬盘时使用）
+				},
+			},
+		}
+		route = "bills/ratings/on-demand-resources"
+	case "Subscription":
+
+		// 订购包年/包月产品的周期类型。 0:天 2:月 3:年 4:小时
+		period_type := 2 // default
+		switch opt.FeeUnit {
+		case "Month":
+			period_type = 2
+		case "Year":
+			period_type = 3
+		default:
+			period_type = 2
+		}
+
+		params = map[string]interface{}{
+			"project_id": projectId,
+			"product_infos": []interface{}{
+				map[string]interface{}{
+					"id":                 "1",
+					"cloud_service_type": "hws.service.type.ec2",
+					"resource_type":      "hws.resource.type.vm",
+					"resource_spec":      opt.InstanceType + ".linux",
+					"region":             self.Id,
+					"available_zone":     opt.ZoneId,
+					"period_type":        period_type,  // 订购包年/包月产品的周期类型。 0:天2:月3:年4:小时
+					"period_num":         opt.Duration, // 订购包年/包月产品的周期数。
+					"subscription_num":   opt.Quantity, // 订购包年/包月产品的数量。
+				},
+				map[string]interface{}{
+					"id":                 "2",
+					"cloud_service_type": "hws.service.type.ebs",
+					"resource_type":      "hws.resource.type.volume",
+					"resource_spec":      opt.SysDiskType,
+					"region":             self.Id,
+					"resource_size":      opt.SysDiskSize,
+					"size_measure_id":    17, // 资源容量度量标识，枚举值,17：GB（购买云硬盘时使用）
+					"period_type":        period_type,
+					"period_num":         opt.Duration,
+					"subscription_num":   opt.Quantity,
+				},
+			},
+		}
+		route = "bills/ratings/period-resources/subscribe-rate"
+	default:
+		params = map[string]interface{}{
+			"project_id": projectId,
+			"product_infos": []interface{}{
+				map[string]interface{}{
+					"id":                 "1",
+					"cloud_service_type": "hws.service.type.ec2",
+					"resource_type":      "hws.resource.type.vm",
+					"resource_spec":      opt.InstanceType + ".linux",
+					"region":             self.Id,
+					"available_zone":     opt.ZoneId,
+					"usage_factor":       "Duration",
+					"usage_value":        1,            // 使用量值。 例如按小时询价，使用量值为1，使用量单位为小时。
+					"usage_measure_id":   4,            // 4 代表小时为单位
+					"subscription_num":   opt.Quantity, // 订购数量。
+				},
+				map[string]interface{}{
+					"id":                 "2",
+					"cloud_service_type": "hws.service.type.ebs",
+					"resource_type":      "hws.resource.type.volume",
+					"resource_spec":      opt.SysDiskType,
+					"region":             self.Id,
+					"usage_factor":       "Duration",
+					"usage_value":        1,
+					"usage_measure_id":   4,               // 4 代表小时为单位
+					"subscription_num":   1,               // 订购数量。
+					"resource_size":      opt.SysDiskSize, // 资源容量大小，例如购买的卷大小或带宽大小。 线性产品时此参数必填。线性产品为包括硬盘，带宽等在订购时需要指定大小的产品。例如硬盘在订购时需选择10G、20G等不同大小。
+					"size_measure_id":    17,              // 资源容量度量标识，枚举值,17：GB（购买云硬盘时使用）
+				},
+			},
+		}
+
+	}
+
+	resp, err := self.client.post(SERVICE_BSS, "", route, params)
+	if err != nil {
+		return nil, err
+	}
+	var ret = make(map[string]string)
+	if err := resp.Unmarshal(&ret); err != nil {
+		return nil, err
+	}
+
+	return ret, nil
+}

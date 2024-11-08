@@ -98,13 +98,17 @@ func (self *SecurityGroupRule) Update(opts *cloudprovider.SecurityGroupRuleUpdat
 	} else {
 		minPort, maxPort = opts.Ports, opts.Ports
 	}
+	var protocol = strings.ToUpper(opts.Protocol)
+	if protocol == "ALL" {
+		protocol = "ANY"
+	}
 	params := map[string]interface{}{
 		"direction":       self.Direction,
 		"description":     opts.Desc,
 		"etherType":       "IPv4",
 		"maxPortRange":    maxPort,
 		"minPortRange":    minPort,
-		"protocol":        strings.ToUpper(opts.Protocol),
+		"protocol":        protocol,
 		"remoteType":      "cidr",
 		"remoteIpPrefix":  opts.CIDR,
 		"securityGroupId": self.SecgroupId,

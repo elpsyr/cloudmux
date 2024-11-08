@@ -72,7 +72,7 @@ type ICfelZone interface {
 // ICfelCloudVM vm接口
 type ICfelCloudVM interface {
 	RebootVM(ctx context.Context) error
-	GetMonitorData(start, end string) ([]ICfelMonitorData, error) // 获取主机监控数据
+	GetMonitorData(start, end, interval string) ([]ICfelMonitorData, error) // 获取主机监控数据
 	GetIsolatedDevice() ([]*IsolatedDeviceInfo, error)
 	GetCfelHypervisor() string
 	GetSSHInfo() (*ServerSSHInfo, error)
@@ -100,7 +100,8 @@ type ICfelMonitorData interface {
 
 // ICfelCloudVpc  vpc 额外功能接口
 type ICfelCloudVpc interface {
-	Update(opts *VpcUpdateOptions) error // 更新 vpc 名称以及描述
+	Update(opts *VpcUpdateOptions) error                                 // 更新 vpc 名称以及描述
+	CfelCreateSubnet(opts *SNetworkCreateOptions) (ICloudNetwork, error) // ecloud
 	ICloudVpc
 }
 

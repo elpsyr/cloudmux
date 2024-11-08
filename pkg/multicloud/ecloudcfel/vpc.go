@@ -17,6 +17,7 @@ package ecloudcfel
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"yunion.io/x/jsonutils"
@@ -244,13 +245,69 @@ func (self *SRegion) CreateIVpc(opts *cloudprovider.VpcCreateOptions) (cloudprov
 		if err != nil {
 			return nil, err
 		}
+		vpc.EcStatus = "ready"
+		var isReady bool
+		for i := 1; i < 4; i++ {
+			net, _ := self.GetNetworkById(ids[0], zone.Region, vpc.FirstNetworkId)
+			if net != nil && net.EcStatus == "ACTIVE" {
+				isReady = true
+				break
+			}
+			time.Sleep(3 * time.Second)
+		}
+		if !isReady {
+			vpc.EcStatus = "creat_fail"
+		}
 	} else {
 		vpc.Id = ret.OrderId
+		vpc.EcStatus = "creat_fail"
 	}
 
 	vpc.region = self
-	vpc.EcStatus = "ready"
+
 	vpc.Cidr = opts.CIDR
 	// vpc := &SVpc{region: self, Id: order[0].InstanceId, Name: opts.NAME, EcStatus: "ready", Cidr: opts.CIDR}
 	return &vpc, nil
+}
+
+func (self *SVpc) CfelCreateSubnet(opts *cloudprovider.SNetworkCreateOptions) (cloudprovider.ICloudNetwork, error) {
+	self.region.fetchZones()
+
+	index := slices.IndexFunc(self.region.izones, func(iz cloudprovider.ICloudZone) bool {
+		return iz.GetGlobalId() == opts.ZoneId
+	})
+	if index == -1 {
+		return nil, fmt.Errorf("zone not found")
+	}
+	var zone = self.region.izones[index].(*SZone)
+	params := map[string]interface{}{
+		"availabilityZoneHints": zone.Region,
+		"networkName":           opts.Name,
+		"networkTypeEnum":       "VM",
+		"routerId":              self.RouterId,
+		"subnets": []map[string]string{
+			{
+				"cidr":      opts.Cidr,
+				"ipVersion": "4",
+			},
+		},
+	}
+	req := NewConsoleRequest(self.region.ID, "/api/openapi-vpc/customer/v3/network", nil, jsonutils.Marshal(params))
+	res, err := self.region.client.doPost(req)
+	if err != nil {
+		return nil, err
+	}
+	return &SNetwork{
+		Id: res.Interface().(string),
+		Subnets: []SSubnet{{
+			Id:         "",
+			Name:       "",
+			NetworkId:  "",
+			Region:     "",
+			GatewayIp:  "",
+			EnableDHCP: false,
+			Cidr:       opts.Cidr,
+			IpVersion:  "",
+		}}}, nil
+	return nil, nil
 }

@@ -109,7 +109,7 @@ func (self *SRegion) GetHostInstance(instanceId string) (cloudprovider.ICloudVM,
 	return instance, err
 }
 
-func (self *SInstance) GetMonitorData(start, end string) ([]cloudprovider.ICfelMonitorData, error) {
+func (self *SInstance) GetMonitorData(start, end, interval string) ([]cloudprovider.ICfelMonitorData, error) {
 	return nil, cloudprovider.ErrNotImplemented
 }
 

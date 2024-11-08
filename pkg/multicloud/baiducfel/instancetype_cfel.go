@@ -1,4 +1,4 @@
-package baidu
+package baiducfel
 
 import (
 	"strconv"
@@ -245,7 +245,7 @@ var (
 // https://cloud.baidu.com/doc/BCC/s/Xk3pb75k1
 func (region *SRegion) fetchFlavorSpec() ([]SFlavors, error) {
 	// zoneName	String	Query参数	可用区名称  非必填
-	body, err := region.client.list("bcc", region.Region, "/v2/instance/flavorSpec", nil)
+	body, err := region.client.list("bcc", region.Region, "/v2/instance/flavorSpec", nil, nil)
 	if err != nil {
 		return nil, err
 	}

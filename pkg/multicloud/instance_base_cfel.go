@@ -13,7 +13,7 @@ func (self *SInstanceBase) CfelRebuildRoot(ctx context.Context, opts *cloudprovi
 func (self *SInstanceBase) RebootVM(ctx context.Context) error {
 	return cloudprovider.ErrNotImplemented
 }
-func (self *SInstanceBase) GetMonitorData(start, end string) ([]cloudprovider.ICfelMonitorData, error) { // 获取主机监控数据
+func (self *SInstanceBase) GetMonitorData(start, end, interval string) ([]cloudprovider.ICfelMonitorData, error) { // 获取主机监控数据
 	return nil, cloudprovider.ErrNotImplemented
 }
 func (self *SInstanceBase) GetIsolatedDevice() ([]*cloudprovider.IsolatedDeviceInfo, error) {

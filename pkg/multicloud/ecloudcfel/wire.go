@@ -88,14 +88,6 @@ func (w *SWire) GetINetworkById(netid string) (cloudprovider.ICloudNetwork, erro
 }
 
 func (w *SWire) CreateINetwork(opts *cloudprovider.SNetworkCreateOptions) (cloudprovider.ICloudNetwork, error) {
-	nets, err := w.GetINetworks()
-	if err != nil {
-		return nil, err
-	}
-	if len(nets) > 0 {
-		return nets[0], nil
-	}
-	return nil, fmt.Errorf("network not found")
 	params := map[string]interface{}{
 		"availabilityZoneHints": w.zone.Region,
 		"networkName":           opts.Name,

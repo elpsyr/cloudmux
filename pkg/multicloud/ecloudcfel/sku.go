@@ -55,6 +55,8 @@ func (self *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
 		return nil, err
 	}
 	var skuChan = make(chan []SServerSku)
+	defer close(skuChan)
+
 	var wg sync.WaitGroup
 
 	var res []cloudprovider.ICfelCloudSku
@@ -119,7 +121,6 @@ func (self *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
 		}
 	}
 	wg.Wait()
-	close(skuChan)
 
 	return res, nil
 }

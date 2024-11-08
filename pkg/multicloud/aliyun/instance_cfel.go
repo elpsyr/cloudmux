@@ -45,8 +45,8 @@ func (self *SRegion) RebootVM(instanceId string) error {
 	// return self.waitInstanceStatus(instanceId, InstanceStatusRunning, time.Second*5, time.Second*180) // 3 minutes to timeout
 }
 
-func (self *SInstance) GetMonitorData(start, end string) ([]cloudprovider.ICfelMonitorData, error) {
-	data, err := self.host.zone.region.DescribeInstanceMonitorData(self.InstanceId, start, end, "")
+func (self *SInstance) GetMonitorData(start, end, interval string) ([]cloudprovider.ICfelMonitorData, error) {
+	data, err := self.host.zone.region.DescribeInstanceMonitorData(self.InstanceId, start, end, interval)
 	if err != nil {
 		return nil, errors.Wrap(err, "DescribeInstanceMonitorData")
 	}
@@ -76,6 +76,15 @@ func (self *SRegion) DescribeInstanceMonitorData(instanceId, startTime, endTime,
 	err = resp.Unmarshal(&ret)
 	if err != nil {
 		return nil, errors.Wrapf(err, "resp.Unmarshal")
+	}
+	for i := range ret.MonitorData.InstanceMonitorData {
+		tt, err := time.Parse(time.RFC3339, ret.MonitorData.InstanceMonitorData[i].TimeStamp)
+		if err != nil {
+			continue
+		}
+		// chinaTimeZone := time.FixedZone("CST", 8*60*60)
+		// chinaTime := tt.In(chinaTimeZone)
+		ret.MonitorData.InstanceMonitorData[i].TimeStamp = tt.Format("2006-01-02 15:04:05")
 	}
 	return ret.MonitorData.InstanceMonitorData, nil
 }

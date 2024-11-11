@@ -182,8 +182,8 @@ func (self *SRegion) DeleteSecurityGroupRule(secGrpId string, direction, ruleId 
 func (self *SRegion) CreateSecurityGroup(opts *cloudprovider.SecurityGroupCreateInput) (string, error) {
 	params := map[string]string{
 		"VpcId":            opts.VpcId,
-		"GroupDescription": opts.Desc,
-		"GroupName":        opts.Name,
+		"GroupDescription": opts.Name,                                     // modify by zhaeng; desc character in ascii,chinese not allow
+		"GroupName":        strings.Replace(opts.Name, "sg-", "sgcc-", 1), // modify by zhaeng; aws sg name not allow begin with 'sg-'
 	}
 	if len(opts.Desc) == 0 {
 		params["GroupDescription"] = "auto create by cloudpods"

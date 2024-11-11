@@ -15,7 +15,7 @@ func (self *SRegion) GetInstanceMatchImage(string) ([]cloudprovider.ICloudImage,
 }
 
 func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.ICloudImage, error) {
-	images, err := self.getPublicImages(ImageOwnerAll, nil)
+	images, err := self.getPublicImages(ImageOwnerSystem, nil)
 	if err != nil {
 		return nil, errors.Wrapf(err, "GetImages")
 	}
@@ -25,6 +25,10 @@ func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.IClo
 		ret = append(ret, &images[i])
 	}
 	return ret, nil
+}
+
+func (self *SRegion) GetICfelCloudImageById(id string) (cloudprovider.ICloudImage, error) {
+	return nil,nil
 }
 
 func (self *SRegion) getPublicImages(owners []TImageOwnerType, ownerIds []string) ([]SImage, error) {
@@ -43,11 +47,12 @@ func (self *SRegion) getPublicImages(owners []TImageOwnerType, ownerIds []string
 	params[fmt.Sprintf("Filter.%d.Value.1", idx)] = "x86_64"
 	idx++
 
-	if len(owners) > 0 || len(ownerIds) > 0 {
-		for i, owner := range imageOwnerTypes2Strings(owners, ownerIds) {
-			params[fmt.Sprintf("Owner.%d", i+1)] = string(owner)
-		}
-	}
+	// if len(owners) > 0 || len(ownerIds) > 0 {
+	// 	for i, owner := range imageOwnerTypes2Strings(owners, ownerIds) {
+	// 		params[fmt.Sprintf("Owner.%d", i+1)] = string(owner)
+	// 	}
+	// }
+	params[fmt.Sprintf("Owner.%d", 1)] = "amazon"
 
 	ret := []SImage{}
 	for {

@@ -171,6 +171,9 @@ func (self *SServerSku) GetGlobalId() string {
 
 // GetGpuAttachable implements cloudprovider.ICfelCloudSku.
 func (self *SServerSku) GetGpuAttachable() bool {
+	if _, ok := self.gpuInfo[self.SpecsName]; ok {
+		return true
+	}
 	return false
 }
 

@@ -47,6 +47,18 @@ func (self *SRegion) getPublicImages(owners []TImageOwnerType, ownerIds []string
 	params[fmt.Sprintf("Filter.%d.Value.1", idx)] = "x86_64"
 	idx++
 
+	// params[fmt.Sprintf("Filter.%d.Name", idx)] = "root-device-type"
+	// params[fmt.Sprintf("Filter.%d.Value.1", idx)] = "ebs"
+	// idx++
+
+	// params[fmt.Sprintf("Filter.%d.Name", idx)] = "virtualization-type"
+	// params[fmt.Sprintf("Filter.%d.Value.1", idx)] = "hvm"
+	// idx++
+
+	// params[fmt.Sprintf("Filter.%d.Name", idx)] = "state"
+	// params[fmt.Sprintf("Filter.%d.Value.1", idx)] = "available "
+	// idx++
+
 	// if len(owners) > 0 || len(ownerIds) > 0 {
 	// 	for i, owner := range imageOwnerTypes2Strings(owners, ownerIds) {
 	// 		params[fmt.Sprintf("Owner.%d", i+1)] = string(owner)

@@ -228,6 +228,13 @@ func (self *SRegion) CreateISecurityGroup(opts *cloudprovider.SecurityGroupCreat
 		return nil, err
 	}
 	secgroup := &SSecurityGroup{region: self, Id: ret.Interface().(string), Status: "ready"}
+	rules,err := secgroup.GetRules()
+	if err != nil {
+		return nil,err
+	}
+	for _,rule := range rules {
+		self.DeleteSecRule(rule.GetGlobalId())
+	}
 	return secgroup, nil
 }
 

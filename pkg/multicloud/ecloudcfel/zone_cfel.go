@@ -95,7 +95,9 @@ func (r *SZone) GetICfelDiskType(diskType string) (map[string]interface{}, error
 					if res != nil {
 						lock.Lock()
 						for _, val := range res {
-							result[val.ProductType] = val.Status
+							if val.Status == "1" {
+								result[val.ProductType] = val.Status
+							}
 						}
 						lock.Unlock()
 						// ch <- res

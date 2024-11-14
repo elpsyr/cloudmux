@@ -3,6 +3,7 @@ package ecloudcfel
 import (
 	"context"
 	"sync"
+	"time"
 
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/cloudmux/pkg/multicloud"
@@ -116,11 +117,12 @@ func (self *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
 					ret = append(ret, skus[i])
 				}
 				skuChan <- ret
-				wg.Done()
+				defer wg.Done()
 			}(vmType, offerId, zone.(*SZone))
 		}
 	}
 	wg.Wait()
+	time.Sleep(100 * time.Microsecond)
 
 	return res, nil
 }

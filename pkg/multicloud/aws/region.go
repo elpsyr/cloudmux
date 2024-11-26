@@ -74,6 +74,10 @@ var RegionLocations = map[string]string{
 	"me-central-1":   "中东(阿联酋)",
 	"ap-southeast-3": "亚太地区(雅加达)",
 	"il-central-1":   "以色列(特拉维夫)",
+
+	// add by zhaeng 241121
+	"ca-west-1":      "加拿大(卡尔加里)",
+	"ap-southeast-5": "亚太地区(马来西亚)",
 }
 
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html
@@ -243,7 +247,7 @@ func (self *SRegion) eksRequest(apiName, path string, params map[string]interfac
 	return self.client.invoke(self.RegionId, EKS_SERVICE_NAME, EKS_SERVICE_ID, "2017-11-01", apiName, path, params, retval, true)
 }
 
-/////////////////////////////////////////////////////////////////////////////
+// ///////////////////////////////////////////////////////////////////////////
 func (self *SRegion) GetZones(id string) ([]SZone, error) {
 	params := map[string]string{
 		"Filter.1.Name":    "region-name",

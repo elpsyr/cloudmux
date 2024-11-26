@@ -2,11 +2,13 @@ package aws
 
 import (
 	"fmt"
-	"math"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
+
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/cloudmux/pkg/multicloud"
@@ -272,6 +274,13 @@ func (s *Sku) GetIsBareMetal() bool {
 	return s.BareMetal
 }
 
+func (s *Sku) GetSpotpaidStatus() string {
+	if slices.Contains(s.SupportedUsageClasses, "spot") {
+		return api.SkuStatusAvailable
+	}
+	return api.CfelSkuStatusAbandon
+}
+
 type GpuInfo struct {
 	Gpus []struct {
 		Count        int    `xml:"count"`
@@ -505,6 +514,199 @@ func (self *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
 	return ret, nil
 }
 
+func getParams(filters map[string]string) []ProductFilter {
+	params := []ProductFilter{}
+
+	for k, v := range filters {
+		params = append(params, ProductFilter{
+			Type:  "TERM_MATCH",
+			Field: k,
+			Value: v,
+		})
+	}
+
+	return params
+}
+
+func (self *SRegion) GetICfelSkuPrice(opt *cloudprovider.CfelSkuPriceOptions) (map[string]string, error) {
+
+	var volumeTotalPrice float64
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	var diskMap = map[string]string{
+		"gp2":      "General Purpose",
+		"gp3":      "General Purpose",
+		"standard": "Magnetic",
+		"io1":      "Provisioned IOPS",
+		"io2":      "Provisioned IOPS",
+		"st1":      "Throughput Optimized HDD",
+		"sc1":      "Cold HDD",
+	}
+
+	go func() {
+		filters := map[string]string{
+			"regionCode":    self.RegionId,
+			"volumeType":    diskMap[opt.SysDiskType],
+			"volumeApiName": opt.SysDiskType,
+		}
+		parts, _, err := self.GetProducts("AmazonEC2", getParams(filters), "")
+		if err != nil {
+
+		}
+		if len(parts) <= 0 {
+			return
+		}
+		var volumePrice float64
+		for _, val := range parts[0].Terms.OnDemand {
+			for _, vv := range val.PriceDimensions {
+				if vv.Unit == "GB-Mo" {
+					volumePrice = vv.PricePerUnit.Usd
+				}
+			}
+		}
+		if opt.FeeUnit == "month" {
+			volumeTotalPrice = volumePrice * float64(opt.SysDiskSize) * float64(opt.Duration)
+		} else if opt.FeeUnit == "year" {
+			volumeTotalPrice = volumePrice * float64(opt.SysDiskSize) * float64(opt.Duration) * 12
+		} else {
+			volumeTotalPrice = volumePrice * float64(opt.SysDiskSize) * float64(opt.Duration) / 730
+		}
+		defer wg.Done()
+	}()
+
+	var serverTotalPrice float64
+
+	if opt.ChargeType == "SpotPayAsYouGo" {
+		price, err := self.DescribeSpotPriceHistory(opt.ZoneId, opt.InstanceType)
+		if err == nil && len(price) > 0 {
+			serverTotalPrice, _ = strconv.ParseFloat(strings.ReplaceAll(price[0].SpotPrice, ",", ""), 64)
+		}
+	} else {
+		if opt.InstanceType != "" {
+			img, err := self.GetImage(opt.ImageId)
+			if err != nil {
+				return nil, err
+			}
+			var ops string
+			var dist = img.GetOsDist()
+			if strings.Contains(dist, "Ubuntu") {
+				ops = "Ubuntu Pro"
+			} else if strings.Contains(dist, "Windows") {
+				ops = "Windows"
+			} else if strings.Contains(dist, "SUSE") {
+				ops = "SUSE"
+			} else if strings.Contains(dist, "RHEL") {
+				ops = "RHEL"
+			} else {
+				ops = "Linux"
+			}
+			filters := map[string]string{
+				"regionCode":      self.RegionId,
+				"operatingSystem": ops,
+				"licenseModel":    "No License required",
+				"productFamily":   "Compute Instance",
+				// "operation":       img.UsageOperation,
+				"tenancy":        "Shared",
+				"preInstalledSw": "NA",
+				"capacitystatus": "Used",
+				"instanceType":   opt.InstanceType,
+			}
+
+			opt.FeeUnit = strings.ToLower(opt.FeeUnit)
+			//var volumePrice float64
+
+			var ret = []SInstanceType{}
+			var nextToken string
+			for {
+				parts, _nextToken, err := self.GetProducts("AmazonEC2", getParams(filters), nextToken)
+				if err != nil {
+					return nil, err
+				}
+				ret = append(ret, parts...)
+				if len(_nextToken) == 0 || len(parts) == 0 {
+					break
+				}
+				nextToken = _nextToken
+			}
+
+			// rr, _ := json.Marshal(ret)
+			// fmt.Println(string(rr))
+			// if len(rr) > 0 {
+			// 	ioutil.WriteFile("./price.json", rr, os.ModeAppend)
+			// }
+
+			if len(ret) > 0 {
+				// 小时价
+				var hourPrice float64
+				for _, val := range ret[0].Terms.OnDemand {
+					for _, vv := range val.PriceDimensions {
+						if vv.Unit == "Hrs" {
+							hourPrice = vv.PricePerUnit.Usd
+						}
+					}
+				}
+				// 一年价和三年价
+				var oneYearPrice, threeYearPrice float64
+				for _, term := range ret[0].Terms.Reserved {
+					attributes := term.TermAttributes
+					if attributes.LeaseContractLength == "1yr" && attributes.OfferingClass == "standard" && attributes.PurchaseOption == "All Upfront" {
+						for _, dimension := range term.PriceDimensions {
+							if dimension.Unit == "Quantity" {
+								oneYearPrice = dimension.PricePerUnit.Usd
+							}
+						}
+					}
+					if attributes.LeaseContractLength == "3yr" && attributes.OfferingClass == "standard" && attributes.PurchaseOption == "All Upfront" {
+						for _, dimension := range term.PriceDimensions {
+							if dimension.Unit == "Quantity" {
+								threeYearPrice = dimension.PricePerUnit.Usd
+							}
+						}
+					}
+				}
+
+				if opt.FeeUnit == "month" {
+					serverTotalPrice = hourPrice * 730 * float64(opt.Quantity) * float64(opt.Duration)
+				} else if opt.FeeUnit == "year" {
+					if oneYearPrice <= 0 {
+						oneYearPrice = hourPrice * 24 * 365
+					}
+					if threeYearPrice <= 0 {
+						threeYearPrice = hourPrice * 24 * 365
+					}
+					if opt.Duration == 1 {
+						serverTotalPrice = oneYearPrice
+					} else if opt.Duration == 3 {
+						serverTotalPrice = threeYearPrice
+					} else {
+						serverTotalPrice = oneYearPrice * float64(opt.Quantity) * float64(opt.Duration)
+					}
+				} else {
+					serverTotalPrice = hourPrice * float64(opt.Quantity) * float64(opt.Duration)
+				}
+			}
+		}
+	}
+
+	wg.Wait()
+
+	var result = map[string]string{
+		// "bootVolumePrice": fmt.Sprintf("%v", volumeTotalPrice),
+		// "serverPrice":     fmt.Sprintf("%v", serverTotalPrice),
+		"currency": "USD",
+	}
+	if opt.InstanceType == "" {
+		result["dataVolumePrice"] = fmt.Sprintf("%v", volumeTotalPrice)
+	} else {
+		result["bootVolumePrice"] = fmt.Sprintf("%v", volumeTotalPrice)
+		result["serverPrice"] = fmt.Sprintf("%v", serverTotalPrice)
+	}
+	return result, nil
+
+}
+
 func (self *SRegion) ListPriceLists() (*SInstanceType, error) {
 	filters := map[string]string{
 		"regionCode": self.RegionId,
@@ -555,6 +757,7 @@ func (self *SRegion) GetInstanceTypePrice(instanceType string) (*SInstanceType, 
 		"regionCode":     self.RegionId,
 		"operation":      "RunInstances",
 		"capacitystatus": "Used",
+		"tenancy":        "Shared",
 		"instanceType":   instanceType,
 	}
 
@@ -683,18 +886,15 @@ func (self *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, erro
 		return -1, errors.Wrapf(err, "GetInstanceTypePrice")
 	}
 	var value float64
-
-	for _, term := range price.Terms.Reserved {
-		attributes := term.TermAttributes
-		if attributes.LeaseContractLength == "1yr" && attributes.OfferingClass == "standard" && attributes.PurchaseOption == "All Upfront" {
-			for _, dimension := range term.PriceDimensions {
-				if dimension.Unit == "Quantity" {
-					// 1yr ==> 1month
-					value = math.Round(dimension.PricePerUnit.Usd/12*1000) / 1000
-				}
+	var hourPrice float64
+	for _, val := range price.Terms.OnDemand {
+		for _, vv := range val.PriceDimensions {
+			if vv.Unit == "Hrs" {
+				hourPrice = vv.PricePerUnit.Usd
 			}
 		}
 	}
+	value = 730 * hourPrice
 	return value, nil
 }
 

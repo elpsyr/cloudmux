@@ -10,12 +10,12 @@ import (
 // Verify that *SRegion implements ICfelCloudRegion
 var _ cloudprovider.ICfelCloudRegion = (*SRegion)(nil)
 
-func (self *SRegion) GetInstanceMatchImage(string) ([]cloudprovider.ICloudImage, error) {
-	return self.GetICfelCloudImage(false)
-}
-
-func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.ICloudImage, error) {
-	images, err := self.getPublicImages(ImageOwnerSystem, nil)
+func (self *SRegion) GetInstanceMatchImage(instanceType string) ([]cloudprovider.ICloudImage, error) {
+	sku, err := self.CfelGetInstanceType(instanceType)
+	if err != nil {
+		return nil, err
+	}
+	images, err := self.cfelGetImages("", []TImageOwnerType{ImageOwnerTypeSystem}, nil, "", "", nil, "", sku.ProcessorInfo.SupportedArchitectures)
 	if err != nil {
 		return nil, errors.Wrapf(err, "GetImages")
 	}
@@ -27,44 +27,83 @@ func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.IClo
 	return ret, nil
 }
 
-func (self *SRegion) GetICfelCloudImageById(id string) (cloudprovider.ICloudImage, error) {
-	return nil,nil
+func (self *SRegion) CfelGetInstanceType(name string) (*Sku, error) {
+	params := map[string]string{
+		"InstanceType.1": name,
+	}
+	ret := struct {
+		InstanceTypeSet []Sku  `xml:"instanceTypeSet>item"`
+		NextToken       string `xml:"nextToken"`
+	}{}
+	err := self.ec2Request("DescribeInstanceTypes", params, &ret)
+	if err != nil {
+		return nil, err
+	}
+	for i := range ret.InstanceTypeSet {
+		if ret.InstanceTypeSet[i].InstanceType == name {
+			return &ret.InstanceTypeSet[i], nil
+		}
+	}
+	return nil, errors.Wrapf(cloudprovider.ErrNotFound, name)
 }
 
-func (self *SRegion) getPublicImages(owners []TImageOwnerType, ownerIds []string) ([]SImage, error) {
+func (self *SRegion) GetICfelCloudImage(withUserMeta bool) ([]cloudprovider.ICloudImage, error) {
+	return nil, cloudprovider.ErrNotImplemented
+}
+
+func (self *SRegion) GetICfelCloudImageById(id string) (cloudprovider.ICloudImage, error) {
+	return nil, nil
+}
+
+func (self *SRegion) cfelGetImages(status ImageStatusType, owners []TImageOwnerType, imageId []string, name string, virtualizationType string, ownerIds []string, volumeType string, arch []string) ([]SImage, error) {
 	params := map[string]string{}
 	idx := 1
 
-	params[fmt.Sprintf("Filter.%d.Name", idx)] = "is-public"
-	params[fmt.Sprintf("Filter.%d.Value.1", idx)] = "true"
-	idx++
+	if len(status) > 0 {
+		params[fmt.Sprintf("Filter.%d.Name", idx)] = "state"
+		params[fmt.Sprintf("Filter.%d.Value.1", idx)] = string(status)
+		idx++
+	}
+
+	if len(name) > 0 {
+		params[fmt.Sprintf("Filter.%d.Name", idx)] = "name"
+		params[fmt.Sprintf("Filter.%d.Value.1", idx)] = name
+		idx++
+	}
+
+	if len(virtualizationType) > 0 {
+		params[fmt.Sprintf("Filter.%d.Name", idx)] = "virtualization-type"
+		params[fmt.Sprintf("Filter.%d.Value.1", idx)] = virtualizationType
+		idx++
+	}
+
+	if len(volumeType) > 0 {
+		params[fmt.Sprintf("Filter.%d.Name", idx)] = "block-device-mapping.volume-type"
+		params[fmt.Sprintf("Filter.%d.Value.1", idx)] = volumeType
+		idx++
+	}
+
+	if len(arch) > 0 {
+		params[fmt.Sprintf("Filter.%d.Name", idx)] = "architecture"
+		for i, v := range arch {
+			params[fmt.Sprintf("Filter.%d.Value.%d", idx, i+1)] = v
+		}
+		idx++
+	}
+	
+	if len(owners) > 0 || len(ownerIds) > 0 {
+		for i, owner := range imageOwnerTypes2Strings(owners, ownerIds) {
+			params[fmt.Sprintf("Owner.%d", i+1)] = string(owner)
+		}
+	}
+
+	for i, id := range imageId {
+		params[fmt.Sprintf("ImageId.%d", i+1)] = id
+	}
 
 	params[fmt.Sprintf("Filter.%d.Name", idx)] = "image-type"
 	params[fmt.Sprintf("Filter.%d.Value.1", idx)] = "machine"
 	idx++
-
-	params[fmt.Sprintf("Filter.%d.Name", idx)] = "architecture"
-	params[fmt.Sprintf("Filter.%d.Value.1", idx)] = "x86_64"
-	idx++
-
-	// params[fmt.Sprintf("Filter.%d.Name", idx)] = "root-device-type"
-	// params[fmt.Sprintf("Filter.%d.Value.1", idx)] = "ebs"
-	// idx++
-
-	// params[fmt.Sprintf("Filter.%d.Name", idx)] = "virtualization-type"
-	// params[fmt.Sprintf("Filter.%d.Value.1", idx)] = "hvm"
-	// idx++
-
-	// params[fmt.Sprintf("Filter.%d.Name", idx)] = "state"
-	// params[fmt.Sprintf("Filter.%d.Value.1", idx)] = "available "
-	// idx++
-
-	// if len(owners) > 0 || len(ownerIds) > 0 {
-	// 	for i, owner := range imageOwnerTypes2Strings(owners, ownerIds) {
-	// 		params[fmt.Sprintf("Owner.%d", i+1)] = string(owner)
-	// 	}
-	// }
-	params[fmt.Sprintf("Owner.%d", 1)] = "amazon"
 
 	ret := []SImage{}
 	for {
@@ -83,5 +122,22 @@ func (self *SRegion) getPublicImages(owners []TImageOwnerType, ownerIds []string
 		}
 		params["NextToken"] = part.NextToken
 	}
-	return ret, nil
+
+	noVersionImages := make([]SImage, 0)
+	versionedImages := make(map[string][]SImage)
+	for i := range ret {
+		key := fmt.Sprintf("%s%s", getImageOSDist(ret[i]), getImageOSVersion(ret[i]))
+		if len(key) == 0 {
+			noVersionImages = append(noVersionImages, ret[i])
+			continue
+		}
+		if _, ok := versionedImages[key]; !ok {
+			versionedImages[key] = make([]SImage, 0)
+		}
+		versionedImages[key] = append(versionedImages[key], ret[i])
+	}
+	for key := range versionedImages {
+		noVersionImages = append(noVersionImages, getLatestImage(versionedImages[key]))
+	}
+	return noVersionImages, nil
 }

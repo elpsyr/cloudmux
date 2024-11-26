@@ -184,6 +184,7 @@ func (self *SImage) GetId() string {
 }
 
 func (self *SImage) GetName() string {
+	return self.Description // modify by zhaeng 241120
 	if len(self.ImageName) > 0 {
 		return self.ImageName
 	}

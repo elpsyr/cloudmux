@@ -346,7 +346,7 @@ func (client *SAwsClient) fetchBuckets() error {
 // 只是使用fetchRegions初始化好的self.iregions. 本身并不从云服务器厂商拉取region信息
 func (self *SAwsClient) GetRegions() ([]SRegion, error) {
 	params := map[string]string{
-		"AllRegions": "true",
+		"AllRegions": "false", // modify by zhaeng true => false 241121
 	}
 	ret := struct {
 		RegionInfo []SRegion `xml:"regionInfo>item"`

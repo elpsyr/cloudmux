@@ -70,7 +70,7 @@ func (self *SAwsClient) GetEcsMetrics(opts *cloudprovider.MetricListOptions) ([]
 			"NetworkOut": "",
 		},
 	} {
-		part, err := self.getMetrics(opts.RegionExtId, "AWS/EC2", metricType, metricNames, "InstanceId", opts.ResourceId, opts.StartTime, opts.EndTime)
+		part, err := self.cfelGetMetrics(opts.RegionExtId, "AWS/EC2", opts.Interval, metricType, metricNames, "InstanceId", opts.ResourceId, opts.StartTime, opts.EndTime)
 		if err != nil {
 			log.Errorf("getMetrics error: %v", err)
 			continue

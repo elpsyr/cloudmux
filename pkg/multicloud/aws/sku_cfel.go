@@ -411,23 +411,47 @@ func (self *SRegion) DescribeInstanceTypeAvailable(instanceType, zone string) (b
 // https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeReservedInstancesOfferings.html
 func (self *SRegion) DescribeReservedInstancesOfferings(instanceType, zone string) (bool, error) {
 	params := map[string]string{
-		"AvailabilityZone": zone,
+		// "AvailabilityZone": zone,
+		"OfferingType":"All upfront",
+		"OfferingClass":"standard",
+		"ProductDescription":"Linux/UNIX",
+		"InstanceTenancy":"default",
+		"MaxInstanceCount":"100",
 	}
 
-	params["Filter.1.Name"] = "availability-zone"
-	params["Filter.1.Value.1"] = zone
-	params["Filter.2.Name"] = "instance-type"
-	params["Filter.2.Value.1"] = instanceType
+	// params["Filter.1.Name"] = "marketplace"
+	// params["Filter.1.Value.1"] = "true"
+	var idx = 1
+	params[fmt.Sprintf("Filter.%d.Name",idx)] = "scope"
+	params[fmt.Sprintf("Filter.%d.Value.1",idx)] = "Region"
+	idx ++
 
-	ret := struct {
-		InstanceTypeSet []InstanceTypeOffering `xml:"reservedInstancesOfferingsSet>item"`
-		NextToken       string                 `xml:"nextToken"`
-	}{}
-	err := self.ec2Request("DescribeReservedInstancesOfferings", params, &ret)
-	if err != nil {
-		return false, err
+	params[fmt.Sprintf("Filter.%d.Name",idx)] = "instance-type"
+	params[fmt.Sprintf("Filter.%d.Value.1",idx)] = instanceType
+	idx ++
+	
+	var nextToken string
+	var res []InstanceTypeOffering
+	for {
+		if len(nextToken) > 0 {
+			params["NextToken"] = nextToken
+		}
+		ret := struct {
+			InstanceTypeSet []InstanceTypeOffering `xml:"reservedInstancesOfferingsSet>item"`
+			NextToken       string                 `xml:"nextToken"`
+		}{}
+		_ = self.ec2Request("DescribeReservedInstancesOfferings", params, &ret)
+		if len(ret.InstanceTypeSet) > 0{
+			res = ret.InstanceTypeSet
+			break
+		}
+		nextToken = ret.NextToken
+		if ret.NextToken == "" {
+			break
+		}
 	}
-	return len(ret.InstanceTypeSet) > 0, nil
+	
+	return len(res) > 0, nil
 }
 
 func (self *SRegion) DescribeInstanceTypeOfferings(nextToken string) ([]InstanceTypeOffering, string, error) {

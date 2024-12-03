@@ -6,7 +6,7 @@ import (
 )
 
 func (s *SZone) GetCapability() (jsonutils.JSONObject, error) {
-	return modules.Zones.GetSpecific(s.region.cli.s, s.Id, "disk-capability", nil)
+	return modules.Zones.GetSpecific(s.region.cli.s, s.Id, "capability", nil)
 }
 
 func (s *SZone) GetICfelDiskType(string) (map[string]interface{}, error) {

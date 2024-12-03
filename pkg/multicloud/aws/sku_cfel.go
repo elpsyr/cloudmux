@@ -672,41 +672,30 @@ func (self *SRegion) GetICfelSkuPrice(opt *cloudprovider.CfelSkuPriceOptions) (m
 					}
 				}
 				// 一年价和三年价
-				var oneYearPrice, threeYearPrice float64
-				for _, term := range ret[0].Terms.Reserved {
-					attributes := term.TermAttributes
-					if attributes.LeaseContractLength == "1yr" && attributes.OfferingClass == "standard" && attributes.PurchaseOption == "All Upfront" {
-						for _, dimension := range term.PriceDimensions {
-							if dimension.Unit == "Quantity" {
-								oneYearPrice = dimension.PricePerUnit.Usd
-							}
-						}
-					}
-					if attributes.LeaseContractLength == "3yr" && attributes.OfferingClass == "standard" && attributes.PurchaseOption == "All Upfront" {
-						for _, dimension := range term.PriceDimensions {
-							if dimension.Unit == "Quantity" {
-								threeYearPrice = dimension.PricePerUnit.Usd
-							}
-						}
-					}
-				}
+				// var oneYearPrice, threeYearPrice float64
+				// for _, term := range ret[0].Terms.Reserved {
+				// 	attributes := term.TermAttributes
+				// 	if attributes.LeaseContractLength == "1yr" && attributes.OfferingClass == "standard" && attributes.PurchaseOption == "All Upfront" {
+				// 		for _, dimension := range term.PriceDimensions {
+				// 			if dimension.Unit == "Quantity" {
+				// 				oneYearPrice = dimension.PricePerUnit.Usd
+				// 			}
+				// 		}
+				// 	}
+				// 	if attributes.LeaseContractLength == "3yr" && attributes.OfferingClass == "standard" && attributes.PurchaseOption == "All Upfront" {
+				// 		for _, dimension := range term.PriceDimensions {
+				// 			if dimension.Unit == "Quantity" {
+				// 				threeYearPrice = dimension.PricePerUnit.Usd
+				// 			}
+				// 		}
+				// 	}
+				// }
 
+				// 包年包月都按小时价算
 				if opt.FeeUnit == "month" {
 					serverTotalPrice = hourPrice * 730 * float64(opt.Quantity) * float64(opt.Duration)
 				} else if opt.FeeUnit == "year" {
-					if oneYearPrice <= 0 {
-						oneYearPrice = hourPrice * 24 * 365
-					}
-					if threeYearPrice <= 0 {
-						threeYearPrice = hourPrice * 24 * 365
-					}
-					if opt.Duration == 1 {
-						serverTotalPrice = oneYearPrice
-					} else if opt.Duration == 3 {
-						serverTotalPrice = threeYearPrice
-					} else {
-						serverTotalPrice = oneYearPrice * float64(opt.Quantity) * float64(opt.Duration)
-					}
+					serverTotalPrice = hourPrice * 730 * 12 * float64(opt.Quantity) * float64(opt.Duration)
 				} else {
 					serverTotalPrice = hourPrice * float64(opt.Quantity) * float64(opt.Duration)
 				}
@@ -947,6 +936,7 @@ func (self *SRegion) GetPostPaidStatus(zoneID, instanceType string) (string, err
 }
 
 func (self *SRegion) GetPrePaidStatus(zoneID, instanceType string) (string, error) {
+	return self.GetPostPaidStatus(zoneID,instanceType) // aws只有包年而且和普通的按量付费是两个东西，所以包年包月直接按小时算，和后付费一样
 	available, err := self.DescribeReservedInstancesOfferings(instanceType, zoneID)
 	if err != nil {
 		return api.SkuStatusSoldout, errors.Wrapf(err, "DescribeReservedInstancesOfferings")

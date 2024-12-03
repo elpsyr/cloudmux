@@ -118,9 +118,7 @@ func (self *SBaiduClient) getUrl(service, regionId, resource string) (string, er
 	if len(regionId) == 0 {
 		regionId = BAIDU_DEFAULT_REGION
 	}
-	switch service {
-	case "bcc", "vpc", "subnet": // 云服务器BCC
-		return fmt.Sprintf("https://bcc.%s.baidubce.com/%s", regionId, strings.TrimPrefix(resource, "/")), nil
+	switch service {	
 	case "bbc":
 		return fmt.Sprintf("https://bbc.%s.baidubce.com/%s", regionId, strings.TrimPrefix(resource, "/")), nil
 	case "bos":
@@ -128,7 +126,7 @@ func (self *SBaiduClient) getUrl(service, regionId, resource string) (string, er
 	case "billing":
 		return fmt.Sprintf("https://billing.baidubce.com/%s", strings.TrimPrefix(resource, "/")), nil
 	default:
-		return "", errors.Wrapf(cloudprovider.ErrNotSupported, service)
+		return fmt.Sprintf("https://bcc.%s.baidubce.com/%s", regionId, strings.TrimPrefix(resource, "/")), nil
 	}
 }
 

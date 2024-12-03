@@ -22,12 +22,14 @@ type BccResources struct {
 }
 type FlavorGroups struct {
 	GroupID string     `json:"groupId"`
-	Flavors []SFlavors `json:"flavors"`
+	Flavors []Sku `json:"flavors"`
 }
 
-// SFlavors  实例规格 （instanceType）
-type SFlavors struct {
+// Sku  实例规格 （instanceType）
+type Sku struct {
 	multicloud.SInstanceBase
+	BaiduTags
+
 	CpuCount            int    `json:"cpuCount"`           // cpu数量
 	MemoryCapacityInGB  int    `json:"memoryCapacityInGB"` // 内存容量（单位：GB）
 	EphemeralDiskInGb   int    `json:"ephemeralDiskInGb"`  // 本地数据盘容量（单位：GB）
@@ -52,137 +54,120 @@ type SFlavors struct {
 }
 
 // Verify that *SInstanceType implements ICloudSku、ICloudSkuUltra
-var _ cloudprovider.ICfelCloudSku = (*SFlavors)(nil)
+var _ cloudprovider.ICfelCloudSku = (*Sku)(nil)
 
-func (S SFlavors) GetId() string {
+func (S Sku) GetId() string {
 	return S.Spec
 }
 
-func (S SFlavors) GetName() string {
+func (S Sku) GetName() string {
 	return S.Spec
 }
 
-func (S SFlavors) GetGlobalId() string {
+func (S Sku) GetGlobalId() string {
 	return S.Spec
 }
 
-func (S SFlavors) GetCreatedAt() time.Time {
+func (S Sku) GetCreatedAt() time.Time {
 	return time.Now()
 }
 
-func (S SFlavors) GetDescription() string {
+func (S Sku) GetDescription() string {
 	return ""
 }
 
-func (S SFlavors) GetStatus() string {
+func (S Sku) GetStatus() string {
 	return ""
 }
 
-func (S SFlavors) Refresh() error {
-	return nil
-}
 
-func (S SFlavors) IsEmulated() bool {
-	return false
-}
 
-func (S SFlavors) GetSysTags() map[string]string {
-	return nil
-}
 
-func (S SFlavors) GetTags() (map[string]string, error) {
-	return nil, nil
-}
-
-func (S SFlavors) SetTags(tags map[string]string, replace bool) error {
-	return nil
-}
-
-func (S SFlavors) GetZoneID() string {
+func (S Sku) GetZoneID() string {
 	return S.ZoneName
 }
 
-func (S SFlavors) GetInstanceTypeFamily() string {
+func (S Sku) GetInstanceTypeFamily() string {
 	return S.GroupID
 }
 
-func (S SFlavors) GetInstanceTypeCategory() string {
+func (S Sku) GetInstanceTypeCategory() string {
 	return S.GroupID
 }
 
-func (S SFlavors) GetPrepaidStatus() string {
+func (S Sku) GetPrepaidStatus() string {
 	return ""
 }
 
-func (S SFlavors) GetPostpaidStatus() string {
+func (S Sku) GetPostpaidStatus() string {
 	return ""
 }
 
-func (S SFlavors) GetCpuArch() string {
+func (S Sku) GetCpuArch() string {
 	return ""
 }
 
-func (S SFlavors) GetCpuCoreCount() int {
+func (S Sku) GetCpuCoreCount() int {
 	return S.CpuCount
 }
 
-func (S SFlavors) GetMemorySizeMB() int {
+func (S Sku) GetMemorySizeMB() int {
 	return S.MemoryCapacityInGB * 1024
 }
 
-func (S SFlavors) GetOsName() string {
+func (S Sku) GetOsName() string {
 	return ""
 }
 
-func (S SFlavors) GetSysDiskResizable() bool {
+func (S Sku) GetSysDiskResizable() bool {
 	return false
 }
 
-func (S SFlavors) GetSysDiskType() string {
+func (S Sku) GetSysDiskType() string {
 	return S.EphemeralDiskType
 }
 
-func (S SFlavors) GetSysDiskMinSizeGB() int {
+func (S Sku) GetSysDiskMinSizeGB() int {
 	return S.EphemeralDiskInGb
 }
 
-func (S SFlavors) GetSysDiskMaxSizeGB() int {
+func (S Sku) GetSysDiskMaxSizeGB() int {
 	return S.EphemeralDiskInGb
 }
 
-func (S SFlavors) GetAttachedDiskType() string {
+func (S Sku) GetAttachedDiskType() string {
 	return S.EphemeralDiskType
 }
 
-func (S SFlavors) GetAttachedDiskSizeGB() int {
+func (S Sku) GetAttachedDiskSizeGB() int {
 	return S.EphemeralDiskInGb
 }
 
-func (S SFlavors) GetAttachedDiskCount() int {
+func (S Sku) GetAttachedDiskCount() int {
 	return S.EphemeralDiskCount
 }
 
-func (S SFlavors) GetDataDiskTypes() string {
+func (S Sku) GetDataDiskTypes() string {
 	return S.EphemeralDiskType
 }
 
-func (S SFlavors) GetDataDiskMaxCount() int {
+func (S Sku) GetDataDiskMaxCount() int {
 	return 0
 }
 
-func (S SFlavors) GetNicType() string {
+func (S Sku) GetNicType() string {
 	return ""
 }
 
-func (S SFlavors) GetNicMaxCount() int {
+func (S Sku) GetNicMaxCount() int {
 	return S.NetEthMaxQueueCount
 }
 
-func (S SFlavors) GetGpuAttachable() bool {
+func (S Sku) GetGpuAttachable() bool {
 	return S.GpuCardCount != 0
 }
 
-func (S SFlavors) GetGpuSpec() string {
+func (S Sku) GetGpuSpec() string {
 
 	cardType, ok := gpuCardTypeMap[S.GpuCardType]
 	if ok {
@@ -191,24 +176,24 @@ func (S SFlavors) GetGpuSpec() string {
 	return S.GpuCardType
 }
 
-func (S SFlavors) GetGpuCount() string {
+func (S Sku) GetGpuCount() string {
 	return strconv.Itoa(S.GpuCardCount)
 }
 
-func (S SFlavors) GetGpuMaxCount() int {
+func (S Sku) GetGpuMaxCount() int {
 	return S.GpuCardCount
 }
 
-func (S SFlavors) Delete() error {
+func (S Sku) Delete() error {
 	return nil
 }
 
-func (S SFlavors) GetIsBareMetal() bool {
+func (S Sku) GetIsBareMetal() bool {
 	return false
 
 }
 
-func (S SFlavors) GetGPUMemorySizeMB() int {
+func (S Sku) GetGPUMemorySizeMB() int {
 	if S.GpuCardCount != 0 {
 		memorySize, ok := gpuCardMemorySizeMap[S.GpuCardType]
 		if ok {
@@ -243,7 +228,7 @@ var (
 
 // fetchFlavorSpec 查询实例套餐规格列表
 // https://cloud.baidu.com/doc/BCC/s/Xk3pb75k1
-func (region *SRegion) fetchFlavorSpec() ([]SFlavors, error) {
+func (region *SRegion) fetchFlavorSpec() ([]Sku, error) {
 	// zoneName	String	Query参数	可用区名称  非必填
 	body, err := region.client.list("bcc", region.Region, "/v2/instance/flavorSpec", nil, nil)
 	if err != nil {
@@ -256,7 +241,7 @@ func (region *SRegion) fetchFlavorSpec() ([]SFlavors, error) {
 		return nil, err
 	}
 
-	flavors := make([]SFlavors, 0)
+	flavors := make([]Sku, 0)
 	flavorMap := map[string]bool{}
 	for _, resource := range flavorSpecList.ZoneResources {
 		for _, group := range resource.BccResources.FlavorGroups {

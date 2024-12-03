@@ -99,14 +99,6 @@ func (self *SRegion) CreateEIP(opts *cloudprovider.SEip) (cloudprovider.ICloudEI
 	return nil, cloudprovider.ErrNotImplemented
 }
 
-func (region *SRegion) CreateISecurityGroup(conf *cloudprovider.SecurityGroupCreateInput) (cloudprovider.ICloudSecurityGroup, error) {
-	return nil, cloudprovider.ErrNotImplemented
-}
-
-func (region *SRegion) GetISecurityGroupById(secgroupId string) (cloudprovider.ICloudSecurityGroup, error) {
-	return nil, cloudprovider.ErrNotImplemented
-}
-
 func (region *SRegion) GetCapabilities() []string {
 	return region.client.GetCapabilities()
 }
@@ -119,12 +111,69 @@ func (self *SRegion) GetIEips() ([]cloudprovider.ICloudEIP, error) {
 	return nil, cloudprovider.ErrNotImplemented
 }
 
+func (self *SRegion) GetIHostById(id string) (cloudprovider.ICloudHost, error) {
+	zone, err := self.GetIZones()
+	if err != nil {
+		return nil, err
+	}
+	for i := range zone {
+		host, err := zone[i].GetIHostById(id)
+		if err == nil {
+			return host, nil
+		}
+	}
+	return nil, cloudprovider.ErrNotFound
+}
+
+func (self *SRegion) GetIVMById(id string) (cloudprovider.ICloudVM, error) {
+	var ret SInstance
+	return &ret, self.doGet(ServiceInstance, "/v2/instance/"+id, nil, &ret)
+}
+
+func (r *SRegion) GetIStorageById(id string) (cloudprovider.ICloudStorage, error) {
+	istores, err := r.GetIStorages()
+	if err != nil {
+		return nil, err
+	}
+	for i := range istores {
+		if istores[i].GetGlobalId() == id {
+			return istores[i], nil
+		}
+	}
+	return nil, cloudprovider.ErrNotFound
+}
+
+func (r *SRegion) GetIStorages() ([]cloudprovider.ICloudStorage, error) {
+	iStores := make([]cloudprovider.ICloudStorage, 0)
+
+	izones, err := r.GetIZones()
+	if err != nil {
+		return nil, err
+	}
+	for i := 0; i < len(izones); i += 1 {
+		iZoneStores, err := izones[i].GetIStorages()
+		if err != nil {
+			return nil, err
+		}
+		iStores = append(iStores, iZoneStores...)
+	}
+	return iStores, nil
+}
+
 func (self *SRegion) GetIZones() ([]cloudprovider.ICloudZone, error) {
 	return self.GetICfelZones()
 }
 
 func (self *SRegion) GetIZoneById(id string) (cloudprovider.ICloudZone, error) {
-	return nil, cloudprovider.ErrNotImplemented
+	if self.iZones == nil {
+		self._fetchZones()
+	}
+	for i := range self.iZones {
+		if self.iZones[i].GetGlobalId() == id {
+			return self.iZones[i], nil
+		}
+	}
+	return nil, cloudprovider.ErrNotFound
 }
 
 func (self *SRegion) doGet(service, resource string, query map[string]string, ret interface{}) error {
@@ -132,11 +181,46 @@ func (self *SRegion) doGet(service, resource string, query map[string]string, re
 	if err != nil {
 		return err
 	}
-	return res.Unmarshal(ret, service)
+	return res.Unmarshal(ret, service[:len(service)-1])
+}
+
+func (self *SRegion) doGetWithoutVal(service, resource string, query map[string]string) (jsonutils.JSONObject, error) {
+	res, err := self.client.request("GET", service, self.Region, resource, query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func (self *SRegion) doList(service, resource string, query map[string]string) (jsonutils.JSONObject, error) {
 	return self.client.request("GET", service, self.Region, resource, query, nil)
+}
+
+func (self *SRegion) doList1(service, resource string, query map[string]string, val interface{}) ([]interface{}, error) {
+	if query == nil {
+		query = make(map[string]string, 0)
+	}
+	var result []interface{}
+	for {
+		res, err := self.client.request("GET", service, self.Region, resource, query, nil)
+		if err != nil {
+			return nil, err
+		}
+		var ret = make(map[string]interface{})
+		err = res.Unmarshal(&ret)
+		if err != nil {
+			return nil, err
+		}
+		res.Unmarshal(&val, service)
+
+		result = append(result, val)
+		if isTruncate, ok := ret["isTruncated"]; ok && isTruncate.(bool) {
+			continue
+		} else {
+			break
+		}
+	}
+	return result, nil
 }
 
 func (self *SRegion) doPost(service, resource string, param map[string]interface{}) (jsonutils.JSONObject, error) {

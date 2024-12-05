@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"yunion.io/x/jsonutils"
@@ -51,6 +52,10 @@ type SRegion struct {
 	Type           string
 
 	storageCache *SStoragecache
+
+	// add by zhaeng
+	instanceStatus *string
+	mut            sync.Mutex
 }
 
 func (self *SRegion) GetClient() *SHuaweiClient {

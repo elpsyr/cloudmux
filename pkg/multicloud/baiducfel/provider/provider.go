@@ -99,6 +99,8 @@ func init() {
 type SBaiduProvider struct {
 	cloudprovider.SBaseProvider
 	client *baidu.SBaiduClient
+
+	sku interface{}
 }
 
 func (self *SBaiduProvider) GetSysInfo() (jsonutils.JSONObject, error) {

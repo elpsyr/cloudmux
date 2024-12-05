@@ -30,16 +30,24 @@ const ServiceSecurityGroups = "securityGroups"
 // CreateRule implements cloudprovider.ICloudSecurityGroup.
 // Subtle: this method shadows the method (SSecurityGroup).CreateRule of SSecurityGroup.SSecurityGroup.
 func (s *SSecurityGroup) CreateRule(opts *cloudprovider.SecurityGroupRuleCreateOptions) (cloudprovider.ISecurityGroupRule, error) {
+	var ports = opts.Ports
+	if len(opts.Ports) == 0 {
+		ports = "1-65535"
+	}
+	var directon = "egress"
+	if opts.Direction == "in" {
+		directon = "ingress"
+	}
 	var params = map[string]interface{}{
 		"rule": map[string]string{
-			"remark":        opts.Desc,
-			"protocol":      strings.ToLower(opts.Protocol),
-			"portRange":     opts.Ports,
-			"direction":     string(opts.Direction),
-			"sourceIp":      opts.CIDR,
+			"remark":    opts.Desc,
+			"protocol":  strings.ToLower(opts.Protocol),
+			"portRange": ports,
+			"direction": string(directon),
+			"sourceIp":  opts.CIDR,
 			// "sourceGroupId": s.ID,
 		},
-		"securityGroupId":s.ID,
+		"securityGroupId": s.ID,
 	}
 	_, err := s.region.doPut(ServiceSecurityGroups, "/v2/securityGroup/"+s.ID+"?authorizeRule", params)
 	if err != nil {
@@ -50,7 +58,7 @@ func (s *SSecurityGroup) CreateRule(opts *cloudprovider.SecurityGroupRuleCreateO
 
 // Delete implements cloudprovider.ICloudSecurityGroup.
 func (s *SSecurityGroup) Delete() error {
-	return s.region.doDelete(ServiceSecurityGroups,"/v2/securityGroup/" + s.ID)
+	return s.region.doDelete(ServiceSecurityGroups, "/v2/securityGroup/"+s.ID)
 }
 
 // GetGlobalId implements cloudprovider.ICloudSecurityGroup.
@@ -98,7 +106,7 @@ func (region *SRegion) CreateISecurityGroup(conf *cloudprovider.SecurityGroupCre
 		return nil, err
 	}
 	id, _ := res.GetString("securityGroupId")
-	return &SSecurityGroup{ID: id, Name: conf.Name}, nil
+	return &SSecurityGroup{ID: id, Name: conf.Name, region: region}, nil
 }
 
 func (region *SRegion) GetISecurityGroupById(secgroupId string) (cloudprovider.ICloudSecurityGroup, error) {

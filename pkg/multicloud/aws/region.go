@@ -164,6 +164,13 @@ type SRegion struct {
 	RegionEndpoint string `xml:"regionEndpoint"`
 	RegionId       string `xml:"regionName"`
 	OptInStatus    string `xml:"optInStatus"`
+
+	// add by zhaeng 
+	instanceAvailable *bool
+	mut sync.Mutex
+
+	instanceType *SInstanceType
+	instanceMut sync.Mutex
 }
 
 /////////////////////////////////////////////////////////////////////////////

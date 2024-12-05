@@ -356,7 +356,7 @@ func (s *SInstance) GetStatus() string {
 		return api.VM_RUNNING
 	case "Stopped":
 		return api.VM_READY
-	case "Starting", "REBOOTING":
+	case "Starting":
 		return api.VM_STARTING
 	case "Stopping":
 		return api.VM_STOPPING

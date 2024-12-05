@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/tencentyun/cos-go-sdk-v5"
@@ -49,6 +50,9 @@ type SRegion struct {
 	Latitude      float64
 	Longitude     float64
 	fetchLocation bool
+
+	instanceConfigInfo *DescribeInstanceConfigInfosUnmarshal //存放规格信息，减少请求 add by zhaeng
+	mux sync.Mutex // 同步价格是并发执行，需要对上面的变量加锁 add by zhaeng
 }
 
 // 腾讯云不支持acl

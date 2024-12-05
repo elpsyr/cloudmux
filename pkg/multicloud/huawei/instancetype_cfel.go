@@ -562,6 +562,12 @@ func (self *SRegion) GetPrePaidStatus(zoneID, instanceType string) (string, erro
 // obt_sellout：公测售罄
 // promotion：推荐(等同 normal，也是商用 )
 func (self *SRegion) GetInstanceTypeStatus(zoneId, instanceTypeName string) (string, error) {
+	self.mut.Lock()
+	defer self.mut.Unlock()
+
+	if self.instanceStatus != nil {
+		return *self.instanceStatus,nil
+	}
 	skus, err := self.GetInstanceTypes(zoneId)
 	if err != nil {
 		return "", errors.Wrapf(err, "fetchInstanceTypes")
@@ -573,6 +579,7 @@ func (self *SRegion) GetInstanceTypeStatus(zoneId, instanceTypeName string) (str
 			break
 		}
 	}
+	var status = api.SkuStatusSoldout
 	if len(ret) > 0 {
 
 		var retSkuStatus string
@@ -592,17 +599,22 @@ func (self *SRegion) GetInstanceTypeStatus(zoneId, instanceTypeName string) (str
 		}
 		switch retSkuStatus {
 		case "normal", "promotion":
-			return api.SkuStatusAvailable, nil
+			status = api.SkuStatusAvailable
+			// return api.SkuStatusAvailable, nil
 		case "sellout":
-			return api.SkuStatusSoldout, nil
+			status = api.SkuStatusSoldout
+			// return api.SkuStatusSoldout, nil
 		case "obt", "obt_sellout", "abandon":
-			return api.CfelSkuStatusAbandon, nil
+			status = api.CfelSkuStatusAbandon
+			// return api.CfelSkuStatusAbandon, nil
 		default:
-			return api.SkuStatusSoldout, nil
+			status = api.SkuStatusSoldout
+			// return api.SkuStatusSoldout, nil
 		}
 	}
+	self.instanceStatus = &status
 	// 没有查询到对应 zone instanceType
-	return api.SkuStatusSoldout, nil
+	return status, nil
 }
 
 // GetICfelSkuPrice 实例询价

@@ -386,6 +386,12 @@ type InstanceTypeOffering struct {
 // DescribeInstanceTypeAvailable
 // 查询指定 instanceType 在zone 下是否售卖
 func (self *SRegion) DescribeInstanceTypeAvailable(instanceType, zone string) (bool, error) {
+	self.mut.Lock()
+	defer self.mut.Unlock()
+
+	if self.instanceAvailable != nil {
+		return *self.instanceAvailable, nil
+	}
 	params := map[string]string{
 		"LocationType": "availability-zone",
 	}
@@ -403,7 +409,9 @@ func (self *SRegion) DescribeInstanceTypeAvailable(instanceType, zone string) (b
 	if err != nil {
 		return false, err
 	}
-	return len(ret.InstanceTypeSet) > 0, nil
+	var res = len(ret.InstanceTypeSet) > 0
+	self.instanceAvailable = &res
+	return res, nil
 }
 
 // DescribeReservedInstancesOfferings
@@ -412,24 +420,24 @@ func (self *SRegion) DescribeInstanceTypeAvailable(instanceType, zone string) (b
 func (self *SRegion) DescribeReservedInstancesOfferings(instanceType, zone string) (bool, error) {
 	params := map[string]string{
 		// "AvailabilityZone": zone,
-		"OfferingType":"All upfront",
-		"OfferingClass":"standard",
-		"ProductDescription":"Linux/UNIX",
-		"InstanceTenancy":"default",
-		"MaxInstanceCount":"100",
+		"OfferingType":       "All upfront",
+		"OfferingClass":      "standard",
+		"ProductDescription": "Linux/UNIX",
+		"InstanceTenancy":    "default",
+		"MaxInstanceCount":   "100",
 	}
 
 	// params["Filter.1.Name"] = "marketplace"
 	// params["Filter.1.Value.1"] = "true"
 	var idx = 1
-	params[fmt.Sprintf("Filter.%d.Name",idx)] = "scope"
-	params[fmt.Sprintf("Filter.%d.Value.1",idx)] = "Region"
-	idx ++
+	params[fmt.Sprintf("Filter.%d.Name", idx)] = "scope"
+	params[fmt.Sprintf("Filter.%d.Value.1", idx)] = "Region"
+	idx++
 
-	params[fmt.Sprintf("Filter.%d.Name",idx)] = "instance-type"
-	params[fmt.Sprintf("Filter.%d.Value.1",idx)] = instanceType
-	idx ++
-	
+	params[fmt.Sprintf("Filter.%d.Name", idx)] = "instance-type"
+	params[fmt.Sprintf("Filter.%d.Value.1", idx)] = instanceType
+	idx++
+
 	var nextToken string
 	var res []InstanceTypeOffering
 	for {
@@ -441,7 +449,7 @@ func (self *SRegion) DescribeReservedInstancesOfferings(instanceType, zone strin
 			NextToken       string                 `xml:"nextToken"`
 		}{}
 		_ = self.ec2Request("DescribeReservedInstancesOfferings", params, &ret)
-		if len(ret.InstanceTypeSet) > 0{
+		if len(ret.InstanceTypeSet) > 0 {
 			res = ret.InstanceTypeSet
 			break
 		}
@@ -450,7 +458,7 @@ func (self *SRegion) DescribeReservedInstancesOfferings(instanceType, zone strin
 			break
 		}
 	}
-	
+
 	return len(res) > 0, nil
 }
 
@@ -763,9 +771,16 @@ func (self *SRegion) ListPriceLists() (*SInstanceType, error) {
 	}
 }
 
+var noResultErr = errors.Errorf("No Result")
 // Price
 
 func (self *SRegion) GetInstanceTypePrice(instanceType string) (*SInstanceType, error) {
+	self.instanceMut.Lock()
+	defer self.instanceMut.Unlock()
+
+	if self.instanceType != nil {
+		return self.instanceType, nil
+	}
 	filters := map[string]string{
 		"regionCode":     self.RegionId,
 		"operation":      "RunInstances",
@@ -798,9 +813,10 @@ func (self *SRegion) GetInstanceTypePrice(instanceType string) (*SInstanceType, 
 		nextToken = _nextToken
 	}
 	if len(ret) > 0 {
+		self.instanceType = &ret[0]
 		return &ret[0], nil
 	} else {
-		return nil, errors.Errorf("No Result")
+		return nil, noResultErr
 	}
 }
 
@@ -871,6 +887,9 @@ func (self *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) (float64,
 func (self *SRegion) GetPostPaidPrice(zoneID, instanceType string) (float64, error) {
 	price, err := self.GetInstanceTypePrice(instanceType)
 	if err != nil {
+		if err == noResultErr {
+			return -1,nil
+		}
 		return -1, errors.Wrapf(err, "GetInstanceTypePrice")
 	}
 	var value float64
@@ -896,6 +915,9 @@ Partial Upfront (部分预付费)： 这是一种折中的选择，您需要在�
 func (self *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, error) {
 	price, err := self.GetInstanceTypePrice(instanceType)
 	if err != nil {
+		if err == noResultErr {
+			return -1,nil
+		}
 		return -1, errors.Wrapf(err, "GetInstanceTypePrice")
 	}
 	var value float64
@@ -936,7 +958,7 @@ func (self *SRegion) GetPostPaidStatus(zoneID, instanceType string) (string, err
 }
 
 func (self *SRegion) GetPrePaidStatus(zoneID, instanceType string) (string, error) {
-	return self.GetPostPaidStatus(zoneID,instanceType) // aws只有包年而且和普通的按量付费是两个东西，所以包年包月直接按小时算，和后付费一样
+	return self.GetPostPaidStatus(zoneID, instanceType) // aws只有包年而且和普通的按量付费是两个东西，所以包年包月直接按小时算，和后付费一样
 	available, err := self.DescribeReservedInstancesOfferings(instanceType, zoneID)
 	if err != nil {
 		return api.SkuStatusSoldout, errors.Wrapf(err, "DescribeReservedInstancesOfferings")

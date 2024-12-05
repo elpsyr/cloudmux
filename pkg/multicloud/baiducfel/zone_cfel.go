@@ -132,6 +132,9 @@ func (r *SZone) GetICfelDiskType(dt string) (map[string]interface{}, error) {
 		if dt == "sys" {
 			min, max = 40, 500
 		}
+		if dt == "sys" && val.StorageType == "enhanced_ssd_pl2" {
+			min = 462
+		}
 		if val.StorageType == "ssd" {
 			val.StorageType = "hp1"
 		}

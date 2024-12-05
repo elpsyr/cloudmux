@@ -22,6 +22,10 @@ type imgResp struct {
 	Images      []SImage `json:"images"`
 }
 
+func (r *SRegion) GetICfelCloudImageById(id string) (cloudprovider.ICloudImage, error) {
+	return nil, nil
+}
+
 func (self *SRegion) GetInstanceMatchImage(instanceType string) ([]cloudprovider.ICloudImage, error) {
 	var query = map[string]string{
 		"spec":    instanceType,

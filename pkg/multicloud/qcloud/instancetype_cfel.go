@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/cloudmux/pkg/multicloud"
@@ -246,6 +247,12 @@ func (self *SRegion) GetAvailableInstanceTypes() ([]SInstanceType, error) {
 // GetInstanceTypesPrice 获取 instanceType 价格
 // 获取 zone 下对应 instance-type 的 规格以及价格信息
 func (self *SRegion) GetInstanceTypesPrice(zoneID, instanceType string) (*DescribeInstanceConfigInfosUnmarshal, error) {
+	self.mux.Lock()
+	defer self.mux.Unlock()
+
+	if self.instanceConfigInfo != nil {
+		return self.instanceConfigInfo, nil
+	}
 	params := make(map[string]string)
 	params["Region"] = self.Region
 	params["Filters.0.Name"] = "zone"
@@ -267,6 +274,7 @@ func (self *SRegion) GetInstanceTypesPrice(zoneID, instanceType string) (*Descri
 		log.Errorf("Unmarshal instance type details fail %s", err)
 		return nil, err
 	}
+	self.instanceConfigInfo = allInfo
 	return allInfo, nil
 }
 

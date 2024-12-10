@@ -16,6 +16,7 @@ package baiducfel
 
 import (
 	"fmt"
+	"sync"
 
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
@@ -42,6 +43,9 @@ type SRegion struct {
 	Region     string
 	RegionName string
 	SCfelRegion
+
+	instanceType []Sku
+	mut          sync.Mutex
 }
 
 func (self *SRegion) GetId() string {
@@ -127,7 +131,12 @@ func (self *SRegion) GetIHostById(id string) (cloudprovider.ICloudHost, error) {
 
 func (self *SRegion) GetIVMById(id string) (cloudprovider.ICloudVM, error) {
 	var ret SInstance
-	return &ret, self.doGet(ServiceInstance, "/v2/instance/"+id, nil, &ret)
+	err := self.doGet(ServiceInstance, "/v2/instance/"+id, nil, &ret)
+	if err != nil {
+		return nil, err
+	}
+	ret.region = self
+	return &ret, nil
 }
 
 func (r *SRegion) GetIStorageById(id string) (cloudprovider.ICloudStorage, error) {

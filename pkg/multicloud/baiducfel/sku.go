@@ -3,10 +3,10 @@ package baiducfel
 import (
 	"strconv"
 	"time"
+
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/cloudmux/pkg/multicloud"
-	"yunion.io/x/pkg/errors"
 )
 
 // FlavorSpecList 实例套餐规格列表对象
@@ -21,8 +21,8 @@ type BccResources struct {
 	FlavorGroups []FlavorGroups `json:"flavorGroups"`
 }
 type FlavorGroups struct {
-	GroupID string     `json:"groupId"`
-	Flavors []Sku `json:"flavors"`
+	GroupID string `json:"groupId"`
+	Flavors []Sku  `json:"flavors"`
 }
 
 // Sku  实例规格 （instanceType）
@@ -79,9 +79,6 @@ func (S Sku) GetDescription() string {
 func (S Sku) GetStatus() string {
 	return ""
 }
-
-
-
 
 func (S Sku) GetZoneID() string {
 	return S.ZoneName
@@ -263,18 +260,6 @@ func (region *SRegion) fetchFlavorSpec() ([]Sku, error) {
 	return flavors, nil
 }
 
-func (self *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
-	skus, err := self.fetchFlavorSpec()
-	if err != nil {
-		return nil, errors.Wrapf(err, "fetchFlavorSpec")
-	}
-	var ret []cloudprovider.ICfelCloudSku
-	for i := range skus {
-		ret = append(ret, &skus[i])
-	}
-	return ret, nil
-}
-
 // fetchInstanceTypePrice 查询实例套餐价格
 // https://cloud.baidu.com/doc/BCC/s/ijwvyo9im
 // 请求参数
@@ -331,8 +316,82 @@ type Price struct {
 // Verify that *SRegion implements ICfelCloudRegion
 var _ cloudprovider.ICfelCloudRegion = (*SRegion)(nil)
 
+// https://cloud.baidu.com/doc/BCC/s/6jwvyo0q2#instancetype
+var instanceTypeMap = map[string]string{
+	"g1":   "N1",
+	"c1":   "N1",
+	"ic1":  "N1",
+	"m1":   "N1",
+	"g2":   "N2",
+	"c2":   "N2",
+	"ic2":  "N2",
+	"m2":   "N2",
+	"g3":   "N3",
+	"c3":   "N3",
+	"ic3":  "N3",
+	"m3":   "N3",
+	"g3ne": "N4",
+	"c3ne": "N4",
+	"m3ne": "N4",
+	"g4":   "N5",
+	"c4":   "N5",
+	"ic4":  "N5",
+	"m4":   "N5",
+	"g5":   "N6",
+	"c5":   "N6",
+	"ic5":  "N6",
+	"m5":   "N6",
+	"hcc1": "C1",
+	"hcg1": "C1",
+	"hcc2": "C2",
+	"hcg2": "C2",
+	"l1":   "S1",
+}
+
+type spotPrice struct {
+	Money    float64
+	Count    int
+	PerMoney float64
+}
+
 func (region *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) (float64, error) {
-	return -1, nil
+
+	return region.GetSpotPrice(zoneID, instanceType, "", 0)
+}
+
+func (region *SRegion) GetSpotPrice(zoneID, instanceType, sysDiskType string, sysDiskSize int) (float64, error) {
+	skus, err := region.getInstanceType(zoneID, instanceType)
+	if err != nil {
+		return -1, err
+	}
+	if len(skus) == 0 {
+		return -1, nil
+	}
+	instanceType, ok := instanceTypeMap[skus[0].SpecID]
+	if !ok {
+		return -1, nil
+	}
+	var params = map[string]interface{}{
+		"instanceType":       instanceType,
+		"cpuCount":           skus[0].CpuCount,
+		"memoryCapacityInGB": skus[0].MemoryCapacityInGB,
+		"purchaseCount":      1,
+	}
+	if len(sysDiskType) > 0 {
+		params["rootDiskStorageType"] = sysDiskType
+	}
+	if sysDiskSize > 0 {
+		params["rootDiskSizeInGb"] = sysDiskSize
+	}
+	res, err := region.doPost(ServiceInstance, "/v2/instance/bidPrice", params)
+	if err != nil {
+		return -1, err
+	}
+	var price spotPrice
+	if err = res.Unmarshal(&price); err != nil {
+		return -1, err
+	}
+	return float64(price.PerMoney) * 60, nil
 }
 
 func (region *SRegion) GetPostPaidPrice(zoneID, instanceType string) (float64, error) {
@@ -349,15 +408,78 @@ func (region *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, er
 }
 
 func (region *SRegion) GetSpotPostPaidStatus(zoneID, instanceType string) (string, error) {
+	skus, err := region.getInstanceType(zoneID, instanceType)
+	if err != nil {
+		return api.SkuStatusSoldout, nil
+	}
+	for _, sku := range skus {
+		if sku.ProductType == "bidding" {
+			return api.SkuStatusAvailable, nil
+		}
+	}
 	return api.SkuStatusSoldout, nil
 }
 
 // 目前获取 instanceType 获取到的数据皆为可购买字段，所以实例的可购买状态皆为  available
 
 func (region *SRegion) GetPostPaidStatus(zoneID, instanceType string) (string, error) {
-	return api.SkuStatusAvailable, nil
+	skus, err := region.getInstanceType(zoneID, instanceType)
+	if err != nil {
+		return api.SkuStatusSoldout, nil
+	}
+	for _, sku := range skus {
+		if sku.ProductType == "Postpaid" {
+			return api.SkuStatusAvailable, nil
+		}
+	}
+	return api.SkuStatusSoldout, nil
 }
 
 func (region *SRegion) GetPrePaidStatus(zoneID, instanceType string) (string, error) {
-	return api.SkuStatusAvailable, nil
+	skus, err := region.getInstanceType(zoneID, instanceType)
+	if err != nil {
+		return api.SkuStatusSoldout, nil
+	}
+	for _, sku := range skus {
+		if sku.ProductType == "Prepaid" {
+			return api.SkuStatusAvailable, nil
+		}
+	}
+	return api.SkuStatusSoldout, nil
+}
+
+func (region *SRegion) getInstanceType(zoneID, instanceType string) ([]Sku, error) {
+	region.mut.Lock()
+	defer region.mut.Unlock()
+
+	if region.instanceType != nil {
+		return region.instanceType, nil
+	}
+	// zoneName	String	Query参数	可用区名称  非必填
+	var query = map[string]string{
+		"zoneName": zoneID,
+		"specs":    instanceType,
+	}
+	body, err := region.client.list("bcc", region.Region, "/v2/instance/flavorSpec", query, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	flavorSpecList := new(FlavorSpecList)
+	err = body.Unmarshal(&flavorSpecList)
+	if err != nil {
+		return nil, err
+	}
+	flavors := make([]Sku, 0)
+	for _, resource := range flavorSpecList.ZoneResources {
+		for _, group := range resource.BccResources.FlavorGroups {
+			for _, flavor := range group.Flavors {
+				flavor.ZoneName = resource.ZoneName
+				flavor.GroupID = group.GroupID
+				flavors = append(flavors, flavor)
+			}
+		}
+	}
+	region.instanceType = flavors
+	return flavors, nil
 }

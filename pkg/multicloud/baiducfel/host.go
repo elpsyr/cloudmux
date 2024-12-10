@@ -46,35 +46,7 @@ func (s *SHost) CreateVM(opts *cloudprovider.SManagedVMCreateConfig) (cloudprovi
 			tags = append(tags, BaiduTags{TagKey: strings.ReplaceAll(k, ":", "/"), TagValue: v})
 		}
 	}
-	var billing = billing{
-		PaymentTiming: "Postpaid", // 预支付（Prepaid）和后支付（Postpaid）
-	}
-	if bc := opts.BillingCycle; bc != nil { // 预付费 prepaid
-		if bc.Unit == "W" {
-			return nil, errors.New("only support Month and duration in [1,2,3,4,5,6,7,8,9,12,24,36]")
-		}
-		var count = bc.Count
-		
-		if bc.Unit == "Y" { //转换成月
-			count = bc.Count * 12
-		}
-		if !slices.Contains(duration, count) {
-			return nil, errors.New("only support Month and duration in [1,2,3,4,5,6,7,8,9,12,24,36]")
-		}
-		billing.PaymentTiming = "Prepaid"
-		billing.Reservation = reservation{
-			ReservationLength:   count,
-			ReservationTimeUnit: "Month",
-		}
-	}
-	var password string
-	var err error
-	if opts.Password != "" {
-		password, err = Aes128EncryptUseSecreteKey(s.zone.region.client.accessKeySecret, opts.Password)
-		if err != nil {
-			return nil, err
-		}
-	}
+
 	var params = map[string]interface{}{
 		"spec":                opts.InstanceType,
 		"rootDiskSizeInGb":    opts.SysDisk.SizeGB,
@@ -84,26 +56,63 @@ func (s *SHost) CreateVM(opts *cloudprovider.SManagedVMCreateConfig) (cloudprovi
 		"hostname":            opts.Hostname,
 		// "autoSeqSuffix": autoSeqSuffix,
 		// "isOpenHostnameDomain": isOpenHostnameDomain,
-		"imageId":          opts.ExternalImageId,
-		"billing":          billing,
+		"imageId": opts.ExternalImageId,
+		// "billing":          billing,
 		"zoneName":         s.zone.ZoneName,
 		"subnetId":         opts.ExternalNetworkId,
 		"securityGroupIds": opts.ExternalSecgroupIds,
 		"tags":             tags,
 		"userData":         opts.UserData,
-		// "keypairId": "",
-		// "aspId": "aspId",
-		// "specId": "specId", //规格族
-		// "resGroupId": "resGroupId",
-		// "ehcClusterId": "ehcClusterId"
 	}
-	if password != "" {
+
+	if opts.Password != "" {
+		password, err := Aes128EncryptUseSecreteKey(s.zone.region.client.accessKeySecret, opts.Password)
+		if err != nil {
+			return nil, err
+		}
 		params["adminPass"] = password
 	}
-	res, err := s.zone.region.doPost(ServiceInstance, "/v2/instanceBySpec", params)
+
+	var res jsonutils.JSONObject
+	var err error
+
+	ct, ok := opts.Tags[cloudprovider.InstanceChargeTypeTag]
+	if ok && ct == cloudprovider.InstanceChargeTypeSpotPaid {
+		params["bidModel"] = "market" // 以市场抢占价格
+		res, err = s.zone.region.doPost(ServiceInstance, "/v2/instance/bid", params)
+	} else {
+		var billing = billing{
+			PaymentTiming: "Postpaid", // 预支付（Prepaid）和后支付（Postpaid）
+		}
+		if bc := opts.BillingCycle; bc != nil { // 预付费 prepaid
+			if bc.Unit == "W" {
+				return nil, errors.New("only support Month and duration in [1,2,3,4,5,6,7,8,9,12,24,36]")
+			}
+			var count = bc.Count
+
+			if bc.Unit == "Y" { //转换成月
+				count = bc.Count * 12
+			}
+			if !slices.Contains(duration, count) {
+				return nil, errors.New("only support Month and duration in [1,2,3,4,5,6,7,8,9,12,24,36]")
+			}
+			billing.PaymentTiming = "Prepaid"
+			billing.Reservation = reservation{
+				ReservationLength:   count,
+				ReservationTimeUnit: "Month",
+			}
+		}
+
+		params["billing"] = billing
+
+		res, err = s.zone.region.doPost(ServiceInstance, "/v2/instanceBySpec", params)
+	}
+
+	
 	if err != nil {
 		return nil, err
 	}
+
 	var ids []string
 	if err = res.Unmarshal(&ids, "instanceIds"); err != nil {
 		return nil, err

@@ -118,9 +118,11 @@ func (self *SBaiduClient) getUrl(service, regionId, resource string) (string, er
 	if len(regionId) == 0 {
 		regionId = BAIDU_DEFAULT_REGION
 	}
-	switch service {	
+	switch service {
 	case "bbc":
 		return fmt.Sprintf("https://bbc.%s.baidubce.com/%s", regionId, strings.TrimPrefix(resource, "/")), nil
+	case "bcm":
+		return fmt.Sprintf("https://bcm.%s.baidubce.com/%s", regionId, strings.TrimPrefix(resource, "/")), nil
 	case "bos":
 		return fmt.Sprintf("https://%s.bcebos.com", regionId), nil
 	case "billing":

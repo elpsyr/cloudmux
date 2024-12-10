@@ -113,8 +113,8 @@ func (self *SRegion) GetICfelSkuPrice(opt *cloudprovider.CfelSkuPriceOptions) (m
 		"duration":    opt.Duration,
 		"quantity":    opt.Quantity,
 		"bootVolume": map[string]interface{}{
-			"size":       opt.SysDiskSize,
-			"volumeType": opt.SysDiskType,
+			"size":       opt.DiskSize,
+			"volumeType": opt.DiskType,
 		},
 	}
 	req := NewConsoleRequest(self.ID, "/api/openapi-ecs/acl/v3/server/query/price", nil, jsonutils.Marshal(param))

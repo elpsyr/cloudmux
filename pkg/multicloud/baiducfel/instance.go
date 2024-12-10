@@ -394,7 +394,20 @@ func (s *SInstance) GetVmemSizeMB() int {
 
 // RebuildRoot implements cloudprovider.ICloudVM.
 func (s *SInstance) RebuildRoot(ctx context.Context, config *cloudprovider.SManagedVMRebuildRootConfig) (string, error) {
-	panic("unimplemented")
+
+	var params = map[string]interface{}{
+		"imageId": config.ImageId,
+		// "adminPass":"adminPass",
+	}
+	if config.Password != "" {
+		password, err := Aes128EncryptUseSecreteKey(s.host.zone.region.client.accessKeySecret, config.Password)
+		if err != nil {
+			return "", nil
+		}
+		params["adminPass"] = password
+	}
+	_, err := s.host.zone.region.doPut(ServiceInstance, "/v2/instance/"+s.ID+"?rebuild", params)
+	return "", err
 }
 
 // SetSecurityGroups implements cloudprovider.ICloudVM.

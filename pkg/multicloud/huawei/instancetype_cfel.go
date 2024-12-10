@@ -650,13 +650,13 @@ func (self *SRegion) GetICfelSkuPrice(opt *cloudprovider.CfelSkuPriceOptions) (m
 					"id":                 "2",
 					"cloud_service_type": "hws.service.type.ebs",
 					"resource_type":      "hws.resource.type.volume",
-					"resource_spec":      opt.SysDiskType,
+					"resource_spec":      opt.DiskType,
 					"region":             self.Id,
 					"usage_factor":       "Duration",
 					"usage_value":        1,
 					"usage_measure_id":   4,               // 4 代表小时为单位
 					"subscription_num":   1,               // 订购数量。
-					"resource_size":      opt.SysDiskSize, // 资源容量大小，例如购买的卷大小或带宽大小。 线性产品时此参数必填。线性产品为包括硬盘，带宽等在订购时需要指定大小的产品。例如硬盘在订购时需选择10G、20G等不同大小。
+					"resource_size":      opt.DiskSize, // 资源容量大小，例如购买的卷大小或带宽大小。 线性产品时此参数必填。线性产品为包括硬盘，带宽等在订购时需要指定大小的产品。例如硬盘在订购时需选择10G、20G等不同大小。
 					"size_measure_id":    17,              // 资源容量度量标识，枚举值,17：GB（购买云硬盘时使用）
 				},
 			},
@@ -693,9 +693,9 @@ func (self *SRegion) GetICfelSkuPrice(opt *cloudprovider.CfelSkuPriceOptions) (m
 					"id":                 "2",
 					"cloud_service_type": "hws.service.type.ebs",
 					"resource_type":      "hws.resource.type.volume",
-					"resource_spec":      opt.SysDiskType,
+					"resource_spec":      opt.DiskType,
 					"region":             self.Id,
-					"resource_size":      opt.SysDiskSize,
+					"resource_size":      opt.DiskSize,
 					"size_measure_id":    17, // 资源容量度量标识，枚举值,17：GB（购买云硬盘时使用）
 					"period_type":        period_type,
 					"period_num":         opt.Duration,
@@ -724,13 +724,13 @@ func (self *SRegion) GetICfelSkuPrice(opt *cloudprovider.CfelSkuPriceOptions) (m
 					"id":                 "2",
 					"cloud_service_type": "hws.service.type.ebs",
 					"resource_type":      "hws.resource.type.volume",
-					"resource_spec":      opt.SysDiskType,
+					"resource_spec":      opt.DiskType,
 					"region":             self.Id,
 					"usage_factor":       "Duration",
 					"usage_value":        1,
 					"usage_measure_id":   4,               // 4 代表小时为单位
 					"subscription_num":   1,               // 订购数量。
-					"resource_size":      opt.SysDiskSize, // 资源容量大小，例如购买的卷大小或带宽大小。 线性产品时此参数必填。线性产品为包括硬盘，带宽等在订购时需要指定大小的产品。例如硬盘在订购时需选择10G、20G等不同大小。
+					"resource_size":      opt.DiskSize, // 资源容量大小，例如购买的卷大小或带宽大小。 线性产品时此参数必填。线性产品为包括硬盘，带宽等在订购时需要指定大小的产品。例如硬盘在订购时需选择10G、20G等不同大小。
 					"size_measure_id":    17,              // 资源容量度量标识，枚举值,17：GB（购买云硬盘时使用）
 				},
 			},

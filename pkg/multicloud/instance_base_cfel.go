@@ -25,3 +25,7 @@ func (self *SInstanceBase) GetCfelHypervisor() string {
 func (self *SInstanceBase) GetSSHInfo() (*cloudprovider.ServerSSHInfo, error) {
 	return nil, cloudprovider.ErrNotImplemented
 }
+
+func (self *SInstanceBase) GetVncUrl() (string, error) {
+	return "", cloudprovider.ErrNotImplemented
+}

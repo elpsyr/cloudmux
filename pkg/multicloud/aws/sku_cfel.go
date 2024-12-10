@@ -580,8 +580,8 @@ func (self *SRegion) GetICfelSkuPrice(opt *cloudprovider.CfelSkuPriceOptions) (m
 	go func() {
 		filters := map[string]string{
 			"regionCode":    self.RegionId,
-			"volumeType":    diskMap[opt.SysDiskType],
-			"volumeApiName": opt.SysDiskType,
+			"volumeType":    diskMap[opt.DiskType],
+			"volumeApiName": opt.DiskType,
 		}
 		parts, _, err := self.GetProducts("AmazonEC2", getParams(filters), "")
 		if err != nil {
@@ -599,18 +599,18 @@ func (self *SRegion) GetICfelSkuPrice(opt *cloudprovider.CfelSkuPriceOptions) (m
 			}
 		}
 		if opt.FeeUnit == "month" {
-			volumeTotalPrice = volumePrice * float64(opt.SysDiskSize) * float64(opt.Duration)
+			volumeTotalPrice = volumePrice * float64(opt.DiskSize) * float64(opt.Duration)
 		} else if opt.FeeUnit == "year" {
-			volumeTotalPrice = volumePrice * float64(opt.SysDiskSize) * float64(opt.Duration) * 12
+			volumeTotalPrice = volumePrice * float64(opt.DiskSize) * float64(opt.Duration) * 12
 		} else {
-			volumeTotalPrice = volumePrice * float64(opt.SysDiskSize) * float64(opt.Duration) / 730
+			volumeTotalPrice = volumePrice * float64(opt.DiskSize) * float64(opt.Duration) / 730
 		}
 		defer wg.Done()
 	}()
 
 	var serverTotalPrice float64
 
-	if opt.ChargeType == "SpotPayAsYouGo" {
+	if opt.ChargeType == cloudprovider.InstanceChargeTypeSpotPaid {
 		price, err := self.DescribeSpotPriceHistory(opt.ZoneId, opt.InstanceType)
 		if err == nil && len(price) > 0 {
 			serverTotalPrice, _ = strconv.ParseFloat(strings.ReplaceAll(price[0].SpotPrice, ",", ""), 64)

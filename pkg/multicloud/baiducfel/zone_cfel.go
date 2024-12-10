@@ -132,14 +132,17 @@ func (r *SZone) GetICfelDiskType(dt string) (map[string]interface{}, error) {
 		if dt == "sys" {
 			min, max = 40, 500
 		}
-		if dt == "sys" && val.StorageType == "enhanced_ssd_pl2" {
-			min = 462
+		if val.StorageType == "enhanced_ssd_pl2" {
+			min = 461
+		}
+		if val.StorageType == "enhanced_ssd_pl1" {
+			min = 20
 		}
 		if val.StorageType == "ssd" {
 			val.StorageType = "hp1"
 		}
 		// ssd 50G 起售 https://cloud.baidu.com/doc/BCC/s/Ujwvyo1ta
-		if dt == "data" && val.StorageType == "ssd" {
+		if dt == "data" && val.StorageType == "hp1" {
 			min = 50
 		}
 		result[val.StorageType] = []int{min, max}

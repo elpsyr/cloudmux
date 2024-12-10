@@ -77,6 +77,7 @@ type ICfelCloudVM interface {
 	GetCfelHypervisor() string
 	GetSSHInfo() (*ServerSSHInfo, error)
 	CfelRebuildRoot(ctx context.Context, config *CfelSManagedVMRebuildRootConfig) (string, error)
+	GetVncUrl() (string, error)
 	ICloudVM
 }
 

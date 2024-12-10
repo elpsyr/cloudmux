@@ -198,5 +198,5 @@ func (self *SBaiduProvider) GetCloudRegionExternalIdPrefix() string {
 }
 
 func (self *SBaiduProvider) GetMetrics(opts *cloudprovider.MetricListOptions) ([]cloudprovider.MetricValues, error) {
-	return nil, cloudprovider.ErrNotImplemented
+	return self.client.GetMetrics(opts)
 }

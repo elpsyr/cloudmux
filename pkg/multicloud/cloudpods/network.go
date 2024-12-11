@@ -133,6 +133,7 @@ func (self *SWire) CreateINetwork(opts *cloudprovider.SNetworkCreateOptions) (cl
 	input.GuestIpPrefix = opts.Cidr
 	input.WireId = self.Id
 	input.ProjectId = opts.ProjectId
+	input.Zone = opts.ZoneId // add by zhaeng 241211
 	network := &SNetwork{wire: self}
 	return network, self.vpc.region.create(&modules.Networks, input, network)
 }

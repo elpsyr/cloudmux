@@ -413,6 +413,7 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 	input.Hypervisor = hypervisor
 	input.AutoStart = true
 	input.DisableDelete = new(bool)
+	input.PreferZone = opts.PreferZoneId
 	input.IsolatedDevices = isolatedDevice
 	if len(input.UserData) > 0 {
 		input.EnableCloudInit = true

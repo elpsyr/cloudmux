@@ -50,10 +50,11 @@ func (s *SDisk) CreateISnapshot(ctx context.Context, name string, desc string) (
 
 // Delete implements cloudprovider.ICloudDisk.
 func (s *SDisk) Delete(ctx context.Context) error {
+	// https://cloud.baidu.com/doc/BCC/s/Xjwvyo2vz
 	var params = map[string]interface{}{
 		"autoSnapshot":   "on",
 		"manualSnapshot": "on",
-		"recycle":        "on",
+		"recycle":        "off", // 直接删除，不放回收站
 	}
 	_, err := s.storage.zone.region.doPost(ServiceDisk, "/v2/volume/"+s.ID, params)
 	return err
@@ -87,7 +88,10 @@ func (s *SDisk) GetDiskSizeMB() int {
 
 // GetDiskType implements cloudprovider.ICloudDisk.
 func (s *SDisk) GetDiskType() string {
-	return s.Type
+	if s.Type == "System" {
+		return "sys"
+	}
+	return "data"
 }
 
 // GetDriver implements cloudprovider.ICloudDisk.

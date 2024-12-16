@@ -85,6 +85,7 @@ type SInstance struct {
 	AliyunTags
 
 	host *SHost
+	region *SRegion // add by zhaeng 241212
 
 	osInfo *imagetools.ImageInfo
 

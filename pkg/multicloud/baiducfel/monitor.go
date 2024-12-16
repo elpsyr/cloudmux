@@ -80,7 +80,7 @@ func (self *SBaiduClient) ListMetrics(region, instanceId string, metricName stri
 		"endTime":        end.Format("2006-01-02T15:04:05Z"),
 		"statistics[]":   "average",
 	}
-	resp, err := self.list("bcm", region, fmt.Sprintf("/json-api/v1/metricdata/%s/BCE_BCC/%s", "aeed992c3f334d5191494624577187f3", metricName), query, nil)
+	resp, err := self.list("bcm", region, fmt.Sprintf("/json-api/v1/metricdata/%s/BCE_BCC/%s", self.ownerId, metricName), query, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "DescribeMetricList")
 	}

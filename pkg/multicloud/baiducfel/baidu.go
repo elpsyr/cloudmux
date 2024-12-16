@@ -44,6 +44,7 @@ type BaiduClientConfig struct {
 	cpcfg           cloudprovider.ProviderConfig
 	accessKeyId     string
 	accessKeySecret string
+	accountId       string
 
 	debug bool
 }
@@ -63,10 +64,11 @@ type IResources interface {
 	Keys() string
 }
 
-func NewBaiduClientConfig(accessKeyId, accessKeySecret string) *BaiduClientConfig {
+func NewBaiduClientConfig(accessKeyId, accessKeySecret, accountId string) *BaiduClientConfig {
 	cfg := &BaiduClientConfig{
 		accessKeyId:     accessKeyId,
 		accessKeySecret: accessKeySecret,
+		accountId:       accountId,
 	}
 	return cfg
 }
@@ -85,6 +87,7 @@ func NewBaiduClient(cfg *BaiduClientConfig) (*SBaiduClient, error) {
 	client := &SBaiduClient{
 		BaiduClientConfig: cfg,
 		ctx:               context.Background(),
+		ownerId:           cfg.accountId,
 	}
 	client.ctx = context.WithValue(client.ctx, "time", time.Now())
 	_, err := client.getOwnerId()

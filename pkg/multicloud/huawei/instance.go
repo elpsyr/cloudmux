@@ -105,6 +105,8 @@ type SInstance struct {
 
 	image *SImage
 
+	region *SRegion // add by zhaeng 241212
+
 	ID          string                 `json:"id"`
 	Name        string                 `json:"name"`
 	Addresses   map[string][]IpAddress `json:"addresses"`

@@ -102,6 +102,7 @@ type SInstance struct {
 	QcloudTags
 
 	host *SHost
+	region *SRegion // add by zhaeng 241212
 
 	// normalized image info
 	osInfo *imagetools.ImageInfo

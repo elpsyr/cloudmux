@@ -446,7 +446,7 @@ func (self *SRegion) getZoneById(id string) (*SZone, error) {
 	return nil, fmt.Errorf("no such zone %s", id)
 }
 
-func (self *SRegion) GetIVMById(id string) (cloudprovider.ICloudVM, error) {
+func (self *SRegion) GetIVMById1(id string) (cloudprovider.ICloudVM, error) {
 	return self.GetInstance(id)
 }
 

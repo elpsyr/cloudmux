@@ -129,7 +129,12 @@ func (self *SEip) GetMode() string {
 }
 
 func (self *SEip) ChangeBandwidth(bw int) error {
-	return cloudprovider.ErrNotImplemented
+	var params = map[string]interface{}{
+		"bandwidth": bw,
+		"id":        self.Id,
+	}
+	_, err := self.region.perform(&modules.Elasticips, self.Id, "change-bandwidth", params)
+	return err
 }
 
 func (self *SRegion) GetIEipById(id string) (cloudprovider.ICloudEIP, error) {

@@ -207,6 +207,15 @@ func (ec *SEcloudClient) doGet(ctx context.Context, r IRequest, result interface
 	return data.Unmarshal(result)
 }
 
+func (ec *SEcloudClient) doGetWithoutVal(ctx context.Context, r IRequest) (jsonutils.JSONObject, error) {
+	r.SetMethod("GET")
+	data, err := ec.request(ctx, r)
+	if err != nil {
+		return nil, err
+	}
+	return data,nil
+}
+
 func (ec *SEcloudClient) doList(ctx context.Context, r IRequest, result interface{}) error {
 	r.SetMethod("GET")
 	// TODO Paging query

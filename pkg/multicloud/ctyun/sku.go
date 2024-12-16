@@ -15,6 +15,8 @@
 package ctyun
 
 type ServerSku struct {
+	CtyunTags
+	
 	GpuVendor     string  `json:"gpuVendor"`
 	CPUInfo       string  `json:"cpuInfo"`
 	BaseBandwidth float64 `json:"baseBandwidth"`
@@ -31,6 +33,7 @@ type ServerSku struct {
 	FlavorId      string  `json:"flavorID"`
 	GpuCount      int     `json:"gpuCount"`
 }
+
 
 func (self *SRegion) GetServerSkus(zoneId string) ([]ServerSku, error) {
 	params := map[string]interface{}{}

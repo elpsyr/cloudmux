@@ -53,3 +53,22 @@ func (self *SInstance) RebootVM(_ context.Context) error {
 	}
 	return cloudprovider.WaitStatus(self, api.VM_RUNNING, 10*time.Second, 300*time.Second) // 5mintues
 }
+
+func (s *SInstance) GetVncUrl() (string, error) {
+	// https://support.huaweicloud.com/api-ecs/ecs_02_0208.html
+	var params = map[string]interface{}{
+		"remote_console": map[string]string{
+			"protocol": "vnc",
+			"type": "novnc",
+		},
+	}
+	res, err := s.region.post(SERVICE_ECS,fmt.Sprintf("cloudservers/%s/remote_console",s.ID),params)
+	if err != nil {
+		return "", nil
+	}
+	url, err := res.GetString("remote_console","url")
+	if err != nil {
+		return "", nil
+	}
+	return url, nil
+}

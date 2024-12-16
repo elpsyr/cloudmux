@@ -191,3 +191,21 @@ func (self *SRegion) RebootVM(instanceId string) error {
 func (self *SRegion) doRebootVM(instanceId string) error {
 	return self.instanceOperation(instanceId, "RebootInstances", nil, true)
 }
+
+func (self *SRegion) GetIVMById(id string) (cloudprovider.ICloudVM, error) {
+	vm, err := self.GetInstance(id)
+	if err != nil {
+		return nil, err
+	}
+	vm.region = self
+	return vm, nil
+}
+
+func (s *SInstance) GetVncUrl() (string, error) {
+	vnc, err := s.region.GetInstanceVNCUrl(s.InstanceId)
+	if err != nil {
+		return "", err
+	}
+	var url = fmt.Sprintf("https://img.qcloud.com/qcloud/app/active_vnc/index.html?InstanceVncUrl=%s", vnc)
+	return url, nil
+}

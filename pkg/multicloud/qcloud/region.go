@@ -126,7 +126,7 @@ func (self *SRegion) GetClient() *SQcloudClient {
 	return self.client
 }
 
-func (self *SRegion) GetIVMById(id string) (cloudprovider.ICloudVM, error) {
+func (self *SRegion) GetIVMById1(id string) (cloudprovider.ICloudVM, error) {
 	return self.GetInstance(id)
 }
 

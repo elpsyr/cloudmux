@@ -261,6 +261,7 @@ func (r *SRegion) GetIVMById(id string) (cloudprovider.ICloudVM, error) {
 	vm.host = &SHost{
 		zone: zone,
 	}
+	vm.region = r
 	return vm, nil
 }
 

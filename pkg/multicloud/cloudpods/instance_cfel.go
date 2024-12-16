@@ -2,6 +2,7 @@ package cloudpods
 
 import (
 	"context"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -118,15 +119,18 @@ func (self *SInstance) GetCfelHypervisor() string {
 }
 
 type Monitor struct {
-	Series []struct {
-		Columns []string    `json:"columns"`
-		Name    string      `json:"name"`
-		Points  [][]float64 `json:"points"`
-		RawName string      `json:"raw_name"`
-	} `json:"series"`
+	Series      []series           `json:"series"`
 	SeriesTotal int                `json:"series_total"`
 	Type        string             `json:"-"`
 	Item        []*MonitorDataItem `json:"-"`
+}
+
+type series struct {
+	Columns []string          `json:"columns"`
+	Name    string            `json:"name"`
+	Points  [][]float64       `json:"points"`
+	RawName string            `json:"raw_name"`
+	Tags    map[string]string `json:"tags"`
 }
 
 func (self *SRegion) GetMonitorData(vmId, start, end, interval string) ([]cloudprovider.ICfelMonitorData, []string, error) {
@@ -292,7 +296,7 @@ func (self *SRegion) GetMonitorDataJSON(opts *cloudprovider.MonitorDataJSONOptio
 						},
 						{
 							Type:   "alias",
-							Params: []string{"result"},
+							Params: []string{opts.Field},
 						},
 					},
 				},
@@ -300,7 +304,69 @@ func (self *SRegion) GetMonitorDataJSON(opts *cloudprovider.MonitorDataJSONOptio
 		}},
 		SkipCheckSeries: true,
 	}
-	return monitor.UnifiedMonitorManager.PerformQuery(self.cli.s, &params)
+	res, err := monitor.UnifiedMonitorManager.PerformQuery(self.cli.s, &params)
+	if err != nil {
+		return nil, err
+	}
+	var monitorData Monitor
+	if err = res.Unmarshal(&monitorData); err != nil {
+		return nil, err
+	}
+	var tmpPoints [][]float64
+	var count int
+	for _, val := range monitorData.Series {
+		var match bool
+		if opts.Measure == "agent_diskio" && len(val.RawName) == 3 { //磁盘读写只要sdx类型的数据
+			match = true
+		} else if opts.Measure == "agent_net" { // 网络读写只要bond类型的数据
+			if strings.Contains(val.RawName, "bond") {
+				match = true
+			} else if strings.Contains(val.RawName, ".") {
+				arr := strings.Split(val.RawName,".")
+				if len(arr) == 2 {
+					_,err := strconv.Atoi(arr[1])
+					if err == nil {
+						match = true
+					}
+				}
+			}
+		}
+		if match {
+			count++
+			if tmpPoints == nil {
+				tmpPoints = val.Points
+			} else {
+				for i := range tmpPoints {
+					if len(val.Points) > i { // 防止获取非法地址数据
+						tmpPoints[i][0] += val.Points[i][0]
+					}
+				}
+			}
+		}
+	}
+
+	// 计算平均值
+	if count > 0 {
+		if count > 1 {
+			for i := range tmpPoints {
+				tmpPoints[i][0] = tmpPoints[i][0] / float64(count)
+			}
+		}
+		series := []series{
+			{
+				Columns: []string{opts.Field, "time"},
+				Name:    opts.Field,
+				Points:  tmpPoints,
+				RawName: "",
+				Tags:    map[string]string{},
+			},
+		}
+		monitorData.SeriesTotal = 1
+		monitorData.Series = series
+	}
+	
+	return jsonutils.Marshal(monitorData), nil
+	// return monitor.UnifiedMonitorManager.PerformQuery(self.cli.s, &params)
 }
 
 func (self *SRegion) CreateBareMetal(opts *cloudprovider.CfelSManagedVMCreateConfig) (cloudprovider.ICloudVM, error) {

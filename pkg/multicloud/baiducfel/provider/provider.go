@@ -71,6 +71,7 @@ func (self *SBaiduProviderFactory) GetProvider(cfg cloudprovider.ProviderConfig)
 		baidu.NewBaiduClientConfig(
 			cfg.Account,
 			cfg.Secret,
+			cfg.AccountId,
 		).CloudproviderConfig(cfg).Debug(cfg.Debug),
 	)
 	if err != nil {

@@ -3,7 +3,9 @@ package aliyun
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
+
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/log"
@@ -328,4 +330,22 @@ func (self *SRegion) CreateInstanceCfel(name, hostname string, imageId string, i
 		return id, nil
 	}
 	return "", errors.Wrapf(cloudprovider.ErrNotFound, "after created")
+}
+
+func (self *SRegion) GetIVMById(id string) (cloudprovider.ICloudVM, error) {
+	vm, err := self.GetInstance(id)
+	if err != nil {
+		return nil, err
+	}
+	vm.region = self
+	return vm, nil
+}
+
+func (s *SInstance) GetVncUrl() (string, error) {
+	vnc, err := s.region.GetInstanceVNCUrl(s.InstanceId)
+	if err != nil {
+		return "", err
+	}
+	var url = fmt.Sprintf("https://g.alicdn.com/aliyun/ecs-console-vnc2/0.0.8/index.html?vncUrl=%s&instanceId=%s&isWindows=%v", vnc, s.InstanceId, strings.Contains(strings.ToLower(s.GetFullOsName()), "windows"))
+	return url, nil
 }

@@ -57,6 +57,7 @@ type SInstance struct {
 	nicComplete bool
 	host        *SHost
 	image       *SImage
+	region      *SRegion
 
 	sysDisk   cloudprovider.ICloudDisk
 	dataDisks []cloudprovider.ICloudDisk

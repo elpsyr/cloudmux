@@ -14,31 +14,38 @@
 
 package ctyun
 
+import "strings"
+
 type ServerSku struct {
 	CtyunTags
-	
-	GpuVendor     string  `json:"gpuVendor"`
-	CPUInfo       string  `json:"cpuInfo"`
-	BaseBandwidth float64 `json:"baseBandwidth"`
-	FlavorName    string  `json:"flavorName"`
-	VideoMemSize  int     `json:"videoMemSize"`
-	FlavorType    string  `json:"flavorType"`
-	FlavorSeries  string  `json:"flavorSeries"`
-	FlavorRAM     int     `json:"flavorRAM"`
-	NicMultiQueue int     `json:"nicMultiQueue"`
-	Pps           string  `json:"pps"`
-	FlavorCPU     int     `json:"flavorCPU"`
-	Bandwidth     int     `json:"bandwidth"`
-	GpuType       string  `json:"gpuType"`
-	FlavorId      string  `json:"flavorID"`
-	GpuCount      int     `json:"gpuCount"`
-}
 
+	GpuVendor     string   `json:"gpuVendor"`
+	CPUInfo       string   `json:"cpuInfo"`
+	BaseBandwidth float64  `json:"baseBandwidth"`
+	FlavorName    string   `json:"flavorName"`
+	VideoMemSize  int      `json:"videoMemSize"`
+	FlavorType    string   `json:"flavorType"`
+	FlavorSeries  string   `json:"flavorSeries"`
+	FlavorRAM     int      `json:"flavorRAM"`
+	NicMultiQueue int      `json:"nicMultiQueue"`
+	Pps           string   `json:"pps"`
+	FlavorCPU     int      `json:"flavorCPU"`
+	Bandwidth     int      `json:"bandwidth"`
+	GpuType       string   `json:"gpuType"`
+	FlavorId      string   `json:"flavorID"`
+	GpuCount      int      `json:"gpuCount"`
+	AzList        []string `json:"zaList"`
+	NicCount      int      `json:"nicCount"`
+	Available     bool     `json:"available"`
+	ZoneId        string   `json:"-"`
+	skuExtInfo    map[string]string
+}
 
 func (self *SRegion) GetServerSkus(zoneId string) ([]ServerSku, error) {
 	params := map[string]interface{}{}
-	if zoneId != "default" {
-		params["azName"] = zoneId
+	z := zoneId[strings.LastIndex(zoneId, "/")+1:]
+	if z != "default" {
+		params["azName"] = z
 	}
 	resp, err := self.post(SERVICE_ECS, "/v4/ecs/flavor/list", params)
 	if err != nil {

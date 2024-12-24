@@ -1,9 +1,20 @@
 package ctyun
 
 import (
+	"encoding/json"
+
+	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/pkg/errors"
 )
+
+func (self *SRegion) SetSkuExtInfo(info string) error {
+	return json.Unmarshal([]byte(info), &self.gpuSkuInfo)
+}
+
+func (r *SRegion) GetICfelCloudImageById(id string) (cloudprovider.ICloudImage, error) {
+	return nil, nil
+}
 
 func (self *SRegion) GetInstanceMatchImage(instanceType string) ([]cloudprovider.ICloudImage, error) {
 	pageNo := 1
@@ -42,4 +53,15 @@ func (self *SRegion) GetInstanceMatchImage(instanceType string) ([]cloudprovider
 		res = append(res, &ret[i])
 	}
 	return res, nil
+}
+
+func (self *SRegion) GetStatus() string {
+	// product, err := self.getProduct()
+	// if err != nil {
+	// 	return api.CLOUD_REGION_STATUS_OUTOFSERVICE
+	// }
+	// if len(product.Other.Region) == 0 {
+	// 	return api.CLOUD_REGION_STATUS_OUTOFSERVICE
+	// }
+	return api.CLOUD_REGION_STATUS_INSERVER
 }

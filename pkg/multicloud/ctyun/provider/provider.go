@@ -73,7 +73,7 @@ func (self *SCtyunProviderFactory) GetProvider(cfg cloudprovider.ProviderConfig)
 	client, err := ctyun.NewSCtyunClient(
 		ctyun.NewSCtyunClientConfig(
 			cfg.Account, cfg.Secret,
-		).CloudproviderConfig(cfg),
+		).CloudproviderConfig(cfg).Debug(cfg.Debug),
 	)
 	if err != nil {
 		return nil, err

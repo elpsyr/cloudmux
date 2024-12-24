@@ -106,14 +106,19 @@ func (self *SCtyunClient) getMetrics(apiName string, opts *cloudprovider.MetricL
 		return nil, err
 	}
 	metrics, pageNo := []SMetric{}, 1
+	interval := opts.Interval
+	if interval < 300 {
+		interval = 300
+	}
 	for {
 		resp, err := self.post(SERVICE_ECS, apiName, map[string]interface{}{
 			"regionID":     region.RegionId,
 			"deviceIDList": opts.ResourceIds,
-			"period":       300,
-			"startTime":    fmt.Sprintf("%d", opts.StartTime.Unix()),
-			"endTime":      fmt.Sprintf("%d", opts.EndTime.Unix()),
-			"pageNo":       pageNo,
+			// "period":       300,
+			"period":    interval,
+			"startTime": fmt.Sprintf("%d", opts.StartTime.Unix()),
+			"endTime":   fmt.Sprintf("%d", opts.EndTime.Unix()),
+			"pageNo":    pageNo,
 		})
 		if err != nil {
 			return nil, err

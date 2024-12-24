@@ -27,6 +27,7 @@ type SWire struct {
 	CtyunTags
 
 	vpc *SVpc
+	zone *SZone
 }
 
 func (self *SWire) GetId() string {
@@ -54,7 +55,7 @@ func (self *SWire) GetIVpc() cloudprovider.ICloudVpc {
 }
 
 func (self *SWire) GetIZone() cloudprovider.ICloudZone {
-	return nil
+	return self.zone
 }
 
 func (self *SWire) GetINetworks() ([]cloudprovider.ICloudNetwork, error) {

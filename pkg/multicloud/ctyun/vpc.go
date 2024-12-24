@@ -82,7 +82,15 @@ func (self *SVpc) GetCidrBlock() string {
 }
 
 func (self *SVpc) GetIWires() ([]cloudprovider.ICloudWire, error) {
-	return []cloudprovider.ICloudWire{&SWire{vpc: self}}, nil
+	zones, err := self.region.GetIZones()
+	if err != nil {
+		return nil, err
+	}
+	var wires []cloudprovider.ICloudWire
+	for i := range zones {
+		wires = append(wires, &SWire{vpc: self, zone: zones[i].(*SZone)})
+	}
+	return wires, nil
 }
 
 func (self *SVpc) GetISecurityGroups() ([]cloudprovider.ICloudSecurityGroup, error) {

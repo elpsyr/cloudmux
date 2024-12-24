@@ -109,11 +109,13 @@ func (self *SRegion) CreateImageByUrl(opts *cloudprovider.CfelSImageCreateOption
 
 func (self *SRegion) CfelCreateDisk(opts *cloudprovider.CfelDiskCreateConfig) (cloudprovider.ICloudDisk, error) {
 	params := map[string]interface{}{
-		"name":        opts.Name,
-		"size":        opts.SizeGb,
-		"backend":     opts.Backend,
-		"medium":      opts.Medium,
-		"description": opts.Desc,
+		"name":             opts.Name,
+		"size":             opts.SizeGb,
+		"backend":          opts.Backend,
+		"medium":           opts.Medium,
+		"prefer_zone_id":   opts.ZoneId,
+		"prefer_region_id": opts.RegionId,
+		"description":      opts.Desc,
 	}
 	res, err := modules.Disks.Create(self.cli.s, jsonutils.Marshal(params))
 	if err != nil {
@@ -157,6 +159,9 @@ func (self *SRegion) CfelGetINetworks(opts *cloudprovider.GetNetworkOptions) ([]
 
 	ret := []cloudprovider.ICloudNetwork{}
 	for i := range networks {
+		if opts.ServerType == "eip" && networks[i].Ports == networks[i].PortsUsed {
+			continue
+		}
 		ret = append(ret, &networks[i])
 	}
 	return ret, nil
@@ -232,15 +237,15 @@ func (self *SRegion) GetGeneralUsage() (cloudprovider.ICfelGeneralUsage, error) 
 }
 
 func (self *SRegion) ICfelDeleteImage(id string) error {
-	return self.cli.delete(&image.Images,id)
+	return self.cli.delete(&image.Images, id)
 }
 
 func (self *SRegion) ICfelSetImageCanDelete(id string) error {
 	params := map[string]interface{}{
 		"disable_delete": false,
-		"protected": false,
-	  }
-	_, err := image.Images.Update(self.cli.s,id,jsonutils.Marshal(params))
+		"protected":      false,
+	}
+	_, err := image.Images.Update(self.cli.s, id, jsonutils.Marshal(params))
 	return err
 }
 

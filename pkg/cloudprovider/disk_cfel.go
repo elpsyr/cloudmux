@@ -16,6 +16,8 @@ package cloudprovider
 
 type CfelDiskCreateConfig struct {
 	DiskCreateConfig
-	Backend string
-	Medium string
+	Backend  string
+	Medium   string
+	ZoneId   string
+	RegionId string
 }

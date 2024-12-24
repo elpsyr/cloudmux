@@ -17,6 +17,8 @@ package ctyun
 import (
 	"fmt"
 	"strings"
+	"sync"
+	"time"
 
 	"yunion.io/x/jsonutils"
 	"yunion.io/x/pkg/errors"
@@ -43,6 +45,13 @@ type SRegion struct {
 	RegionType   string
 	ZoneList     []string
 	RegionName   string
+
+	Stat       string            // add by zhaeng
+	gpuSkuInfo map[string]string // add by zhaeng
+	skuInfo    *ServerSku        // add by zhaeng
+	mut        sync.Mutex        // add by zhaeng
+	skuImageId *string           // add by zhaeng
+	mutImage   sync.Mutex        // add by zhaeng
 }
 
 func (self *SRegion) list(service, res string, params map[string]interface{}) (jsonutils.JSONObject, error) {
@@ -62,14 +71,35 @@ func (self *SRegion) post(service, res string, params map[string]interface{}) (j
 }
 
 func (self *SRegion) CreateVpc(opts *cloudprovider.VpcCreateOptions) (*SVpc, error) {
+	uuid := utils.GenRequestId(20)
 	params := map[string]interface{}{
-		"clientToken": utils.GenRequestId(20),
+		"clientToken": uuid,
 		"name":        opts.NAME,
-		"description": opts.Desc,
+		"description": fmt.Sprintf("%s@clientToken:%s", opts.Desc, uuid),
 		"CIDR":        opts.CIDR,
+		"regionID":    self.RegionId,
 	}
 	resp, err := self.post(SERVICE_VPC, "/v4/vpc/create", params)
 	if err != nil {
+		// 天翼云的bug，创建vpc成功会报错，实际成功
+		var vv *SVpc
+		for i := 0; i < 5; i++ {
+			vpcs, err := self.GetVpcs()
+			if err != nil {
+				time.Sleep(3 * time.Second)
+			}
+			for _, v := range vpcs {
+				if strings.HasSuffix(v.Description, fmt.Sprintf("clientToken:%s", uuid)) {
+					vv = &v
+					break
+				}
+			}
+			time.Sleep(3 * time.Second)
+		}
+		if vv != nil {
+			vv.region = self
+			return vv, nil
+		}
 		return nil, err
 	}
 	vpcId, err := resp.GetString("returnObj", "vpcID")
@@ -149,7 +179,7 @@ func (self *SRegion) GetGlobalId() string {
 	return fmt.Sprintf("%s/%s", self.client.GetAccessEnv(), self.GetId())
 }
 
-func (self *SRegion) GetStatus() string {
+func (self *SRegion) GetStatus1() string {
 	product, err := self.getProduct()
 	if err != nil {
 		return api.CLOUD_REGION_STATUS_OUTOFSERVICE
@@ -259,6 +289,7 @@ func (self *SRegion) GetIVMById(id string) (cloudprovider.ICloudVM, error) {
 	if err != nil {
 		return nil, err
 	}
+	vm.region = self // add by zhaeng 241219
 	return vm, nil
 }
 
@@ -400,7 +431,7 @@ func (self *SRegion) GetInstances(zoneId string, ids []string) ([]SInstance, err
 		params["instanceIDList"] = strings.Join(ids, ",")
 	}
 	if len(zoneId) > 0 {
-		params["azName"] = zoneId
+		params["azName"] = zoneId[strings.LastIndex(zoneId, "/")+1:]
 	}
 	ret := []SInstance{}
 	for {

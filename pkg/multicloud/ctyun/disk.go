@@ -17,6 +17,7 @@ package ctyun
 import (
 	"context"
 	"strconv"
+	"strings"
 	"time"
 
 	"yunion.io/x/jsonutils"
@@ -262,8 +263,11 @@ func (self *SRegion) CreateDisk(zoneId, name, diskType string, size int) (*SDisk
 		"diskName":    name,
 		"diskSize":    size,
 	}
-	if len(zoneId) > 0 && zoneId != "default" {
-		params["azName"] = zoneId
+	if len(zoneId) > 0 {
+		z := zoneId[strings.LastIndex(zoneId, "/")+1:]
+		if z != "default" {
+			params["azName"] = z
+		}
 	}
 	resp, err := self.post(SERVICE_EBS, "/v4/ebs/new-ebs", params)
 	if err != nil {

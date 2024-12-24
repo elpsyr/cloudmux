@@ -223,7 +223,10 @@ func (self *SCtyunClient) Do(req *http.Request) (*http.Response, error) {
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("ctyun-eop-request-id", utils.GenRequestId(20))
-	sh, _ := time.LoadLocation("Asia/Shanghai")
+	sh, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		sh = time.FixedZone("CST", 8*3600)
+	}
 	req.Header.Set("eop-date", time.Now().In(sh).Format("20060102T150405Z"))
 
 	signature, err := self.sign(req)
@@ -320,7 +323,7 @@ func (self *SCtyunClient) request(method httputils.THttpMethod, service, resourc
 	return nil, fmt.Errorf(resp.String())
 }
 
-func (self *SCtyunClient) GetIRegions() ([]cloudprovider.ICloudRegion, error) {
+func (self *SCtyunClient) GetIRegions1() ([]cloudprovider.ICloudRegion, error) {
 	ret := []cloudprovider.ICloudRegion{}
 	for i := range self.regions {
 		self.regions[i].client = self

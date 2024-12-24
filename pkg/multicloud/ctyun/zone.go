@@ -34,7 +34,7 @@ type SZone struct {
 }
 
 func (self *SZone) GetId() string {
-	return self.Name
+	return self.GetGlobalId()
 }
 
 func (self *SZone) GetName() string {

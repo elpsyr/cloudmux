@@ -16,6 +16,7 @@ package ctyun
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strconv"
 	"strings"
@@ -39,6 +40,7 @@ type SInstance struct {
 
 	host  *SHost
 	image *SImage
+	region *SRegion // add by zhaeng 241219
 
 	AzName         string
 	ExpiredTime    string
@@ -606,7 +608,7 @@ func (self *SRegion) CreateInstance(zoneId string, opts *cloudprovider.SManagedV
 		"bootDiskType":    opts.SysDisk.StorageType,
 		"bootDiskSize":    opts.SysDisk.SizeGB,
 		"secGroupList":    opts.ExternalSecgroupIds,
-		"azName":          zoneId,
+		"azName":          zoneId[strings.LastIndex(zoneId,"/")+1:],
 		"dataDiskList":    disks,
 		"networkCardList": []map[string]interface{}{nets},
 	}
@@ -632,6 +634,12 @@ func (self *SRegion) CreateInstance(zoneId string, opts *cloudprovider.SManagedV
 			params["cycleCount"] = opts.BillingCycle.GetMonths()
 		}
 	}
+
+	// add by zhaeng 241218 begin
+	if len(opts.UserData) > 0 {
+		params["userData"] = base64.StdEncoding.EncodeToString([]byte(opts.UserData))
+	}
+	// add by zhaeng 241218 end
 
 	resp, err := self.post(SERVICE_ECS, "/v4/ecs/create-instance", params)
 	if err != nil {

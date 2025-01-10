@@ -97,6 +97,19 @@ func NewChinaUnionClient(cfg *ChinaUnionClientConfig) (*SChinaUnionClient, error
 }
 
 func (self *SChinaUnionClient) GetRegions() ([]SRegion, error) {
+	param := map[string]interface{}{
+		"currPage": 1,
+		"pageSize": 10000,
+		"specilZone": "cn-langfang-2a",
+		"serviceTypeId": "1001",
+		"billType": "0",
+		"version": "1",
+		"cloudRegionId": "7961132062134697984",
+		"zoneId": "7961158857508716544",
+		"orderType": "productMode",
+		"orderBy": "asc",
+	  }
+	self.post("product-cons/product/productquery/flavorsHasResChk",param)
 	if len(self.regions) > 0 {
 		return self.regions, nil
 	}

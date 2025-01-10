@@ -35,7 +35,15 @@ func (r *SZone) GetCapability() (jsonutils.JSONObject, error) {
 	return nil, cloudprovider.ErrNotImplemented
 }
 
-func (r *SZone) GetICfelDiskType(diskType string) (map[string]interface{}, error) {
+var EcloudDiskType = map[string]string{
+	"ssd":      "ebs_ceph_ssd",
+	"ssdebs":   "ebs_ceph_cache",
+	"capebs":   "ebs_ceph_data",
+	"ssdebsyc": "ebs_ceph_cache_arm",
+	"ssdyc":    "ebs_ceph_ssd_arm",
+}
+
+func (r *SZone) GetICfelDiskType(diskType string) ([]*cloudprovider.DiskInfo, error) {
 	if diskType == "sys" {
 		// https://ecloud.10086.cn/op-help-center/doc/article/75582
 		query := map[string]string{
@@ -47,10 +55,11 @@ func (r *SZone) GetICfelDiskType(diskType string) (map[string]interface{}, error
 		if err != nil {
 			return nil, nil
 		}
-		var ret = make(map[string]interface{})
+		var ret = []*cloudprovider.DiskInfo{}
 		for _, val := range res {
 			if val.SoldOut == "0" {
-				ret[val.BootVolumeType] = val.BootVolumeTypeName
+				ret = append(ret, &cloudprovider.DiskInfo{StorageType: val.BootVolumeType,Name: val.BootVolumeTypeName})
+				// ret[val.BootVolumeType] = val.BootVolumeTypeName
 			}
 		}
 		return ret, nil
@@ -76,7 +85,7 @@ func (r *SZone) GetICfelDiskType(diskType string) (map[string]interface{}, error
 	}
 	var wg sync.WaitGroup
 
-	var result = make(map[string]interface{})
+	var result = []*cloudprovider.DiskInfo{}
 	var lock = sync.Mutex{}
 
 	for dt := range ret {
@@ -96,7 +105,9 @@ func (r *SZone) GetICfelDiskType(diskType string) (map[string]interface{}, error
 						lock.Lock()
 						for _, val := range res {
 							if val.Status == "1" {
-								result[val.ProductType] = val.Status
+								if _,ok := EcloudDiskType[val.ProductType];ok {
+									result = append(result, &cloudprovider.DiskInfo{StorageType: val.ProductType})
+								}
 							}
 						}
 						lock.Unlock()

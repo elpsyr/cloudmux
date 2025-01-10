@@ -66,7 +66,7 @@ type ICfelCloudSku interface {
 type ICfelZone interface {
 	ICloudZone
 	GetCapability() (jsonutils.JSONObject, error)
-	GetICfelDiskType(diskType string) (map[string]interface{}, error) //  包年包月 售卖状态
+	GetICfelDiskType(diskType string) ([]*DiskInfo, error) //  包年包月 售卖状态
 }
 
 // ICfelCloudVM vm接口
@@ -78,6 +78,7 @@ type ICfelCloudVM interface {
 	GetSSHInfo() (*ServerSSHInfo, error)
 	CfelRebuildRoot(ctx context.Context, config *CfelSManagedVMRebuildRootConfig) (string, error)
 	GetVncUrl() (string, error)
+	ExecCmd(ctx context.Context, opts *CfelExecCmdOption) ([]string, error)
 	ICloudVM
 }
 

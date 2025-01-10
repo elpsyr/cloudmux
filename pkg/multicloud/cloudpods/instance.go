@@ -38,6 +38,8 @@ type SInstance struct {
 	multicloud.SInstanceBase
 	CloudpodsTags
 
+	region *SRegion // add by zhaeng 250106
+
 	host *SHost
 	api.ServerDetails
 }
@@ -272,7 +274,16 @@ func (self *SInstance) RebuildRoot(ctx context.Context, opts *cloudprovider.SMan
 		}
 		input.KeypairId = keypairId
 	}
-	_, err := self.host.zone.region.perform(&modules.Servers, self.Id, "rebuild-root", input)
+	// add by zhaeng 250109
+	params := map[string]interface{}{
+		"image_id":  opts.ImageId,
+		"password":  opts.Password,
+		"user_data": opts.UserData,
+	}
+	if len(input.KeypairId) > 0 {
+		params["keypair_id"] = input.KeypairId
+	}
+	_, err := self.host.zone.region.perform(&modules.Servers, self.Id, "rebuild-root", params)
 	if err != nil {
 		return "", err
 	}

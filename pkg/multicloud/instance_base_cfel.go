@@ -29,3 +29,7 @@ func (self *SInstanceBase) GetSSHInfo() (*cloudprovider.ServerSSHInfo, error) {
 func (self *SInstanceBase) GetVncUrl() (string, error) {
 	return "", cloudprovider.ErrNotImplemented
 }
+
+func (self *SInstanceBase) ExecCmd(ctx context.Context, opts *cloudprovider.CfelExecCmdOption) ([]string, error){
+	return nil, cloudprovider.ErrNotImplemented
+}

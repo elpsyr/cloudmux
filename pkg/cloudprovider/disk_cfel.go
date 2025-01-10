@@ -21,3 +21,13 @@ type CfelDiskCreateConfig struct {
 	ZoneId   string
 	RegionId string
 }
+
+type DiskInfo struct {
+	Name string
+	StorageType string
+	MinSizeGB int
+	MaxSizeGB int
+	StepLen int
+	IsSysDisk bool
+	IsDataDisk bool
+}

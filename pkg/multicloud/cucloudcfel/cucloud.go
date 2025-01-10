@@ -25,12 +25,15 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
+	"moul.io/http2curl/v2"
 	"yunion.io/x/jsonutils"
+	"yunion.io/x/log"
 	"yunion.io/x/pkg/errors"
 	"yunion.io/x/pkg/gotypes"
 	"yunion.io/x/pkg/util/httputils"
@@ -42,6 +45,7 @@ import (
 
 const (
 	CLOUD_PROVIDER_CUCLOUD_CN = "联通云"
+	CLOUD_PROVIDER_CUCLOUD    = "ChinaUnionCfel"
 	CUCLOUD_DEFAULT_REGION    = "cn-langfang-2"
 )
 
@@ -49,6 +53,9 @@ type ChinaUnionClientConfig struct {
 	cpcfg           cloudprovider.ProviderConfig
 	accessKeyId     string
 	accessKeySecret string
+
+	userName string
+	password string
 
 	debug bool
 }
@@ -62,6 +69,7 @@ type SChinaUnionClient struct {
 
 	regions []SRegion
 	ownerId string
+	token   string
 }
 
 func NewChinaUnionClientConfig(accessKeyId, accessKeySecret string) *ChinaUnionClientConfig {
@@ -104,20 +112,15 @@ func (self *SChinaUnionClient) GetRegions() ([]SRegion, error) {
 	if err != nil {
 		return nil, err
 	}
-	ret := struct {
-		Result struct {
-			Total int
-			List  []SRegion
-		}
-	}{}
-	err = resp.Unmarshal(&ret)
+	var ret []SRegion
+	err = resp.Unmarshal(&ret, "list")
 	if err != nil {
 		return nil, err
 	}
 	self.regions = []SRegion{}
-	for i := range ret.Result.List {
-		ret.Result.List[i].client = self
-		self.regions = append(self.regions, ret.Result.List[i])
+	for i := range ret {
+		ret[i].client = self
+		self.regions = append(self.regions, ret[i])
 	}
 	return self.regions, nil
 }
@@ -140,13 +143,103 @@ func (self *SChinaUnionClient) getUrl(resource string) string {
 	return fmt.Sprintf("https://gateway.cucloud.cn/%s", strings.TrimPrefix(resource, "/"))
 }
 
+func (self *SChinaUnionClient) SetToken(token string) {
+	self.token = token
+}
+
+type loginResp struct {
+	Data struct {
+		LoginUserID   int64  `json:"loginUserId"`
+		LoginUserName string `json:"loginUserName"`
+		PublicKey     string `json:"publicKey"`
+		Token         string `json:"token"`
+		UserType      int64  `json:"userType"`
+	} `json:"data"`
+	Msg    string `json:"msg"`
+	Status string `json:"status"`
+}
+
+func (self *SChinaUnionClient) CheckAuth() error {
+
+	res, err := self.getWithToken("iam/iam-portal/uc/v1/checkAuth", nil)
+	if err != nil {
+		return err
+	}
+	var ret loginResp
+	if err = res.Unmarshal(&ret); err != nil {
+		return err
+	}
+	if ret.Status != "200" {
+		return fmt.Errorf(ret.Msg)
+	}
+	return nil
+}
+
+func (self *SChinaUnionClient) Login() (string, error) {
+	// 测试先读本地
+	var err error
+	tokenfile := "/root/project/puhui-uci/_output/token"
+	tt, err := ioutil.ReadFile(tokenfile)
+	if err != nil {
+		log.Warningf("write token file err:%v", err)
+	} else {
+		self.SetToken(string(tt))
+		if err = self.CheckAuth(); err == nil {
+			return string(tt), err
+		}
+	}
+
+	// iam用户登录 用iamUserName字段加密
+	// 	https://gateway.cucloud.cn/iam/iam-portal/uc/v1/iam/login
+	// {
+	//   "userName": "zhaeng",
+	//   "iamUserName": "cfel01",
+	//   "password": "boEkdA7MWWBkeIJA4GWHrA==",
+	//   "currentTimeMillis": "1735610890333"
+	// }
+
+	var timestamp = fmt.Sprintf("%v", time.Now().Unix())
+	self.userName = "zhaeng"
+	self.password = "zhaeng@1011"
+	pwd, err := encryptPwd(self.userName, self.password, timestamp)
+	if err != nil {
+		return "", err
+	}
+	params := map[string]interface{}{
+		"userName":          self.userName,
+		"password":          pwd,
+		"loginMode":         "0",
+		"currentTimeMillis": timestamp,
+	}
+	res, err := self.postWithToken("iam/iam-portal/uc/v1/portal/login", params)
+	if err != nil {
+		return "", err
+	}
+	var ret loginResp
+	if err = res.Unmarshal(&ret); err != nil {
+		return "", err
+	}
+	if ret.Status != "200" {
+		return "", fmt.Errorf(ret.Msg)
+	}
+	// 本地使用
+	ioutil.WriteFile(tokenfile, []byte(ret.Data.Token), os.ModeAppend)
+
+	self.SetToken(ret.Data.Token)
+	return ret.Data.Token, nil
+}
+
+func (self *SChinaUnionClient) GetToken() string {
+	return self.token
+}
+
 func (cli *SChinaUnionClient) getDefaultClient() *http.Client {
 	cli.lock.Lock()
 	defer cli.lock.Unlock()
 	if !gotypes.IsNil(cli.client) {
 		return cli.client
 	}
-	cli.client = httputils.GetAdaptiveTimeoutClient()
+	cli.client = httputils.GetTimeoutClient(60 * time.Second)
 	httputils.SetClientProxyFunc(cli.client, cli.cpcfg.ProxyFunc)
 	ts, _ := cli.client.Transport.(*http.Transport)
 	ts.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
@@ -203,7 +296,7 @@ func (self *SChinaUnionClient) sign(req *http.Request) (string, error) {
 		keys = append(keys, k)
 		keyMap[k] = params.Get(k)
 	}
-	if req.Method == "POST" {
+	if req.Method == string(httputils.POST) || req.Method == string(httputils.PUT) || req.Method == string(httputils.DELETE) {
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
 			return "", errors.Wrapf(err, "read body")
@@ -248,11 +341,22 @@ func (self *SChinaUnionClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	req.Header.Set("sign", signature)
+	curlCmd, _ := http2curl.GetCurlCommand(req)
+	fmt.Println(curlCmd)
 	return client.Do(req)
 }
 
 func (self *SChinaUnionClient) list(resource string, params map[string]interface{}) (jsonutils.JSONObject, error) {
 	return self.request(httputils.GET, resource, params)
+}
+
+func (self *SChinaUnionClient) get(resource string, params map[string]interface{}) (jsonutils.JSONObject, error) {
+	return self.request(httputils.GET, resource, params)
+}
+
+func (self *SChinaUnionClient) delete(resource string, params map[string]interface{}) error {
+	_, err := self.request(httputils.DELETE, resource, params)
+	return err
 }
 
 func (self *SChinaUnionClient) post(resource string, params map[string]interface{}) (jsonutils.JSONObject, error) {
@@ -274,7 +378,7 @@ func (self *SChinaUnionClient) request(method httputils.THttpMethod, resource st
 		if len(values) > 0 {
 			uri = fmt.Sprintf("%s?%s", uri, values.Encode())
 		}
-	case httputils.POST:
+	case httputils.POST, httputils.PUT, httputils.DELETE:
 		body = jsonutils.Marshal(params)
 	}
 	req := httputils.NewJsonRequest(method, uri, body)
@@ -288,6 +392,62 @@ func (self *SChinaUnionClient) request(method httputils.THttpMethod, resource st
 		return nil, fmt.Errorf("empty response")
 	}
 	code, _ := resp.GetString("code")
+	if code != "200" {
+		return nil, errors.Errorf(resp.String())
+	}
+	res, err := resp.GetIgnoreCases("result")
+	if err != nil {
+		return resp, nil
+	}
+	return res, nil
+}
+
+func (self *SChinaUnionClient) getWithToken(resource string, params map[string]interface{}) (jsonutils.JSONObject, error) {
+	return self.requestWithToken(httputils.GET, resource, params)
+}
+
+func (self *SChinaUnionClient) postWithToken(resource string, params map[string]interface{}) (jsonutils.JSONObject, error) {
+	return self.requestWithToken(httputils.POST, resource, params)
+}
+
+func (self *SChinaUnionClient) requestWithToken(method httputils.THttpMethod, resource string, params map[string]interface{}) (jsonutils.JSONObject, error) {
+	uri := self.getUrl(resource)
+	if params == nil {
+		params = map[string]interface{}{}
+	}
+	var body jsonutils.JSONObject = jsonutils.NewDict()
+	switch method {
+	case httputils.GET:
+		values := url.Values{}
+		for k, v := range params {
+			values.Set(k, v.(string))
+		}
+		if len(values) > 0 {
+			uri = fmt.Sprintf("%s?%s", uri, values.Encode())
+		}
+	case httputils.POST:
+		body = jsonutils.Marshal(params)
+	}
+	req := httputils.NewJsonRequest(method, uri, body)
+	if self.token != "" {
+		req.GetHeader().Add("access_token", self.token)
+	}
+	bErr := &sChinaUnionError{}
+	client := httputils.NewJsonClient(self)
+	_, resp, err := client.Send(self.ctx, req, bErr, self.debug)
+	if err != nil {
+		return nil, err
+	}
+	if gotypes.IsNil(resp) {
+		return nil, fmt.Errorf("empty response")
+	}
+	code, err := resp.GetString("code")
+	if errors.Cause(err) == jsonutils.ErrJsonDictKeyNotFound {
+		code, err = resp.GetString("status")
+		if errors.Cause(err) == jsonutils.ErrJsonDictKeyNotFound {
+			return nil, errors.Errorf(resp.String())
+		}
+	}
 	if code != "200" {
 		return nil, errors.Errorf(resp.String())
 	}

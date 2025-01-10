@@ -108,7 +108,7 @@ type diskInfo struct {
 	StorageType string `json:"storageType"`
 }
 
-func (r *SZone) GetICfelDiskType(dt string) (map[string]interface{}, error) {
+func (r *SZone) GetICfelDiskType(dt string) ([]*cloudprovider.DiskInfo, error) {
 	var query = map[string]string{
 		"zoneName": r.ZoneName,
 	}
@@ -120,10 +120,11 @@ func (r *SZone) GetICfelDiskType(dt string) (map[string]interface{}, error) {
 	if err = res.Unmarshal(&ret, "diskZoneResources"); err != nil {
 		return nil, err
 	}
-	var result = make(map[string]interface{})
+	var result = []*cloudprovider.DiskInfo{}
 	if len(ret) == 0 {
 		return result, nil
 	}
+
 	for _, val := range ret[0].DiskInfos {
 		if dt == "sys" && val.StorageType == "hdd" {
 			continue
@@ -145,7 +146,13 @@ func (r *SZone) GetICfelDiskType(dt string) (map[string]interface{}, error) {
 		if dt == "data" && val.StorageType == "hp1" {
 			min = 50
 		}
-		result[val.StorageType] = []int{min, max}
+		result = append(result, &cloudprovider.DiskInfo{
+			Name:        "",
+			StorageType: val.StorageType,
+			MinSizeGB:   min,
+			MaxSizeGB:   max,
+			StepLen:     0,
+		})
 	}
 	return result, nil
 }

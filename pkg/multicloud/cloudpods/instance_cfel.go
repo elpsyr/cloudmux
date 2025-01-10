@@ -322,9 +322,9 @@ func (self *SRegion) GetMonitorDataJSON(opts *cloudprovider.MonitorDataJSONOptio
 			if strings.Contains(val.RawName, "bond") {
 				match = true
 			} else if strings.Contains(val.RawName, ".") {
-				arr := strings.Split(val.RawName,".")
+				arr := strings.Split(val.RawName, ".")
 				if len(arr) == 2 {
-					_,err := strconv.Atoi(arr[1])
+					_, err := strconv.Atoi(arr[1])
 					if err == nil {
 						match = true
 					}
@@ -364,7 +364,7 @@ func (self *SRegion) GetMonitorDataJSON(opts *cloudprovider.MonitorDataJSONOptio
 		monitorData.SeriesTotal = 1
 		monitorData.Series = series
 	}
-	
+
 	return jsonutils.Marshal(monitorData), nil
 	// return monitor.UnifiedMonitorManager.PerformQuery(self.cli.s, &params)
 }
@@ -613,4 +613,23 @@ func (self *SRegion) GetInstanceSSH(id string) (*cloudprovider.ServerSSHInfo, er
 		return nil, errors.Wrapf(err, "GetSpecific")
 	}
 	return result, nil
+}
+
+func (self *SInstance) ExecCmd(ctx context.Context, opts *cloudprovider.CfelExecCmdOption) ([]string, error) {
+	params := map[string]interface{}{
+		"ip":       opts.Ip,
+		"port":     opts.Port,
+		"cmd":      opts.Cmd,
+		"user":     opts.User,
+		"password": opts.Password,
+	}
+	ret, err := self.region.perform(&modules.Servers, self.Id, "exec-cmd", params)
+	if err != nil {
+		return nil, err
+	}
+	var res []string
+	if err = ret.Unmarshal(&res); err != nil {
+		return nil, err
+	}
+	return res, err
 }

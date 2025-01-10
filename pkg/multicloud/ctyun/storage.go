@@ -69,7 +69,7 @@ func (self *SStorage) GetIDisks() ([]cloudprovider.ICloudDisk, error) {
 	}
 	ret := []cloudprovider.ICloudDisk{}
 	for i := range disks {
-		if disks[i].DiskType == self.storageType && (len(disks[i].AzName) == 0 || disks[i].AzName == self.zone.AzDisplayName) {
+		if disks[i].DiskType == self.storageType && (len(disks[i].AzName) == 0 || disks[i].AzName == self.zone.Name) {
 			disks[i].storage = self
 			ret = append(ret, &disks[i])
 		}

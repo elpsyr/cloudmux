@@ -178,3 +178,19 @@ type ServerSSHInfo struct {
 
 	apis.Meta
 }
+
+type CfelResetGuestPasswordOption struct {
+	GuestID       string `json:"guest_id,omitempty"`
+	ResetPassword bool   `json:"reset_password,omitempty"`
+	AutoStart     bool   `json:"auto_start,omitempty"`
+	Password      string `json:"password,omitempty"`
+	UserName      string `json:"username,omitempty"`
+}
+
+type CfelExecCmdOption struct {
+	Ip       string
+	Port     int
+	Cmd      string
+	User     string
+	Password string
+}

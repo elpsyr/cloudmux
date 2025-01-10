@@ -86,6 +86,7 @@ func (self *SRegion) GetIVMById(id string) (cloudprovider.ICloudVM, error) {
 	if err != nil {
 		return nil, err
 	}
+	ins.region = self // add by zhaeng 250106
 	return ins, nil
 }
 

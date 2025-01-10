@@ -239,6 +239,9 @@ func (s Sku) GetGpuAttachable() bool {
 }
 
 func (s Sku) GetGpuSpec() string {
+	if s.InstanceType == "p5en.48xlarge" {
+		return "NVIDIA H200"
+	}
 	if s.GpuInfo.TotalGpuMemoryInMiB != 0 && len(s.GpuInfo.Gpus) > 0 {
 		if s.GpuInfo.Gpus[0].Manufacturer != "" && s.GpuInfo.Gpus[0].Name != "" {
 			return fmt.Sprintf("%s %s", s.GpuInfo.Gpus[0].Manufacturer, s.GpuInfo.Gpus[0].Name)

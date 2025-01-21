@@ -16,6 +16,7 @@ package cucloudcfel
 
 import (
 	"fmt"
+	"sync"
 
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
@@ -34,6 +35,12 @@ type SRegion struct {
 	CloudRegionName string
 	CloudRegionCode string
 	Status          string
+
+	mut sync.Mutex
+	postPaidSku *SServerSku
+
+	mut1 sync.Mutex
+	prePaidSku *SServerSku
 }
 
 func (self *SRegion) GetId() string {

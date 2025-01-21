@@ -2,6 +2,8 @@ package cucloudcfel
 
 import (
 	"encoding/json"
+	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -20,6 +22,8 @@ type SServerSku struct {
 
 	region *SRegion
 
+	Name         string
+	ProductId    string
 	FlavorId     string
 	CpuCount     int `json:"cpu"`
 	MemorySize   int `json:"ram"`
@@ -33,6 +37,8 @@ type SServerSku struct {
 	VmType       string
 	ZoneId       string
 	Arch         string
+
+	ProductIds []string
 }
 
 // Delete implements cloudprovider.ICfelCloudSku.
@@ -87,7 +93,7 @@ func (s *SServerSku) GetGlobalId() string {
 
 // GetGpuAttachable implements cloudprovider.ICfelCloudSku.
 func (s *SServerSku) GetGpuAttachable() bool {
-	return s.GpuMemory > 0
+	return s.GpuCount != ""
 }
 
 // GetGpuCount implements cloudprovider.ICfelCloudSku.
@@ -132,7 +138,7 @@ func (s *SServerSku) GetMemorySizeMB() int {
 
 // GetName implements cloudprovider.ICfelCloudSku.
 func (s *SServerSku) GetName() string {
-	return s.FlavorId
+	return s.Name
 }
 
 // GetNicMaxCount implements cloudprovider.ICfelCloudSku.
@@ -201,7 +207,11 @@ func (s *SServerSku) GetSysDiskType() string {
 
 // GetZoneID implements cloudprovider.ICfelCloudSku.
 func (s *SServerSku) GetZoneID() string {
-	return ""
+	return s.ZoneId
+}
+
+func (s *SServerSku) GetDescription() string {
+	return s.ProductId
 }
 
 var _ cloudprovider.ICfelCloudSku = (*SServerSku)(nil)
@@ -233,8 +243,9 @@ type productDetail struct {
 }
 
 type flavorResp struct {
-	List   []*flavor `json:"list"`
-	ZoneId string
+	List          []*flavor `json:"list"`
+	ZoneId        string
+	ResourcesType string
 }
 
 func (r *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
@@ -258,33 +269,39 @@ func (r *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
 	go func() {
 		for val := range ch {
 			for _, v := range val.List {
+				if v.BmsSurplusNum == "0" {
+					continue
+				}
 				if sku, ok := tmp[v.ProductMode]; ok {
-					if v.BillType == "0" && v.BmsSurplusNum != "0" {
+					if v.BillType == "0" {
 						sku.Subscription = true
-					} else if v.BillType == "5" && v.BmsSurplusNum != "0" {
+					} else if v.BillType == "5" {
 						sku.OnDemand = true
 					}
+					sku.ProductIds = append(sku.ProductIds, v.BillType+"-"+v.ProductID+"-"+val.ResourcesType)
 				} else {
 
 					sku = &SServerSku{
-						region:    r,
-						FlavorId:  v.ProductMode,
-						SpecsName: v.ProductMode,
-						ZoneId:    val.ZoneId,
+						region:     r,
+						FlavorId:   v.ProductMode,
+						SpecsName:  v.ProductMode,
+						ZoneId:     val.ZoneId,
+						ProductIds: []string{v.BillType + "-" + v.ProductID + "-" + val.ResourcesType},
 					}
-					if v.ProductArchitect != "pGPU" {
-						sku.Arch = v.ProductArchitect
-					}
+					// if v.ProductArchitect != "pGPU" {
+					sku.Arch = v.ProductArchitect
+					// }
 					var detail []productDetail
 					json.Unmarshal([]byte(v.ProductDetail), &detail)
+
 					for _, d := range detail {
-						if d.PrtyType == "memorySize" {
+						if d.PrtyCode == "memorySize" {
 							vv, _ := strconv.Atoi(d.PrtyValue)
 							sku.MemorySize = vv * 1024
-						} else if d.PrtyType == "cpuNum" {
+						} else if d.PrtyCode == "cpuNum" {
 							vv, _ := strconv.Atoi(d.PrtyValue)
 							sku.CpuCount = vv
-						} else if d.PrtyType == "vGpu" { // 4 * NVIDIA Tesla T4，4 * 16GB
+						} else if d.PrtyCode == "vGpu" { // 4 * NVIDIA Tesla T4，4 * 16GB
 							arr := strings.Split(d.PrtyValue, "，")
 							if len(arr) >= 2 {
 								arr1 := strings.Split(arr[0], "*")
@@ -302,9 +319,9 @@ func (r *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
 							}
 						}
 					}
-					if v.BillType == "0" && v.BmsSurplusNum != "0" {
+					if v.BillType == "0" {
 						sku.Subscription = true
-					} else if v.BillType == "5" && v.BmsSurplusNum != "0" {
+					} else if v.BillType == "5" {
 						sku.OnDemand = true
 					}
 					tmp[v.ProductMode] = sku
@@ -335,7 +352,8 @@ func (r *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
 						if err = res.Unmarshal(&ret, "result"); err == nil {
 							if len(ret.List) > 0 {
 								log.Infof("get flavors res:%d", len(ret.List))
-								ret.ZoneId = zone.(*SZone).ZoneCode
+								ret.ZoneId = zone.GetGlobalId()
+								ret.ResourcesType = serviceType
 								ch <- &ret
 							}
 						}
@@ -351,7 +369,137 @@ func (r *SRegion) GetICfelSkus() ([]cloudprovider.ICfelCloudSku, error) {
 	time.Sleep(2 * time.Second)
 	var result []cloudprovider.ICfelCloudSku
 	for _, vv := range tmp {
+		sort.Strings(vv.ProductIds)
+		vv.Name = strings.Join(vv.ProductIds, "@")
 		result = append(result, vv)
 	}
 	return result, nil
+}
+
+func (region *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) (float64, error) {
+	return 0, nil
+}
+
+func (region *SRegion) GetPostPaidPrice(zoneID, instanceType string) (float64, error) {
+	return region.GetPrice(zoneID, instanceType, true)
+}
+
+func (region *SRegion) GetPrePaidPrice(zoneID, instanceType string) (float64, error) {
+	return region.GetPrice(zoneID, instanceType, false)
+}
+
+func (region *SRegion) GetSpotPostPaidStatus(zoneID, instanceType string) (string, error) {
+	return api.SkuStatusSoldout, nil
+}
+
+// 目前获取 instanceType 获取到的数据皆为可购买字段，所以实例的可购买状态皆为  available
+func (region *SRegion) GetPostPaidStatus(zoneID, instanceType string) (string, error) {
+	arr := strings.Split(instanceType, "@")
+	if len(arr) == 2 {
+		return api.SkuStatusAvailable, nil
+	} else {
+		arr = strings.Split(arr[0], "-")
+		if len(arr) == 2 && arr[0] == "5" {
+			return api.SkuStatusAvailable, nil
+		} else {
+			return api.SkuStatusSoldout, nil
+		}
+	}
+}
+
+func (region *SRegion) GetPrePaidStatus(zoneID, instanceType string) (string, error) {
+
+	arr := strings.Split(instanceType, "@")
+	if len(arr) == 2 {
+		return api.SkuStatusAvailable, nil
+	} else {
+		arr = strings.Split(arr[0], "-")
+		if len(arr) == 2 && arr[0] == "0" {
+			return api.SkuStatusAvailable, nil
+		} else {
+			return api.SkuStatusSoldout, nil
+		}
+	}
+}
+
+func (region *SRegion) GetPrice(zoneID, instanceType string, isOnDemand bool) (float64, error) {
+	if region.zones == nil {
+		if err := region.fetchZones(); err != nil {
+			return 0, err
+		}
+	}
+	var zone *SZone
+	for _, z := range region.zones {
+		if z.GetGlobalId() == zoneID {
+			zone = z.(*SZone)
+		}
+	}
+	if zone == nil {
+		return 0, fmt.Errorf("zone not found")
+	}
+	var purchaseUnit = 3 // 3 包年包月 2 按量付费
+	arr := strings.Split(instanceType, "@")
+	// if len(arr) < 2 {
+	// 	return 0, fmt.Errorf("instanceType format error;instanceType:%s", instanceType)
+	// }
+	if len(arr) == 1 {
+		arr = append(arr, arr[0])
+	}
+	var productId = arr[0]
+	if isOnDemand {
+		purchaseUnit = 2
+		productId = arr[1]
+	}
+	arr = strings.Split(productId, "-")
+	if len(arr) < 3 {
+		return 0, fmt.Errorf("instanceType format error;instanceType:%s", instanceType)
+	}
+	params := map[string]interface{}{
+		"accountId":               region.client.accountId,
+		"userId":                  region.client.userId,
+		"isOnDemand":              isOnDemand,
+		"orderChannel":            1,
+		"orderType":               1,
+		"payType":                 1,
+		"autoRenew":               false,
+		"autoRenewPrice":          0,
+		"autoRenewPurchaseUnit":   3, // 3 包年包月 2 按量付费
+		"autoRenewPurchaseNumber": 1,
+		"autoRenewTimes":          1,
+		"description":             "",
+		"subOrders": []map[string]interface{}{
+			{
+				"packageCount":   1,
+				"purchaseNumber": 1,
+				"purchaseUnit":   purchaseUnit, // 3 包年包月 2 按量付费
+				"subOrderItems": []map[string]interface{}{
+					{
+						"instanceType":          arr[2],
+						"master":                true,
+						"productId":             arr[1],
+						"resourceType":          arr[2],
+						"zone":                  zone.ZoneID,
+						"resourceConfiguration": "{\"cpuNum\":10,\"memorySize\":1,\"dataType\":\"public\",\"diskSize\":50}",
+						"isOnDemand":            false,
+					},
+				},
+			},
+		},
+		"businessType": 0,
+	}
+	ret, err := region.client.postWithToken("bill-out-cons/bill/charge/order/getTotalProductPriceFromBill", params)
+	if err != nil {
+		return 0, err
+	}
+	var rr = struct {
+		StandardPrice float64
+		OriginalPrice float64
+	}{}
+	if err = ret.Unmarshal(&rr, "result"); err != nil {
+		return 0, err
+	}
+	if rr.StandardPrice == 0 {
+		return rr.OriginalPrice / 1000, nil
+	}
+	return rr.StandardPrice / 1000, nil
 }

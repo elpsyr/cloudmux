@@ -27,6 +27,7 @@ import (
 	"net/url"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -54,8 +55,9 @@ type ChinaUnionClientConfig struct {
 	accessKeyId     string
 	accessKeySecret string
 
-	userName string
-	password string
+	mainUserName string
+	userName     string
+	password     string
 
 	debug bool
 }
@@ -67,9 +69,11 @@ type SChinaUnionClient struct {
 	lock   sync.Mutex
 	ctx    context.Context
 
-	regions []SRegion
-	ownerId string
-	token   string
+	regions   []SRegion
+	ownerId   string
+	token     string
+	userId    int64
+	accountId int64
 }
 
 func NewChinaUnionClientConfig(accessKeyId, accessKeySecret string) *ChinaUnionClientConfig {
@@ -143,12 +147,15 @@ func (self *SChinaUnionClient) getUrl(resource string) string {
 	return fmt.Sprintf("https://gateway.cucloud.cn/%s", strings.TrimPrefix(resource, "/"))
 }
 
-func (self *SChinaUnionClient) SetToken(token string) {
-	self.token = token
+func (self *SChinaUnionClient) SetToken(token *AccountInfo) {
+	self.token = token.Token
+	self.userId = token.UserId
+	self.accountId = token.AccountId
 }
 
 type loginResp struct {
 	Data struct {
+		MainUserId    int64  `json:"mainUserId"`
 		LoginUserID   int64  `json:"loginUserId"`
 		LoginUserName string `json:"loginUserName"`
 		PublicKey     string `json:"publicKey"`
@@ -157,6 +164,13 @@ type loginResp struct {
 	} `json:"data"`
 	Msg    string `json:"msg"`
 	Status string `json:"status"`
+}
+
+type AccountInfo struct {
+	Token     string
+	UserId    int64
+	AccountId int64
+	Timestamp time.Time
 }
 
 func (self *SChinaUnionClient) CheckAuth() error {
@@ -175,17 +189,27 @@ func (self *SChinaUnionClient) CheckAuth() error {
 	return nil
 }
 
-func (self *SChinaUnionClient) Login() (string, error) {
+func (self *SChinaUnionClient) Login() (*AccountInfo, error) {
 	// 测试先读本地
 	var err error
-	tokenfile := "/root/project/puhui-uci/_output/token"
-	tt, err := ioutil.ReadFile(tokenfile)
-	if err != nil {
-		log.Warningf("write token file err:%v", err)
-	} else {
-		self.SetToken(string(tt))
-		if err = self.CheckAuth(); err == nil {
-			return string(tt), err
+	var tokenfile string
+	if self.debug {
+		tokenfile = "/root/project/puhui-uci/_output/token"
+		tt, err := ioutil.ReadFile(tokenfile)
+		if err != nil {
+			log.Warningf("write token file err:%v", err)
+		} else {
+			arr := strings.Split(string(tt), ",")
+			if len(arr) == 3 {
+				userId, _ := strconv.Atoi(arr[1])
+				accountId, _ := strconv.Atoi(arr[2])
+				acc := &AccountInfo{Token: arr[0], UserId: int64(userId), AccountId: int64(accountId), Timestamp: time.Now()}
+				self.SetToken(acc)
+				if err = self.CheckAuth(); err == nil {
+					return acc, err
+				}
+			}
+
 		}
 	}
 
@@ -197,36 +221,42 @@ func (self *SChinaUnionClient) Login() (string, error) {
 	//   "password": "boEkdA7MWWBkeIJA4GWHrA==",
 	//   "currentTimeMillis": "1735610890333"
 	// }
+	// 主账号登录用这个url iam/iam-portal/uc/v1/portal/login
 
 	var timestamp = fmt.Sprintf("%v", time.Now().Unix())
-	self.userName = "zhaeng"
-	self.password = "zhaeng@1011"
+	self.mainUserName = "zhaeng"
+	self.userName = "cfel01" // iam 用户
+	self.password = "Cfel@12345678"
 	pwd, err := encryptPwd(self.userName, self.password, timestamp)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	params := map[string]interface{}{
-		"userName":          self.userName,
-		"password":          pwd,
-		"loginMode":         "0",
+		"userName": self.mainUserName, // 主账号
+		"password": pwd,
+		// "loginMode":         "0", //主账号登录需要
 		"currentTimeMillis": timestamp,
+		"iamUserName":       self.userName, // 不是 iam用户登录不需要
 	}
-	res, err := self.postWithToken("iam/iam-portal/uc/v1/portal/login", params)
+	res, err := self.postWithToken("iam/iam-portal/uc/v1/iam/login", params)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	var ret loginResp
 	if err = res.Unmarshal(&ret); err != nil {
-		return "", err
+		return nil, err
 	}
 	if ret.Status != "200" {
-		return "", fmt.Errorf(ret.Msg)
+		return nil, fmt.Errorf(ret.Msg)
 	}
 	// 本地使用
-	ioutil.WriteFile(tokenfile, []byte(ret.Data.Token), os.ModeAppend)
+	if self.debug {
+		ioutil.WriteFile(tokenfile, []byte(fmt.Sprintf("%s,%d,%d", ret.Data.Token, ret.Data.LoginUserID, ret.Data.MainUserId)), os.ModeAppend)
+	}
 
-	self.SetToken(ret.Data.Token)
-	return ret.Data.Token, nil
+	account := &AccountInfo{Token: ret.Data.Token, UserId: ret.Data.LoginUserID, AccountId: ret.Data.MainUserId, Timestamp: time.Now()}
+	self.SetToken(account)
+	return account, nil
 }
 
 func (self *SChinaUnionClient) GetToken() string {
@@ -341,8 +371,10 @@ func (self *SChinaUnionClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	req.Header.Set("sign", signature)
-	curlCmd, _ := http2curl.GetCurlCommand(req)
-	fmt.Println(curlCmd)
+	if self.debug {
+		curlCmd, _ := http2curl.GetCurlCommand(req)
+		fmt.Println(curlCmd)
+	}
 	return client.Do(req)
 }
 

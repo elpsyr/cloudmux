@@ -33,13 +33,9 @@ type SChinaUnionProviderFactory struct {
 	cloudprovider.SPublicCloudBaseProviderFactory
 
 	mut      sync.Mutex
-	tokenMap map[string]*tokenInfo
+	tokenMap map[string]*cucloud.AccountInfo
 }
 
-type tokenInfo struct {
-	token     string
-	timestamp time.Time
-}
 
 func (self *SChinaUnionProviderFactory) GetId() string {
 	return CLOUD_PROVIDER_CUCLOUD
@@ -94,41 +90,45 @@ func (self *SChinaUnionProviderFactory) GetProvider(cfg cloudprovider.ProviderCo
 
 	now := time.Now()
 	for k, v := range self.tokenMap {
-		if now.Sub(v.timestamp) > 12*time.Hour {
+		if now.Sub(v.Timestamp) > 12*time.Hour {
 			delete(self.tokenMap, k)
 		}
 	}
-	
-	if info, ok := self.tokenMap[cfg.Account]; ok {
 
-		if now.Sub(info.timestamp) > 2*time.Hour { // token生成时间大于30分钟更新token
+	if info, ok := self.tokenMap[cfg.Account]; ok {
+		if now.Sub(info.Timestamp) > 2*time.Hour { // token生成时间大于30分钟更新token
 			token, err := client.Login()
 			if err != nil {
 				return nil, err
 			}
-			info.timestamp = now
-			info.token = token
+			info.Timestamp = now
+			info.Token = token.Token
+			info.UserId = token.UserId
+			info.AccountId = token.AccountId
 			self.tokenMap[cfg.Account] = info
 		} else {
+			client.SetToken(info)
 			err := client.CheckAuth()
 			if err != nil {
 				token, err := client.Login()
 				if err != nil {
 					return nil, err
 				}
-				info.timestamp = now
-				info.token = token
+				info.Timestamp = now
+				info.Token = token.Token
+				info.UserId = token.UserId
+				info.AccountId = token.AccountId
 				self.tokenMap[cfg.Account] = info
 			}
 		}
-		client.SetToken(info.token)
+		client.SetToken(info)
 	} else {
 		token, err := client.Login()
 		if err != nil {
 			return nil, err
 		}
 		client.SetToken(token)
-		self.tokenMap[cfg.Account] = &tokenInfo{token: token, timestamp: time.Now()}
+		self.tokenMap[cfg.Account] = token
 	}
 
 	return &SChinaUnionProvider{
@@ -146,7 +146,7 @@ func (self *SChinaUnionProviderFactory) GetClientRC(info cloudprovider.SProvider
 }
 
 func init() {
-	factory := SChinaUnionProviderFactory{tokenMap: make(map[string]*tokenInfo)}
+	factory := SChinaUnionProviderFactory{tokenMap: make(map[string]*cucloud.AccountInfo)}
 	cloudprovider.RegisterFactory(&factory)
 }
 

@@ -225,20 +225,20 @@ func (self *SChinaUnionClient) Login() (*AccountInfo, error) {
 
 	var timestamp = fmt.Sprintf("%v", time.Now().Unix())
 	self.mainUserName = "zhaeng"
-	self.userName = "cfel01" // iam 用户
-	self.password = "Cfel@12345678"
-	pwd, err := encryptPwd(self.userName, self.password, timestamp)
+	self.userName = "cfel01" // iam 用户 Cfel@12345678
+	self.password = "zhaeng@1011"
+	pwd, err := encryptPwd(self.mainUserName, self.password, timestamp)
 	if err != nil {
 		return nil, err
 	}
 	params := map[string]interface{}{
 		"userName": self.mainUserName, // 主账号
 		"password": pwd,
-		// "loginMode":         "0", //主账号登录需要
+		"loginMode":         "0", //主账号登录需要
 		"currentTimeMillis": timestamp,
-		"iamUserName":       self.userName, // 不是 iam用户登录不需要
+		// "iamUserName":       self.userName, // 不是 iam用户登录不需要
 	}
-	res, err := self.postWithToken("iam/iam-portal/uc/v1/iam/login", params)
+	res, err := self.postWithToken("iam/iam-portal/uc/v1/portal/login", params)
 	if err != nil {
 		return nil, err
 	}

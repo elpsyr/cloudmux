@@ -20,6 +20,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"yunion.io/x/pkg/util/httputils"
 
 	"yunion.io/x/jsonutils"
 	"yunion.io/x/log"
@@ -103,6 +104,12 @@ func (self *SRegion) getOBSClient(signType obs.SignatureType) (*obs.ObsClient, e
 func (self *SRegion) GetZones() ([]SZone, error) {
 	resp, err := self.list(SERVICE_ECS_V2_1, "os-availability-zone", nil)
 	if err != nil {
+		// cfel add
+		if e, ok := err.(*httputils.JSONClientError); ok && e.Code == 403 {
+			if e.Details == "The IAM user is forbidden in the currently selected region" {
+				return []SZone{}, nil
+			}
+		}
 		return nil, err
 	}
 	ret := []SZone{}

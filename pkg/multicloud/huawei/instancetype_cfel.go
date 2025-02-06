@@ -566,7 +566,7 @@ func (self *SRegion) GetInstanceTypeStatus(zoneId, instanceTypeName string) (str
 	defer self.mut.Unlock()
 
 	if self.instanceStatus != nil {
-		return *self.instanceStatus,nil
+		return *self.instanceStatus, nil
 	}
 	skus, err := self.GetInstanceTypes(zoneId)
 	if err != nil {
@@ -587,7 +587,7 @@ func (self *SRegion) GetInstanceTypeStatus(zoneId, instanceTypeName string) (str
 		az := ret[0].OSExtraSpecs.CondOperationAz
 
 		// like: abandon
-		status := ret[0].OSExtraSpecs.CondOperationStatus
+		status = ret[0].OSExtraSpecs.CondOperationStatus
 		// 定义正则表达式
 		re := regexp.MustCompile(zoneId + `\(([^)]+)\)`)
 		// 在字符串中查找匹配项
@@ -654,10 +654,10 @@ func (self *SRegion) GetICfelSkuPrice(opt *cloudprovider.CfelSkuPriceOptions) (m
 					"region":             self.Id,
 					"usage_factor":       "Duration",
 					"usage_value":        1,
-					"usage_measure_id":   4,               // 4 代表小时为单位
-					"subscription_num":   1,               // 订购数量。
+					"usage_measure_id":   4,            // 4 代表小时为单位
+					"subscription_num":   1,            // 订购数量。
 					"resource_size":      opt.DiskSize, // 资源容量大小，例如购买的卷大小或带宽大小。 线性产品时此参数必填。线性产品为包括硬盘，带宽等在订购时需要指定大小的产品。例如硬盘在订购时需选择10G、20G等不同大小。
-					"size_measure_id":    17,              // 资源容量度量标识，枚举值,17：GB（购买云硬盘时使用）
+					"size_measure_id":    17,           // 资源容量度量标识，枚举值,17：GB（购买云硬盘时使用）
 				},
 			},
 		}
@@ -728,10 +728,10 @@ func (self *SRegion) GetICfelSkuPrice(opt *cloudprovider.CfelSkuPriceOptions) (m
 					"region":             self.Id,
 					"usage_factor":       "Duration",
 					"usage_value":        1,
-					"usage_measure_id":   4,               // 4 代表小时为单位
-					"subscription_num":   1,               // 订购数量。
+					"usage_measure_id":   4,            // 4 代表小时为单位
+					"subscription_num":   1,            // 订购数量。
 					"resource_size":      opt.DiskSize, // 资源容量大小，例如购买的卷大小或带宽大小。 线性产品时此参数必填。线性产品为包括硬盘，带宽等在订购时需要指定大小的产品。例如硬盘在订购时需选择10G、20G等不同大小。
-					"size_measure_id":    17,              // 资源容量度量标识，枚举值,17：GB（购买云硬盘时使用）
+					"size_measure_id":    17,           // 资源容量度量标识，枚举值,17：GB（购买云硬盘时使用）
 				},
 			},
 		}

@@ -2,6 +2,7 @@ package huawei
 
 import (
 	"fmt"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -568,26 +569,20 @@ func (self *SRegion) GetInstanceTypeStatus(zoneId, instanceTypeName string) (str
 	if self.instanceStatus != nil {
 		return *self.instanceStatus, nil
 	}
-	skus, err := self.GetInstanceTypes(zoneId)
+	osExtraSpecs, err := self.NovaShowFlavorExtraSpecs(instanceTypeName)
 	if err != nil {
 		return "", errors.Wrapf(err, "fetchInstanceTypes")
 	}
-	ret := make([]SInstanceType, 0)
-	for _, sku := range skus {
-		if sku.Name == instanceTypeName {
-			ret = append(ret, sku)
-			break
-		}
-	}
+
 	var status = api.SkuStatusSoldout
-	if len(ret) > 0 {
+	if osExtraSpecs != nil {
 
 		var retSkuStatus string
 		// like: cn-east-3a(normal),cn-east-3c(sellout),cn-east-3d(normal)
-		az := ret[0].OSExtraSpecs.CondOperationAz
+		az := osExtraSpecs.CondOperationAz
 
 		// like: abandon
-		status = ret[0].OSExtraSpecs.CondOperationStatus
+		status = osExtraSpecs.CondOperationStatus
 		// 定义正则表达式
 		re := regexp.MustCompile(zoneId + `\(([^)]+)\)`)
 		// 在字符串中查找匹配项
@@ -615,6 +610,25 @@ func (self *SRegion) GetInstanceTypeStatus(zoneId, instanceTypeName string) (str
 	self.instanceStatus = &status
 	// 没有查询到对应 zone instanceType
 	return status, nil
+}
+
+// NovaShowFlavorExtraSpecs https://console.huaweicloud.com/apiexplorer/#/openapi/ECS/debug?api=NovaShowFlavorExtraSpecs
+// 查询云服务器规格extra_specs的详情
+func (self *SRegion) NovaShowFlavorExtraSpecs(flavorId string) (*OSExtraSpecs, error) {
+	query := url.Values{}
+	if len(flavorId) > 0 {
+		query.Set("flavor_id", flavorId)
+	}
+	resp, err := self.list(SERVICE_ECS_V2_1, fmt.Sprintf("flavors/%s/os-extra_specs", flavorId), query)
+	if err != nil {
+		return nil, errors.Wrapf(err, "list flavors")
+	}
+	ret := &OSExtraSpecs{}
+	err = resp.Unmarshal(&ret, "extra_specs")
+	if err != nil {
+		return nil, errors.Wrapf(err, "Unmarshal")
+	}
+	return ret, nil
 }
 
 // GetICfelSkuPrice 实例询价

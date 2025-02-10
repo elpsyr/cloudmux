@@ -451,6 +451,12 @@ func (self *SRegion) cfelCreateInstance(hostId, hypervisor string, opts *cloudpr
 	input := compute.ServerCreateInput{
 		ServerConfigs: &compute.ServerConfigs{},
 	}
+	// scheduler tag
+	input.Schedtags = []*compute.SchedtagConfig{}
+	for _, schedtagConfig := range opts.SchedtagConfig {
+		input.Schedtags = append(input.Schedtags, &compute.SchedtagConfig{Id: schedtagConfig.Id, Strategy: schedtagConfig.Strategy})
+	}
+
 	var isolatedDevice []*compute.IsolatedDeviceConfig
 	if opts.IsolatedDevice != nil {
 		for _, v := range opts.IsolatedDevice {

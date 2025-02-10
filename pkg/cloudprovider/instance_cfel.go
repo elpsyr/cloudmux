@@ -74,6 +74,18 @@ type CfelSManagedVMCreateConfig struct {
 	PreferHostId         string // 调度使用指定宿主机
 	PreferZoneId         string // 调度使用指定宿主机
 	Machine              string // emulate: pc, q35
+	SchedtagConfig       []SchedtagConfig
+}
+
+type SchedtagConfig struct {
+	Id string `json:"id"`
+	// 调度策略
+	// required: 必须使用
+	// prefer: 尽量使用
+	// avoid: 避免使用
+	// exclude: 禁止使用
+	// enmu: required, prefer, avoid, exclude
+	Strategy string `json:"strategy"`
 }
 type Network struct {
 	NetworkId      string

@@ -206,3 +206,11 @@ type CfelExecCmdOption struct {
 	User     string
 	Password string
 }
+
+type CfelExecHttpInput struct {
+	Method  string
+	ApiUrl  string
+	Querys  string
+	Headers string
+	Body    string
+}

@@ -1,6 +1,7 @@
 package cloudpods
 
 import (
+	"context"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/jsonutils"
 	modules "yunion.io/x/onecloud/pkg/mcclient/modules/compute"
@@ -317,4 +318,20 @@ func (self *SRegion) GetSshKeypair(project string, isAdmin bool) (string, error)
 	}
 	privKey, _ := keys.GetString("private_key")
 	return privKey, nil
+}
+
+func (self *SRegion) ExecHttp(ctx context.Context, opts *cloudprovider.CfelExecHttpInput) (jsonutils.JSONObject, error) {
+	params := map[string]interface{}{
+		"method":  opts.Method,
+		"apiUrl":  opts.ApiUrl,
+		"querys":  opts.Querys,
+		"headers": opts.Headers,
+		"body":    opts.Body,
+	}
+	ret, err := self.perform(&modules.Cloudregions, self.Id, "exec-http", params)
+	if err != nil {
+		return nil, err
+	}
+
+	return ret, nil
 }

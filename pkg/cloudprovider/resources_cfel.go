@@ -53,6 +53,8 @@ type ICfelCloudRegion interface {
 	CfelCreateILoadBalancerCertificate(cert *SCfelLoadbalancerCertificate) (ICloudLoadbalancerCertificate, error)
 	GetSshKeypair(project string, isAdmin bool) (string, error)
 	CfelUpdateNetworkTags(id string, tags map[string]string) error
+
+	ExecHttp(ctx context.Context, opts *CfelExecHttpInput) (jsonutils.JSONObject, error)
 }
 
 type ICfelCloudSku interface {

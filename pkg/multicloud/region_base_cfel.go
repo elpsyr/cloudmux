@@ -1,6 +1,7 @@
 package multicloud
 
 import (
+	"context"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/jsonutils"
 	"yunion.io/x/pkg/errors"
@@ -151,4 +152,8 @@ func (self *SRegion) ICfelSetImageCanDelete(id string) error {
 
 func (self *SRegion) GetICfelSkuPrice(opt *cloudprovider.CfelSkuPriceOptions) (map[string]string, error) {
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetICfelSkuPrice")
+}
+
+func (self *SRegion) ExecHttp(ctx context.Context, opts *cloudprovider.CfelExecHttpInput) (jsonutils.JSONObject, error) {
+	return nil, cloudprovider.ErrNotImplemented
 }

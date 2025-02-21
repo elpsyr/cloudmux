@@ -95,6 +95,18 @@ func (self *SLBListener) GetBackendServerPort() int {
 // https://cloud.tencent.com/document/product/214/30691
 func (self *SLBListener) CreateILoadBalancerListenerRule(rule *cloudprovider.SLoadbalancerListenerRule) (cloudprovider.ICloudLoadbalancerListenerRule, error) {
 	hc := getListenerRuleHealthCheck(rule)
+
+	// add by zhaeng begin
+	switch strings.ToLower(rule.Scheduler) {
+	case api.LB_SCHEDULER_WRR:
+		rule.Scheduler = "WRR"
+	case api.LB_SCHEDULER_WLC:
+		rule.Scheduler = "LEAST_CONN"
+	case api.LB_SCHEDULER_SCH:
+		rule.Scheduler = "IP_HASH"
+	}
+	// add by zhaeng end
+	
 	requestId, err := self.lb.region.CreateLoadbalancerListenerRule(self.lb.GetId(),
 		self.GetId(),
 		rule.Domain,

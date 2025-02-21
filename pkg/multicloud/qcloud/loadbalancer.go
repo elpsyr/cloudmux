@@ -245,7 +245,8 @@ func (self *SLoadbalancer) GetNetworkType() string {
 
 func (self *SLoadbalancer) GetNetworkIds() []string {
 	if len(self.SubnetId) == 0 {
-		return []string{}
+		// return []string{}
+		return []string{""} // modify by zhaeng
 	}
 
 	return []string{self.SubnetId}
@@ -422,7 +423,7 @@ func (self *SLoadbalancer) SetTags(tags map[string]string, replace bool) error {
 }
 
 // https://cloud.tencent.com/document/api/214/30692
-func (self *SRegion) CreateILoadBalancer(opts *cloudprovider.SLoadbalancerCreateOptions) (cloudprovider.ICloudLoadbalancer, error) {
+func (self *SRegion) CreateILoadBalancer1(opts *cloudprovider.SLoadbalancerCreateOptions) (cloudprovider.ICloudLoadbalancer, error) {
 	params := map[string]string{
 		"LoadBalancerName": opts.Name,
 		"VpcId":            opts.VpcId,

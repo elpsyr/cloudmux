@@ -22,14 +22,17 @@ var (
 )
 
 type SEip struct {
-	Name              string
-	BandwidthMbps     int
-	ChargeType        string
-	BGPType           string
-	NetworkExternalId string
-	Ip                string
-	ProjectId         string
-	Tags              map[string]string
+	Name               string
+	BandwidthMbps      int
+	ChargeType         string // 计费方式 PostPaid 按量计费 PrePaid 包年包月
+	BGPType            string
+	InternetChargeType string // 计费方式 PayByBandwidth 按带宽 PayByTraffic 按流量 add by zhaeng
+	PricingCycle       string // 包年包月计费周期 add by zhaeng
+	Period             int    // 购买时长 add by zhaeng
+	NetworkExternalId  string
+	Ip                 string
+	ProjectId          string
+	Tags               map[string]string
 }
 
 type AssociateConfig struct {

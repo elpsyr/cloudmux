@@ -133,7 +133,8 @@ type ICfelGeneralUsage interface {
 
 type ICfelLoadbalancerBackendGroup interface {
 	ICloudLoadbalancerBackendGroup
-	CfelAddBackendServer(serverType, serverId, ssl string, weight int, port int) (ICloudLoadbalancerBackend, error)
+	CfelAddBackendServer(opts *SCfelLBListenerAddServer) (ICloudLoadbalancerBackend, error)
+	CfelRemoveBackendServer(opts *SCfelLBListenerRemoveServer) error
 }
 
 type ICfelLoadbalancerListener interface {
@@ -145,6 +146,8 @@ type ICfelLoadbalancerListener interface {
 type ICfelLoadbalancer interface {
 	ICloudLoadbalancer
 	CfelCreateILoadBalancerBackendGroup(*SCfelLoadbalancerBackendGroup) (ICloudLoadbalancerBackendGroup, error)
+	CfelSetLoadBalancerSecurityGroups(sgs []string) error // for qcloud only
+	CfelUnSetLoadBalancerSecurityGroups(sgs []string) error // for qcloud only
 }
 
 type ICfelLoadbalancerSku interface {

@@ -122,19 +122,23 @@ type SCloudLoadbalancerBackendGroup struct {
 }
 
 // CfelAddBackendServer implements cloudprovider.ICfelLoadbalancerBackendGroup.
-func (s *SCloudLoadbalancerBackendGroup) CfelAddBackendServer(serverType string, serverId string, ssl string, weight int, port int) (cloudprovider.ICloudLoadbalancerBackend, error) {
+func (s *SCloudLoadbalancerBackendGroup) CfelAddBackendServer(opts *cloudprovider.SCfelLBListenerAddServer) (cloudprovider.ICloudLoadbalancerBackend, error) {
 	params := map[string]interface{}{
-		"backend_type":  serverType,
-		"guest_backend": serverId,
-		"port":          port,
-		"weight":        weight,
-		"ssl":           ssl,
+		"backend_type":  opts.ServerType,
+		"guest_backend": opts.ServerId,
+		"port":          opts.Port,
+		"weight":        opts.Weight,
+		"ssl":           opts.Ssl,
 		"backend_group": s.ID,
-		"backend":       serverId,
+		"backend":       opts.ServerId,
 	}
 	var ret SCloudLoadbalancerBackend
 	err := s.loadbalancer.region.create(&modules.LoadbalancerBackends, params, &ret)
 	return &ret, err
+}
+
+func (s *SCloudLoadbalancerBackendGroup) CfelRemoveBackendServer(opts *cloudprovider.SCfelLBListenerRemoveServer) error {
+	return nil
 }
 
 // AddBackendServer implements cloudprovider.ICloudLoadbalancerBackendGroup.

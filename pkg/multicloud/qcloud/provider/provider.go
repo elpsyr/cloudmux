@@ -210,7 +210,7 @@ func (self *SQcloudProviderFactory) GetProvider(cfg cloudprovider.ProviderConfig
 	client, err := qcloud.NewQcloudClient(
 		qcloud.NewQcloudClientConfig(
 			secretId, cfg.Secret,
-		).AppId(appId).CloudproviderConfig(cfg),
+		).AppId(appId).CloudproviderConfig(cfg).Debug(cfg.Debug),
 	)
 	if err != nil {
 		return nil, err

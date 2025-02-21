@@ -3,8 +3,10 @@ package aliyun
 import (
 	"encoding/json"
 	"fmt"
-	alierr "github.com/aliyun/alibaba-cloud-sdk-go/sdk/errors"
 	"strings"
+	"time"
+
+	alierr "github.com/aliyun/alibaba-cloud-sdk-go/sdk/errors"
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
 	"yunion.io/x/log"
@@ -330,4 +332,64 @@ func (self *SRegion) GetImagesByInstanceType(instanceType string, status ImageSt
 	}
 
 	return self.getImages(params)
+}
+
+func (region *SRegion) CreateILoadBalancer(loadbalancer *cloudprovider.SLoadbalancerCreateOptions) (cloudprovider.ICloudLoadbalancer, error) {
+	params := map[string]string{}
+	params["RegionId"] = region.RegionId
+	params["LoadBalancerName"] = loadbalancer.Name
+	if len(loadbalancer.ZoneId) > 0 {
+		params["MasterZoneId"] = transZoneIdFromEcsZoneId(region, "elb", loadbalancer.ZoneId)
+	}
+
+	if len(loadbalancer.VpcId) > 0 {
+		params["VpcId"] = loadbalancer.VpcId
+	}
+
+	if len(loadbalancer.NetworkIds) > 0 {
+		params["VSwitchId"] = loadbalancer.NetworkIds[0]
+	}
+
+	if len(loadbalancer.Address) > 0 {
+		params["Address"] = loadbalancer.Address
+	}
+
+	if len(loadbalancer.AddressType) > 0 {
+		params["AddressType"] = loadbalancer.AddressType
+	}
+
+	if len(loadbalancer.LoadbalancerSpec) > 0 {
+		params["LoadBalancerSpec"] = loadbalancer.LoadbalancerSpec
+	}
+
+	if len(loadbalancer.ChargeType) > 0 {
+		params["InternetChargeType"] = "payby" + loadbalancer.ChargeType
+	}
+
+	if len(loadbalancer.ProjectId) > 0 {
+		params["ResourceGroupId"] = loadbalancer.ProjectId
+	}
+
+	if len(loadbalancer.InstanceChargeType) > 0 {
+		params["InstanceChargeType"] = loadbalancer.InstanceChargeType
+	}
+	
+	if loadbalancer.ChargeType == api.LB_CHARGE_TYPE_BY_BANDWIDTH && loadbalancer.EgressMbps > 0 {
+		params["Bandwidth"] = fmt.Sprintf("%d", loadbalancer.EgressMbps)
+	}
+
+	body, err := region.lbRequest("CreateLoadBalancer", params)
+	if err != nil {
+		return nil, err
+	}
+	loadBalancerID, err := body.GetString("LoadBalancerId")
+	if err != nil {
+		return nil, err
+	}
+	region.SetResourceTags(ALIYUN_SERVICE_SLB, "instance", loadBalancerID, loadbalancer.Tags, false)
+	iLoadbalancer, err := region.GetLoadbalancerDetail(loadBalancerID)
+	if err != nil {
+		return nil, err
+	}
+	return iLoadbalancer, cloudprovider.WaitStatus(iLoadbalancer, api.LB_STATUS_ENABLED, time.Second*5, time.Minute*5)
 }

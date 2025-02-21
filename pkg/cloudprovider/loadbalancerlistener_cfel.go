@@ -32,6 +32,27 @@ type SCfelLoadbalancerListenerRule struct {
 	RedirectPath   string
 }
 
+type SCfelLBListenerAddServer struct {
+	ServerType string
+	ServerId   string
+
+	Ssl    string
+	Weight int
+	Port   int
+
+	LocationId string // for qcloud only
+}
+
+type SCfelLBListenerRemoveServer struct {
+	ServerType string
+	ServerId   string
+
+	Weight int
+	Port   int
+
+	LocationId string // for qcloud only
+}
+
 type SCfelLoadbalancerBackendGroup struct {
 	Name           string
 	GroupType      string

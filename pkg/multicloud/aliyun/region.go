@@ -978,7 +978,7 @@ func (region *SRegion) GetILoadBalancerCertificates() ([]cloudprovider.ICloudLoa
 	return iCertificates, nil
 }
 
-func (region *SRegion) CreateILoadBalancer(loadbalancer *cloudprovider.SLoadbalancerCreateOptions) (cloudprovider.ICloudLoadbalancer, error) {
+func (region *SRegion) CreateILoadBalancer1(loadbalancer *cloudprovider.SLoadbalancerCreateOptions) (cloudprovider.ICloudLoadbalancer, error) {
 	params := map[string]string{}
 	params["RegionId"] = region.RegionId
 	params["LoadBalancerName"] = loadbalancer.Name

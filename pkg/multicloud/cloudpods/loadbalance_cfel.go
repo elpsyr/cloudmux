@@ -56,6 +56,14 @@ func (s *SLoadbalancer) CfelCreateILoadBalancerBackendGroup(bg *cloudprovider.SC
 	return &ret, res.Unmarshal(&ret)
 }
 
+func (s *SLoadbalancer) CfelSetLoadBalancerSecurityGroups(sgs []string) error {
+	return nil
+}
+
+func (s *SLoadbalancer) CfelUnSetLoadBalancerSecurityGroups(sgs []string) error {
+	return nil
+}
+
 // CreateILoadBalancerBackendGroup implements cloudprovider.ICloudLoadbalancer.
 func (s *SLoadbalancer) CreateILoadBalancerBackendGroup(group *cloudprovider.SLoadbalancerBackendGroup) (cloudprovider.ICloudLoadbalancerBackendGroup, error) {
 	params := map[string]interface{}{

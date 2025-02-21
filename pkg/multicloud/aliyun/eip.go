@@ -299,7 +299,7 @@ func (region *SRegion) GetEip(eipId string) (*SEipAddress, error) {
 	return nil, errors.Wrapf(cloudprovider.ErrNotFound, eipId)
 }
 
-func (region *SRegion) AllocateEIP(opts *cloudprovider.SEip) (*SEipAddress, error) {
+func (region *SRegion) AllocateEIP1(opts *cloudprovider.SEip) (*SEipAddress, error) {
 	params := make(map[string]string)
 	if len(opts.Name) > 0 {
 		params["Name"] = opts.Name

@@ -210,7 +210,7 @@ type CfelExecCmdOption struct {
 type CfelExecHttpInput struct {
 	Method  string
 	ApiUrl  string
-	Querys  string
-	Headers string
+	Querys  map[string]string
+	Headers map[string]string
 	Body    string
 }

@@ -90,8 +90,10 @@ func (self *SEipAddress) GetStatus() string {
 		return api.EIP_STATUS_ASSOCIATE
 	case EIP_STATUS_UNBINDING:
 		return api.EIP_STATUS_DISSOCIATE
-	case EIP_STATUS_UNBIND, EIP_STATUS_BIND, EIP_STATUS_OFFLINING, EIP_STATUS_BIND_ENI:
+	case EIP_STATUS_UNBIND, EIP_STATUS_OFFLINING, EIP_STATUS_BIND_ENI:
 		return api.EIP_STATUS_READY
+	case EIP_STATUS_BIND: // modify by zhaeng
+		return api.EIP_CFEL_STATUS_DISSOCIATED
 	case EIP_STATUS_CREATE_FAILED:
 		return api.EIP_STATUS_ALLOCATE_FAIL
 	default:
@@ -221,7 +223,7 @@ func (self *SEipAddress) Associate(conf *cloudprovider.AssociateConfig) error {
 			log.Warningf("failed to change instance %s bandwidth -> %d error: %v", conf.InstanceId, conf.Bandwidth, err)
 		}
 	}
-	return cloudprovider.WaitStatusWithDelay(self, api.EIP_STATUS_READY, 5*time.Second, 10*time.Second, 180*time.Second)
+	return cloudprovider.WaitStatusWithDelay(self, api.EIP_CFEL_STATUS_DISSOCIATED, 5*time.Second, 10*time.Second, 180*time.Second)
 }
 
 func (self *SEipAddress) Dissociate() error {

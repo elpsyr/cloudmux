@@ -140,6 +140,7 @@ type ICfelLoadbalancerBackendGroup interface {
 type ICfelLoadbalancerListener interface {
 	ICloudLoadbalancerListener
 	CfelCreateILoadBalancerListenerRule(*SCfelLoadbalancerListenerRule) (ICloudLoadbalancerListenerRule, error)
+	CfelUpdateILoadBalancerListenerRule(*SCfelUpdateLoadbalancerListenerRule) error
 	Update(*SLoadbalancerListenerCreateOptions) error
 }
 
@@ -148,6 +149,7 @@ type ICfelLoadbalancer interface {
 	CfelCreateILoadBalancerBackendGroup(*SCfelLoadbalancerBackendGroup) (ICloudLoadbalancerBackendGroup, error)
 	CfelSetLoadBalancerSecurityGroups(sgs []string) error // for qcloud only
 	CfelUnSetLoadBalancerSecurityGroups(sgs []string) error // for qcloud only
+	CfelModifyLoadBalancerAttributes(*SCfelModifyLbAttributes) error // for qcloud only
 }
 
 type ICfelLoadbalancerSku interface {

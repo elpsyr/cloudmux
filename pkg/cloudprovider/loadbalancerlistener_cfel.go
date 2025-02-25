@@ -32,6 +32,11 @@ type SCfelLoadbalancerListenerRule struct {
 	RedirectPath   string
 }
 
+type SCfelUpdateLoadbalancerListenerRule struct {
+	SLoadbalancerListenerRule
+	LocationId string
+}
+
 type SCfelLBListenerAddServer struct {
 	ServerType string
 	ServerId   string
@@ -51,6 +56,10 @@ type SCfelLBListenerRemoveServer struct {
 	Port   int
 
 	LocationId string // for qcloud only
+}
+
+type SCfelModifyLbAttributes struct {
+	LoadBalancerPassToTarget bool
 }
 
 type SCfelLoadbalancerBackendGroup struct {

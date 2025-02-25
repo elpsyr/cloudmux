@@ -60,7 +60,7 @@ type Rule struct {
 
 // backend InstanceId + protocol  +Port + ip + rip全局唯一
 func (self *SLBBackend) GetId() string {
-	return fmt.Sprintf("%s/%s-%d", self.group.GetId(), self.InstanceId, self.Port)
+	return self.InstanceId // modify by zhaeng
 }
 
 func (self *SLBBackend) GetName() string {
@@ -68,7 +68,7 @@ func (self *SLBBackend) GetName() string {
 }
 
 func (self *SLBBackend) GetGlobalId() string {
-	return self.GetId()
+	return fmt.Sprintf("%s/%s-%d", self.group.GetId(), self.InstanceId, self.Port) // modify by zhaeng
 }
 
 func (self *SLBBackend) GetStatus() string {

@@ -212,3 +212,16 @@ func (listener *SLoadbalancerHTTPListener) CfelCreateILoadBalancerListenerRule(*
 func (listener *SLoadbalancerTCPListener) CfelCreateILoadBalancerListenerRule(*cloudprovider.SCfelLoadbalancerListenerRule) (cloudprovider.ICloudLoadbalancerListenerRule, error) {
 	panic("unimplemented")
 }
+
+func (listener *SLoadbalancerTCPListener)CfelUpdateILoadBalancerListenerRule(*cloudprovider.SCfelUpdateLoadbalancerListenerRule) error {
+	panic("unimplemented")
+}
+func (listener *SLoadbalancerUDPListener)CfelUpdateILoadBalancerListenerRule(*cloudprovider.SCfelUpdateLoadbalancerListenerRule) error {
+	panic("unimplemented")
+}
+func (listener *SLoadbalancerHTTPListener)CfelUpdateILoadBalancerListenerRule(*cloudprovider.SCfelUpdateLoadbalancerListenerRule) error {
+	panic("unimplemented")
+}
+func (listener *SLoadbalancerHTTPSListener)CfelUpdateILoadBalancerListenerRule(*cloudprovider.SCfelUpdateLoadbalancerListenerRule) error {
+	panic("unimplemented")
+}

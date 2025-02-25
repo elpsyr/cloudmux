@@ -485,6 +485,7 @@ func (self *SRegion) CreateLoadbalancerListenerRule(lbid string, listenerId stri
 	params["Rules.0.HealthCheck.IntervalTime"] = strconv.Itoa(hc.IntervalTime)
 	params["Rules.0.HealthCheck.HealthNum"] = strconv.Itoa(hc.HealthNum)
 	params["Rules.0.HealthCheck.UnHealthNum"] = strconv.Itoa(hc.UnHealthNum)
+	params["Rules.0.HealthCheck.TimeOut"] = strconv.Itoa(hc.TimeOut) // add by zhaeng
 	if hc.HTTPCode > 0 {
 		params["Rules.0.HealthCheck.HttpCode"] = strconv.Itoa(hc.HTTPCode)
 		params["Rules.0.HealthCheck.HttpCheckPath"] = hc.HTTPCheckPath
@@ -564,9 +565,10 @@ func getListenerRuleHealthCheck(rule *cloudprovider.SLoadbalancerListenerRule) *
 		httpCode := onecloudHealthCodeToQcloud(rule.HealthCheckHttpCode)
 		if httpCode > 0 {
 			hc.HTTPCode = httpCode
-			hc.HTTPCheckMethod = "HEAD" // todo: add column HttpCheckMethod in model
+			// hc.HTTPCheckMethod = "HEAD" // todo: add column HttpCheckMethod in model
 			hc.HTTPCheckDomain = rule.HealthCheckDomain
 			hc.HTTPCheckPath = rule.HealthCheckURI
+			hc.HTTPCheckMethod = rule.HealthCheckMethod // add by zhaeng
 		}
 	} else {
 		hc = &HealthCheck{

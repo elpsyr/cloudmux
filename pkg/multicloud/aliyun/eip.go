@@ -117,8 +117,10 @@ func (self *SEipAddress) GetGlobalId() string {
 
 func (self *SEipAddress) GetStatus() string {
 	switch self.Status {
-	case EIP_STATUS_AVAILABLE, EIP_STATUS_INUSE:
+	case EIP_STATUS_AVAILABLE:
 		return api.EIP_STATUS_READY
+	case EIP_STATUS_INUSE: // modify by zhaeng
+		return api.EIP_CFEL_STATUS_DISSOCIATED
 	case EIP_STATUS_ASSOCIATING:
 		return api.EIP_STATUS_ASSOCIATE
 	case EIP_STATUS_UNASSOCIATING:
@@ -223,7 +225,8 @@ func (self *SEipAddress) Associate(conf *cloudprovider.AssociateConfig) error {
 		}
 		return true, nil
 	})
-	err = cloudprovider.WaitStatus(self, api.EIP_STATUS_READY, 10*time.Second, 180*time.Second)
+	// err = cloudprovider.WaitStatus(self, api.EIP_STATUS_READY, 10*time.Second, 180*time.Second)
+	err = cloudprovider.WaitStatus(self, api.EIP_CFEL_STATUS_DISSOCIATED, 10*time.Second, 180*time.Second) // modify by zhaeng
 	return err
 }
 

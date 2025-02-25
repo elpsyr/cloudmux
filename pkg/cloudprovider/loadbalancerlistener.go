@@ -100,9 +100,9 @@ type SLoadbalancerListenerRule struct {
 	HealthCheckHttpCode string // for qcloud only
 	HealthCheckURI      string // for qcloud only
 	HealthCheckInterval int    // for qcloud only
-
-	HealthCheckRise int // for qcloud only
-	HealthCheckFail int // for qcloud only
+	HealthCheckMethod   string // for qcloud only
+	HealthCheckRise     int    // for qcloud only
+	HealthCheckFail     int    // for qcloud only
 
 	StickySessionCookieTimeout int // for qcloud only
 }

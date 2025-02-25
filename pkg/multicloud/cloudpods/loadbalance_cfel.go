@@ -60,6 +60,10 @@ func (s *SLoadbalancer) CfelSetLoadBalancerSecurityGroups(sgs []string) error {
 	return nil
 }
 
+func (s *SLoadbalancer) CfelModifyLoadBalancerAttributes(*cloudprovider.SCfelModifyLbAttributes) error {
+	return nil
+}
+
 func (s *SLoadbalancer) CfelUnSetLoadBalancerSecurityGroups(sgs []string) error {
 	return nil
 }

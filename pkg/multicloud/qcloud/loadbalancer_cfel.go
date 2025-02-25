@@ -124,6 +124,24 @@ func (s *SLoadbalancer) CfelCreateILoadBalancerBackendGroup(bg *cloudprovider.SC
 	return nil, nil
 }
 
+// https://cloud.tencent.com/document/product/214/30680
+func (s *SLoadbalancer) CfelModifyLoadBalancerAttributes(opts *cloudprovider.SCfelModifyLbAttributes) error {
+	params := map[string]string{
+		"LoadBalancerPassToTarget": fmt.Sprintf("%v", opts.LoadBalancerPassToTarget),
+		"LoadBalancerId":           s.LoadBalancerId,
+	}
+
+	resp, err := s.region.clbRequest("ModifyLoadBalancerAttributes", params)
+	if err != nil {
+		return err
+	}
+	requestId, err := resp.GetString("RequestId")
+	if err != nil {
+		return err
+	}
+	return s.region.WaitLBTaskSuccess(requestId, 5*time.Second, 60*time.Second)
+}
+
 func (s *SLoadbalancer) CfelSetLoadBalancerSecurityGroups(sgs []string) error {
 	params := map[string]string{
 		"LoadBalancerId": s.LoadBalancerId,
@@ -146,10 +164,10 @@ func (s *SLoadbalancer) CfelSetLoadBalancerSecurityGroups(sgs []string) error {
 func (s *SLoadbalancer) CfelUnSetLoadBalancerSecurityGroups(sgs []string) error {
 	params := map[string]string{
 		"LoadBalancerIds.0": s.LoadBalancerId,
-		"SecurityGroup":    sgs[0],
-		"OperationType":    "DEL",
+		"SecurityGroup":     sgs[0],
+		"OperationType":     "DEL",
 	}
-	
+
 	resp, err := s.region.clbRequest("SetSecurityGroupForLoadbalancers", params)
 	if err != nil {
 		return err

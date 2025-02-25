@@ -22,6 +22,7 @@ import (
 	"yunion.io/x/jsonutils"
 
 	api "yunion.io/x/onecloud/pkg/apis/compute"
+	mux_api "yunion.io/x/cloudmux/pkg/apis/compute"
 	modules "yunion.io/x/onecloud/pkg/mcclient/modules/compute"
 )
 
@@ -51,6 +52,11 @@ func (self *SEip) GetProjectId() string {
 }
 
 func (self *SEip) GetStatus() string {
+	// modify by zhaeng begin
+	if len(self.AssociateId) > 0 {
+		return mux_api.EIP_CFEL_STATUS_DISSOCIATED
+	}
+	// modify by zhaeng end
 	return self.Status
 }
 

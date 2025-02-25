@@ -25,7 +25,7 @@ func (region *SRegion) AllocateEIP(opts *cloudprovider.SEip) (*SEipAddress, erro
 			params["InternetChargeType"] = string(InternetChargeByTraffic)
 		case api.EIP_CHARGE_TYPE_BY_BANDWIDTH:
 			params["InternetChargeType"] = string(InternetChargeByBandwidth)
-	
+
 		}
 	} else { // 包年包月
 		var pricingCycle = "Month"
@@ -34,6 +34,7 @@ func (region *SRegion) AllocateEIP(opts *cloudprovider.SEip) (*SEipAddress, erro
 		}
 		params["PricingCycle"] = pricingCycle
 		params["Period"] = strconv.Itoa(opts.Period)
+		params["AutoPay"] = "true" // 包年包月开启自动付费
 	}
 	params["InstanceChargeType"] = opts.ChargeType
 	params["ClientToken"] = utils.GenRequestId(20)
@@ -54,8 +55,18 @@ func (region *SRegion) AllocateEIP(opts *cloudprovider.SEip) (*SEipAddress, erro
 	if err != nil {
 		return nil, errors.Wrapf(err, "get AllocationId after created")
 	}
-
-	eip, err := region.GetEip(eipId)
+	var eip *SEipAddress
+	var i = 0
+	for i < 4 { // 包年包月会比较慢
+		i ++
+		eip, err = region.GetEip(eipId)
+		if err != nil {
+			time.Sleep(2 * time.Second)
+		} else {
+			break
+		}
+	}
+	
 	if err != nil {
 		return nil, err
 	}

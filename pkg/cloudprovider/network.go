@@ -17,10 +17,11 @@ package cloudprovider
 type SNetworkCreateOptions struct {
 	Name           string
 	Desc           string
-	ZoneId         string   // for Huawei
+	ZoneId         string // for Huawei
 	ProjectId      string
 	Cidr           string
 	AssignPublicIp bool
+	Tag            map[string]string // add by zhaeng
 }
 
 type SWireCreateOptions struct {

@@ -134,6 +134,9 @@ func (self *SWire) CreateINetwork(opts *cloudprovider.SNetworkCreateOptions) (cl
 	input.WireId = self.Id
 	input.ProjectId = opts.ProjectId
 	input.Zone = opts.ZoneId // add by zhaeng 241211
+	if opts.Tag != nil { // add by zhaeng 
+		input.Metadata = opts.Tag
+	}
 	network := &SNetwork{wire: self}
 	return network, self.vpc.region.create(&modules.Networks, input, network)
 }

@@ -33,6 +33,8 @@ const (
 	EIP_STATUS_ASSOCIATE     = "associate"
 	EIP_STATUS_DISSOCIATE    = "dissociate"
 
+	EIP_CFEL_STATUS_DISSOCIATED    = "associated" // 已绑定 add by zhaeng
+
 	EIP_CHARGE_TYPE_BY_TRAFFIC   = "traffic"
 	EIP_CHARGE_TYPE_BY_BANDWIDTH = "bandwidth"
 )

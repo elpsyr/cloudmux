@@ -17,6 +17,7 @@ package qcloud
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"yunion.io/x/jsonutils"
 
@@ -60,7 +61,7 @@ type Rule struct {
 
 // backend InstanceId + protocol  +Port + ip + rip全局唯一
 func (self *SLBBackend) GetId() string {
-	return self.InstanceId // modify by zhaeng
+	return self.GetGlobalId() // modify by zhaeng
 }
 
 func (self *SLBBackend) GetName() string {
@@ -68,7 +69,7 @@ func (self *SLBBackend) GetName() string {
 }
 
 func (self *SLBBackend) GetGlobalId() string {
-	return fmt.Sprintf("%s/%s-%d", self.group.GetId(), self.InstanceId, self.Port) // modify by zhaeng
+	return fmt.Sprintf("%s/%s/%d", self.group.GetId(), self.InstanceId, self.Port) // modify by zhaeng
 }
 
 func (self *SLBBackend) GetStatus() string {
@@ -143,12 +144,32 @@ func (self *SRegion) GetBackends(lbId, listenerId string) ([]SLBBackend, error) 
 }
 
 func (self *SLBBackend) SyncConf(ctx context.Context, port, weight int) error {
-	//err := self.group.UpdateBackendServer(self.InstanceId, self.Weight, self.Port, weight, port)
-	//if err != nil {
-	//	return err
-	//}
+	var (
+		portErr   error
+		wigthErr  error
+		requestId string
+	)
 
-	self.Port = port
-	self.Weight = weight
+	if port > 0 && port != self.Port {
+		requestId, portErr = self.group.UpdateBackendServerWeight("ModifyTargetPort", self.InstanceId, weight, port, self.Port)
+		if portErr != nil {
+			return portErr
+		}
+		portErr = self.group.lb.region.WaitLBTaskSuccess(requestId, 5*time.Second, 60*time.Second)
+		if portErr != nil {
+			return portErr
+		}
+	}
+	if weight != self.Weight {
+		requestId, wigthErr = self.group.UpdateBackendServerWeight("ModifyTargetWeight", self.InstanceId, weight, 0, self.Port)
+		if wigthErr != nil {
+			return wigthErr
+		}
+		wigthErr = self.group.lb.region.WaitLBTaskSuccess(requestId, 5*time.Second, 60*time.Second)
+		if wigthErr != nil {
+			return wigthErr
+		}
+	}
+
 	return nil
 }

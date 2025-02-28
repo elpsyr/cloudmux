@@ -225,3 +225,16 @@ func (listener *SLoadbalancerHTTPListener)CfelUpdateILoadBalancerListenerRule(*c
 func (listener *SLoadbalancerHTTPSListener)CfelUpdateILoadBalancerListenerRule(*cloudprovider.SCfelUpdateLoadbalancerListenerRule) error {
 	panic("unimplemented")
 }
+
+func (listener *SLoadbalancerTCPListener)CfelModifyDomainAttributes(*cloudprovider.SCfelModifyDomainAttributes) error {
+	panic("unimplemented")
+}
+func (listener *SLoadbalancerUDPListener)CfelModifyDomainAttributes(*cloudprovider.SCfelModifyDomainAttributes) error {
+	panic("unimplemented")
+}
+func (listener *SLoadbalancerHTTPListener)CfelModifyDomainAttributes(*cloudprovider.SCfelModifyDomainAttributes) error {
+	panic("unimplemented")
+}
+func (listener *SLoadbalancerHTTPSListener)CfelModifyDomainAttributes(*cloudprovider.SCfelModifyDomainAttributes) error {
+	panic("unimplemented")
+}

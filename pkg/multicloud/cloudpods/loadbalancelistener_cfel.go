@@ -279,6 +279,10 @@ func (listener *SCloudLoadbalancerListener)CfelUpdateILoadBalancerListenerRule(*
 	panic("unimplemented")
 }
 
+func (listener *SCloudLoadbalancerListener) CfelModifyDomainAttributes(*cloudprovider.SCfelModifyDomainAttributes)error {
+	panic("unimplemented")
+}
+
 // GetCreatedAt implements cloudprovider.ICloudLoadbalancerListener.
 // Subtle: this method shadows the method (SResourceBase).GetCreatedAt of SCloudLoadbalancerListener.SResourceBase.
 func (s *SCloudLoadbalancerListener) GetCreatedAt() time.Time {

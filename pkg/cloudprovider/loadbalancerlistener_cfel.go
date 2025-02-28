@@ -37,6 +37,11 @@ type SCfelUpdateLoadbalancerListenerRule struct {
 	LocationId string
 }
 
+type SCfelModifyDomainAttributes struct {
+	Domain    string
+	NewDomain string
+}
+
 type SCfelLBListenerAddServer struct {
 	ServerType string
 	ServerId   string
@@ -59,7 +64,10 @@ type SCfelLBListenerRemoveServer struct {
 }
 
 type SCfelModifyLbAttributes struct {
-	LoadBalancerPassToTarget bool
+	LoadbalancerName         string
+	LoadBalancerPassToTarget *bool
+	InternetChargeType       string
+	Bandwidth                int
 }
 
 type SCfelLoadbalancerBackendGroup struct {

@@ -10,7 +10,7 @@ import (
 )
 
 func (self *SLBBackendGroup) CfelAddBackendServer(opts *cloudprovider.SCfelLBListenerAddServer) (cloudprovider.ICloudLoadbalancerBackend, error) {
-	requestId, err := self.appLBBackendServerCfel("RegisterTargets",opts.LocationId, opts.ServerId, opts.Weight, opts.Port)
+	requestId, err := self.appLBBackendServerCfel("RegisterTargets", opts.LocationId, opts.ServerId, opts.Weight, opts.Port)
 	if err != nil {
 		return nil, err
 	}
@@ -23,7 +23,7 @@ func (self *SLBBackendGroup) CfelAddBackendServer(opts *cloudprovider.SCfelLBLis
 		return nil, err
 	}
 	for _, backend := range backends {
-		if strings.HasSuffix(backend.GetId(), fmt.Sprintf("%s-%d", opts.ServerId, opts.Port)) {
+		if strings.HasSuffix(backend.GetGlobalId(), fmt.Sprintf("%s/%d", opts.ServerId, opts.Port)) {
 			return &backend, nil
 		}
 	}
@@ -31,7 +31,13 @@ func (self *SLBBackendGroup) CfelAddBackendServer(opts *cloudprovider.SCfelLBLis
 }
 
 func (self *SLBBackendGroup) CfelRemoveBackendServer(opts *cloudprovider.SCfelLBListenerRemoveServer) error {
-	requestId, err := self.appLBBackendServerCfel("DeregisterTargets", opts.LocationId, opts.ServerId, opts.Weight, opts.Port)
+	// 传进来的serverId格式 fmt.Sprintf("%s/%s/%d", self.group.GetId(), self.InstanceId, self.Port)
+	// 要分割出真的serverId
+	arr := strings.Split(opts.ServerId,"/") 
+	if len(arr) < 2 {
+		return fmt.Errorf("serverId format error")
+	}
+	requestId, err := self.appLBBackendServerCfel("DeregisterTargets", opts.LocationId, arr[1], opts.Weight, opts.Port)
 	if err != nil {
 		if strings.Contains(err.Error(), "not registered") {
 			return nil

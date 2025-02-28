@@ -12,6 +12,27 @@ import (
 func (self *SLBListener) CfelCreateILoadBalancerListenerRule(*cloudprovider.SCfelLoadbalancerListenerRule) (cloudprovider.ICloudLoadbalancerListenerRule, error) {
 	return nil, nil
 }
+
+func (self *SLBListener) CfelModifyDomainAttributes(opts *cloudprovider.SCfelModifyDomainAttributes) error {
+	params := map[string]string{
+		"LoadBalancerId": self.lb.LoadBalancerId,
+		"ListenerId":     self.ListenerId,
+		"Domain":         opts.Domain,
+		"NewDomain":      opts.NewDomain,
+	}
+	resp, err := self.lb.region.clbRequest("ModifyDomainAttributes", params)
+	if err != nil {
+		return err
+	}
+
+	requestId, err := resp.GetString("RequestId")
+	if err != nil {
+		return err
+	}
+
+	return self.lb.region.WaitLBTaskSuccess(requestId, 5*time.Second, 60*time.Second)
+}
+
 func (self *SLBListener) CfelUpdateILoadBalancerListenerRule(rule *cloudprovider.SCfelUpdateLoadbalancerListenerRule) error {
 	hc := getListenerRuleHealthCheck(&rule.SLoadbalancerListenerRule)
 

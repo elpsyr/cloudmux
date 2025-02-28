@@ -141,6 +141,7 @@ type ICfelLoadbalancerListener interface {
 	ICloudLoadbalancerListener
 	CfelCreateILoadBalancerListenerRule(*SCfelLoadbalancerListenerRule) (ICloudLoadbalancerListenerRule, error)
 	CfelUpdateILoadBalancerListenerRule(*SCfelUpdateLoadbalancerListenerRule) error
+	CfelModifyDomainAttributes(*SCfelModifyDomainAttributes) error
 	Update(*SLoadbalancerListenerCreateOptions) error
 }
 

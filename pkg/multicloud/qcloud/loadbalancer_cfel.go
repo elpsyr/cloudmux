@@ -127,10 +127,25 @@ func (s *SLoadbalancer) CfelCreateILoadBalancerBackendGroup(bg *cloudprovider.SC
 // https://cloud.tencent.com/document/product/214/30680
 func (s *SLoadbalancer) CfelModifyLoadBalancerAttributes(opts *cloudprovider.SCfelModifyLbAttributes) error {
 	params := map[string]string{
-		"LoadBalancerPassToTarget": fmt.Sprintf("%v", opts.LoadBalancerPassToTarget),
-		"LoadBalancerId":           s.LoadBalancerId,
+		"LoadBalancerId": s.LoadBalancerId,
 	}
-
+	if len(opts.LoadbalancerName) > 0 {
+		params["LoadBalancerName"] = opts.LoadbalancerName
+	}
+	if opts.LoadBalancerPassToTarget != nil {
+		params["LoadBalancerPassToTarget"] = fmt.Sprintf("%v", *opts.LoadBalancerPassToTarget)
+	}
+	if opts.Bandwidth > 0 {
+		params["InternetChargeInfo.InternetMaxBandwidthOut"] = fmt.Sprintf("%d", opts.Bandwidth)
+	}
+	// 不支持接口改网络计费方式
+	if len(opts.InternetChargeType) > 0 {
+		if opts.InternetChargeType == "traffic" {
+			params["InternetChargeInfo.InternetChargeType"] = "TRAFFIC_POSTPAID_BY_HOUR"
+		} else {
+			params["InternetChargeInfo.InternetChargeType"] = "BANDWIDTH_POSTPAID_BY_HOUR"
+		}
+	}
 	resp, err := s.region.clbRequest("ModifyLoadBalancerAttributes", params)
 	if err != nil {
 		return err

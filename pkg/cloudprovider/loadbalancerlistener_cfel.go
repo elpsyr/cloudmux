@@ -65,8 +65,9 @@ type SCfelLBListenerRemoveServer struct {
 
 type SCfelModifyLbAttributes struct {
 	LoadbalancerName         string
-	LoadBalancerPassToTarget *bool
-	InternetChargeType       string
+	LoadBalancerPassToTarget bool
+	ChargeType               string // 实例计费方式
+	InternetChargeType       string // 网络计费方式
 	Bandwidth                int
 }
 

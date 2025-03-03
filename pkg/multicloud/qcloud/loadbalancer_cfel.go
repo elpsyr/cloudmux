@@ -132,20 +132,27 @@ func (s *SLoadbalancer) CfelModifyLoadBalancerAttributes(opts *cloudprovider.SCf
 	if len(opts.LoadbalancerName) > 0 {
 		params["LoadBalancerName"] = opts.LoadbalancerName
 	}
-	if opts.LoadBalancerPassToTarget != nil {
-		params["LoadBalancerPassToTarget"] = fmt.Sprintf("%v", *opts.LoadBalancerPassToTarget)
-	}
+
 	if opts.Bandwidth > 0 {
-		params["InternetChargeInfo.InternetMaxBandwidthOut"] = fmt.Sprintf("%d", opts.Bandwidth)
-	}
-	// 不支持接口改网络计费方式
-	if len(opts.InternetChargeType) > 0 {
-		if opts.InternetChargeType == "traffic" {
-			params["InternetChargeInfo.InternetChargeType"] = "TRAFFIC_POSTPAID_BY_HOUR"
-		} else {
-			params["InternetChargeInfo.InternetChargeType"] = "BANDWIDTH_POSTPAID_BY_HOUR"
+		// 修改成相同的会报错
+		if opts.Bandwidth == s.NetworkAttributes.InternetMaxBandwidthOut {
+			return nil
 		}
+		// 不支持接口改网络计费方式
+		params["InternetChargeInfo.InternetMaxBandwidthOut"] = fmt.Sprintf("%d", opts.Bandwidth)
+		if opts.ChargeType == "PrePaid" {
+			params["InternetChargeInfo.InternetChargeType"] = "BANDWIDTH_PREPAID"
+		} else if len(opts.InternetChargeType) > 0 {
+			if opts.InternetChargeType == "traffic" {
+				params["InternetChargeInfo.InternetChargeType"] = "TRAFFIC_POSTPAID_BY_HOUR"
+			} else {
+				params["InternetChargeInfo.InternetChargeType"] = "BANDWIDTH_POSTPAID_BY_HOUR"
+			}
+		}
+	} else {
+		params["LoadBalancerPassToTarget"] = fmt.Sprintf("%v", opts.LoadBalancerPassToTarget)
 	}
+
 	resp, err := s.region.clbRequest("ModifyLoadBalancerAttributes", params)
 	if err != nil {
 		return err

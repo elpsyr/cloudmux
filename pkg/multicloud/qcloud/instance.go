@@ -101,7 +101,7 @@ type SInstance struct {
 	multicloud.SInstanceBase
 	QcloudTags
 
-	host *SHost
+	host   *SHost
 	region *SRegion // add by zhaeng 241212
 
 	// normalized image info
@@ -933,6 +933,8 @@ func (self *SInstance) GetBillingType() string {
 		return billing_api.BILLING_TYPE_PREPAID
 	case PostPaidInstanceChargeType:
 		return billing_api.BILLING_TYPE_POSTPAID
+	case SpotPaidInstanceChargeType: // add by zhaeng
+		return "spotpaid"
 	default:
 		return billing_api.BILLING_TYPE_PREPAID
 	}

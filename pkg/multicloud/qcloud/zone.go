@@ -34,6 +34,7 @@ const (
 	PrePaidInstanceChargeType  InstanceChargeType = "PREPAID"
 	PostPaidInstanceChargeType InstanceChargeType = "POSTPAID_BY_HOUR"
 	CdhPaidInstanceChargeType  InstanceChargeType = "CDHPAID"
+	SpotPaidInstanceChargeType InstanceChargeType = "SPOTPAID" // add by zhaeng
 	DefaultInstanceChargeType                     = PostPaidInstanceChargeType
 )
 

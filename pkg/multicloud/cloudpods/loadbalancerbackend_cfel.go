@@ -141,6 +141,10 @@ func (s *SCloudLoadbalancerBackendGroup) CfelRemoveBackendServer(opts *cloudprov
 	return nil
 }
 
+func (s *SCloudLoadbalancerBackendGroup) CfelBackendServerPortAndWeight(opts *cloudprovider.SCfelUpdateServerPortAndWeight) (cloudprovider.ICloudLoadbalancerBackend, error) {
+	return nil,nil
+}
+
 // AddBackendServer implements cloudprovider.ICloudLoadbalancerBackendGroup.
 func (s *SCloudLoadbalancerBackendGroup) AddBackendServer(serverId string, weight int, port int) (cloudprovider.ICloudLoadbalancerBackend, error) {
 	panic("unimplemented")

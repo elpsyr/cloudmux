@@ -135,6 +135,7 @@ type ICfelLoadbalancerBackendGroup interface {
 	ICloudLoadbalancerBackendGroup
 	CfelAddBackendServer(opts *SCfelLBListenerAddServer) (ICloudLoadbalancerBackend, error)
 	CfelRemoveBackendServer(opts *SCfelLBListenerRemoveServer) error
+	CfelBackendServerPortAndWeight(opts *SCfelUpdateServerPortAndWeight) (ICloudLoadbalancerBackend, error)
 }
 
 type ICfelLoadbalancerListener interface {

@@ -12,6 +12,7 @@ import (
 )
 
 // https://cloud.tencent.com/document/api/214/30692
+// 这个接口只能创建按量付费，不能创建包年包月
 func (self *SRegion) CreateILoadBalancer(opts *cloudprovider.SLoadbalancerCreateOptions) (cloudprovider.ICloudLoadbalancer, error) {
 	params := map[string]string{
 		"LoadBalancerName": opts.Name,

@@ -52,7 +52,7 @@ func (self *SLBBackendGroup) appLBBackendServer(action string, serverId string, 
 }
 
 // https://cloud.tencent.com/document/product/214/30677
-func (self *SLBBackendGroup) UpdateBackendServerWeight(action string, serverId string, weight int, port, oldPort int) (string, error) {
+func (self *SLBBackendGroup) UpdateBackendServerWeight(action string, serverId string,locationId string, weight int, port, oldPort int) (string, error) {
 	if len(serverId) == 0 {
 		return "", fmt.Errorf("loadbalancer backend instance id should not be empty.")
 	}
@@ -66,6 +66,9 @@ func (self *SLBBackendGroup) UpdateBackendServerWeight(action string, serverId s
 	}
 	if port > 0 {
 		params["NewPort"] = strconv.Itoa(port)
+	}
+	if len(locationId) > 0 {
+		params["LocationId"] =  locationId
 	}
 
 	resp, err := self.lb.region.clbRequest(action, params)

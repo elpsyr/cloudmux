@@ -39,6 +39,8 @@ type SLBBackend struct {
 	RegisteredTime     string   `json:"RegisteredTime"`
 	Type               string   `json:"Type"`
 	Port               int      `json:"Port"`
+
+	Tag string `json:"Tag"`
 }
 
 // ==========================================================
@@ -69,7 +71,7 @@ func (self *SLBBackend) GetName() string {
 }
 
 func (self *SLBBackend) GetGlobalId() string {
-	return fmt.Sprintf("%s/%s/%d", self.group.GetId(), self.InstanceId, self.Port) // modify by zhaeng
+	return fmt.Sprintf("%s/%s/%s", self.group.GetId(), self.InstanceId, self.Tag) // modify by zhaeng
 }
 
 func (self *SLBBackend) GetStatus() string {
@@ -151,7 +153,7 @@ func (self *SLBBackend) SyncConf(ctx context.Context, port, weight int) error {
 	)
 
 	if port > 0 && port != self.Port {
-		requestId, portErr = self.group.UpdateBackendServerWeight("ModifyTargetPort", self.InstanceId, weight, port, self.Port)
+		requestId, portErr = self.group.UpdateBackendServerWeight("ModifyTargetPort", self.InstanceId, "", weight, port, self.Port)
 		if portErr != nil {
 			return portErr
 		}
@@ -161,7 +163,7 @@ func (self *SLBBackend) SyncConf(ctx context.Context, port, weight int) error {
 		}
 	}
 	if weight != self.Weight {
-		requestId, wigthErr = self.group.UpdateBackendServerWeight("ModifyTargetWeight", self.InstanceId, weight, 0, self.Port)
+		requestId, wigthErr = self.group.UpdateBackendServerWeight("ModifyTargetWeight", self.InstanceId, "", weight, 0, self.Port)
 		if wigthErr != nil {
 			return wigthErr
 		}

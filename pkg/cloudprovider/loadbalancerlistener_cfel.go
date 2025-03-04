@@ -63,6 +63,16 @@ type SCfelLBListenerRemoveServer struct {
 	LocationId string // for qcloud only
 }
 
+type SCfelUpdateServerPortAndWeight struct {
+	ServerType string
+	ServerId   string
+
+	Weight int
+	Port   int
+
+	LocationId string // for qcloud only
+}
+
 type SCfelModifyLbAttributes struct {
 	LoadbalancerName         string
 	LoadBalancerPassToTarget bool

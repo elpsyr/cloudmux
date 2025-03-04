@@ -84,7 +84,7 @@ func (self *SLBBackendGroup) CfelAddBackendServer(opts *cloudprovider.SCfelLBLis
 		return nil, err
 	}
 	for _, backend := range backends {
-		if strings.HasSuffix(backend.GetGlobalId(), fmt.Sprintf("%s/%d", opts.ServerId, tag)) {
+		if strings.HasSuffix(backend.GetGlobalId(), fmt.Sprintf("%s/%s", opts.ServerId, tag)) {
 			return &backend, nil
 		}
 	}

@@ -17,6 +17,7 @@ package aliyun
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"yunion.io/x/jsonutils"
 
@@ -269,6 +270,15 @@ func (backendgroup *SLoadbalancerBackendGroup) AddBackendServer(serverId string,
 }
 
 func (backendgroup *SLoadbalancerBackendGroup) RemoveBackendServer(serverId string, weight, port int) error {
+	// add by zhaeng begin
+	if strings.Contains(serverId, "/") {
+		arr := strings.Split(serverId, "/")
+		if len(arr) < 2 {
+			return fmt.Errorf("serverId format error")
+		}
+		serverId = arr[1]
+	}
+	// add by zhaeng end
 	return backendgroup.lb.region.RemoveBackendVServer(backendgroup.lb.LoadBalancerId, backendgroup.VServerGroupId, serverId, port)
 }
 

@@ -1,7 +1,9 @@
 package baidu
 
 import (
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 	api "yunion.io/x/cloudmux/pkg/apis/compute"
 	"yunion.io/x/cloudmux/pkg/cloudprovider"
@@ -346,8 +348,138 @@ type Price struct {
 // Verify that *SRegion implements ICfelCloudRegion
 var _ cloudprovider.ICfelCloudRegion = (*SRegion)(nil)
 
-func (region *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) (float64, error) {
+// instanceType map
+var instanceTypeMap = map[string]string{
+	"la2":  "LA2P",
+	"c3":   "N3",
+	"ca1":  "A1",
+	"vgn3": "VG1",
+	"ch1":  "H1",
+	"l3":   "L3",
+	"ca2":  "A2",
+	"ma2":  "A2",
+	"gn3":  "G1",
+	"gn5":  "G1",
+	"lgn3": "G1",
+	"g4":   "N5",
+	"l3d":  "L3D",
+	"ic3":  "N3",
+	"ic4":  "N5",
+	"l1":   "S1",
+	"ica1": "A1",
+	"m5":   "N6",
+	"m3":   "N3",
+	"m4":   "N5",
+	"hcc3": "c3",
+	"ma1":  "A1",
+	"gh1":  "H1",
+	"gr1":  "GR1",
+	"g3":   "N3",
+	"l2":   "S2",
+	"hcc2": "C2",
+	"hcg2": "C2",
+	"c4":   "N5",
+	"yxl3": "S3",
+	"c5":   "N6",
+	"aep4": "AEP",
+	"lgn2": "G1",
+	"vgn2": "VG1",
+	"ic2":  "N2",
+	"g5":   "N6",
+	"ic5":  "N6",
+	"lgn1": "G1",
+	"gna2": "G1",
+	"hcg3": "c3",
+	"ga1":  "A1",
+	"ich1": "H1",
+	"mh1":  "H1",
+	"d1s":  "D1S",
+	"ga2":  "A2",
+}
+
+type SBidPriceResp struct {
+	Money    string  `json:"money"`
+	Count    string  `json:"count"`
+	PerMoney float64 `json:"perMoney"`
+}
+
+// ParseC64M256 parses a string like "c64m256" and extracts the numbers after 'c' and 'm'.
+func ParseC64M256(input string) (int, int, error) {
+	re := regexp.MustCompile(`c(\d+)m(\d+)`)
+	matches := re.FindStringSubmatch(input)
+
+	if len(matches) != 3 {
+		return 0, 0, errors.Errorf("invalid format: %s", input)
+	}
+
+	cValue, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return 0, 0, err
+	}
+
+	mValue, err := strconv.Atoi(matches[2])
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return cValue, mValue, nil
+}
+
+func (region *SRegion) BidPrice(instanceType string) (float64, error) {
+
+	parts := strings.Split(instanceType, ".")
+	var family string
+	var cpu int
+	var mem int
+	var ok bool
+
+	if len(parts) >= 3 {
+		spec := parts[1] // 提取 `bcc.` 之后的第1个字段
+		cm := parts[2]   // 提取 `bcc.` 之后的第2个字段
+		family, ok = instanceTypeMap[spec]
+		if !ok {
+			return -1, errors.Errorf("invalid instanceType format: %s", instanceType)
+		}
+		c, m, err := ParseC64M256(cm)
+		if err != nil {
+			return -1, err
+		}
+		cpu = c
+		mem = m
+	} else {
+		return -1, errors.Errorf("invalid instanceType format: %s", instanceType)
+	}
+	params := map[string]interface{}{
+		"instanceType":       family,
+		"cpuCount":           cpu,
+		"memoryCapacityInGB": mem,
+	}
+
+	body, err := region.client.post("bcc", region.Region, "/v2/instance/bidPrice ", params)
+	if err != nil {
+		return -1, err
+	}
+
+	priceResponse := new(SBidPriceResp)
+	err = body.Unmarshal(&priceResponse)
+	if err != nil {
+		return -1, err
+	}
+
+	if priceResponse != nil && priceResponse.PerMoney != 0 {
+
+		return priceResponse.PerMoney, nil
+	}
 	return -1, nil
+}
+
+func (region *SRegion) GetSpotPostPaidPrice(zoneID, instanceType string) (float64, error) {
+	pricePerMin, err := region.fetchInstanceTypePrice(instanceType, zoneID, "Postpaid")
+	if err != nil {
+		return -1, err
+	}
+	// baidu Postpaid 返回每分钟价格，需要返回小时计价
+	return pricePerMin * 60, nil
 }
 
 func (region *SRegion) GetPostPaidPrice(zoneID, instanceType string) (float64, error) {

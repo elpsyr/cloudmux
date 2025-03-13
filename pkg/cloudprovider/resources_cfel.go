@@ -81,6 +81,7 @@ type ICfelCloudVM interface {
 	CfelRebuildRoot(ctx context.Context, config *CfelSManagedVMRebuildRootConfig) (string, error)
 	GetVncUrl() (string, error)
 	ExecCmd(ctx context.Context, opts *CfelExecCmdOption) ([]string, error)
+	SetPublicIpBw(ctx context.Context, opts *CfelSetPublicIpBwOptions) error
 	ICloudVM
 }
 

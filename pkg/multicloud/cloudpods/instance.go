@@ -108,7 +108,7 @@ func (self *SInstance) GetIDisks() ([]cloudprovider.ICloudDisk, error) {
 	return ret, nil
 }
 
-func (self *SInstance) GetIEIP() (cloudprovider.ICloudEIP, error) {
+func (self *SInstance) GetIEIP1() (cloudprovider.ICloudEIP, error) {
 	if len(self.Eip) > 0 {
 		eips, err := self.host.zone.region.GetEips(self.Id)
 		if err != nil {

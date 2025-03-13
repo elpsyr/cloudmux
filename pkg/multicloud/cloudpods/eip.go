@@ -21,8 +21,8 @@ import (
 	"yunion.io/x/cloudmux/pkg/multicloud"
 	"yunion.io/x/jsonutils"
 
-	api "yunion.io/x/onecloud/pkg/apis/compute"
 	mux_api "yunion.io/x/cloudmux/pkg/apis/compute"
+	api "yunion.io/x/onecloud/pkg/apis/compute"
 	modules "yunion.io/x/onecloud/pkg/mcclient/modules/compute"
 )
 
@@ -73,6 +73,14 @@ func (self *SEip) GetBillingType() string {
 }
 
 func (self *SEip) GetIpAddr() string {
+	tag, _ := self.GetTags()
+	if tag != nil {
+		if val, ok := tag["user:publicIp"]; ok {
+			if len(val) > 0 {
+				return val
+			}
+		}
+	}
 	return self.IpAddr
 }
 

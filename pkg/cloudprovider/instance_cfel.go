@@ -207,6 +207,11 @@ type CfelExecCmdOption struct {
 	Password string
 }
 
+type CfelSetPublicIpBwOptions struct {
+	Ip        string
+	Bandwidth int
+}
+
 type CfelExecHttpInput struct {
 	Method  string
 	ApiUrl  string

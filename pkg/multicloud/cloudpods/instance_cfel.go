@@ -639,3 +639,51 @@ func (self *SInstance) ExecCmd(ctx context.Context, opts *cloudprovider.CfelExec
 	}
 	return res, err
 }
+
+func (self *SInstance) SetPublicIpBw(ctx context.Context, opts *cloudprovider.CfelSetPublicIpBwOptions) error {
+	params := map[string]interface{}{
+		"ip":        opts.Ip,
+		"bandwidth": opts.Bandwidth,
+	}
+	_, err := self.region.perform(&modules.Servers, self.Id, "set-public-ip-bw", params)
+
+	return err
+}
+
+func (self *SInstance) GetIEIP() (cloudprovider.ICloudEIP, error) {
+	if len(self.Eip) > 0 {
+		eips, err := self.host.zone.region.GetEips(self.Id)
+		if err != nil {
+			return nil, err
+		}
+		for i := range eips {
+			eips[i].region = self.host.zone.region
+			return &eips[i], nil
+		}
+		return nil, cloudprovider.ErrNotFound
+	}
+	tag, err := self.GetTags()
+	if err != nil {
+		return nil, err
+	}
+	if ip, ok := tag["bind"]; ok {
+		eip := &SEip{
+			ElasticipDetails: compute.ElasticipDetails{
+				SElasticip: compute.SElasticip{
+					NetworkId:     "",
+					Mode:          "",
+					IpAddr:        ip,
+					AssociateType: "",
+					AssociateId:   "",
+					Bandwidth:     0,
+					ChargeType:    "",
+					BgpType:       "",
+					AutoDellocate: new(bool),
+				},
+				AssociateName: "",
+			},
+		}
+		return eip, nil
+	}
+	return nil, nil
+}

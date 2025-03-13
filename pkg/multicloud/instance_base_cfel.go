@@ -30,6 +30,10 @@ func (self *SInstanceBase) GetVncUrl() (string, error) {
 	return "", cloudprovider.ErrNotImplemented
 }
 
-func (self *SInstanceBase) ExecCmd(ctx context.Context, opts *cloudprovider.CfelExecCmdOption) ([]string, error){
+func (self *SInstanceBase) ExecCmd(ctx context.Context, opts *cloudprovider.CfelExecCmdOption) ([]string, error) {
 	return nil, cloudprovider.ErrNotImplemented
+}
+
+func (self *SInstanceBase) SetPublicIpBw(ctx context.Context, opts *cloudprovider.CfelSetPublicIpBwOptions) error {
+	return cloudprovider.ErrNotImplemented
 }

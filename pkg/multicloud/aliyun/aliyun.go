@@ -219,6 +219,8 @@ func doRequest(client *sdk.Client, domain, apiVersion, apiName string, params ma
 					return nil, errors.Wrapf(cloudprovider.ErrInvalidAccessKey, err.Error())
 				case "404 Not Found", "InstanceNotFound":
 					return nil, errors.Wrap(cloudprovider.ErrNotFound, err.Error())
+				case "InstanceExpired": // add by zhaeng
+					return nil, errors.New(e.Message())
 				case "OperationDenied.NoStock":
 					return nil, errors.Wrapf(err, "所请求的套餐在指定的区域内已售罄;尝试其他套餐或选择其他区域和可用区。")
 				case "InvalidInstance.NotSupported",

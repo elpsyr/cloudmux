@@ -173,16 +173,23 @@ func (self *SRegion) GetIHostsByCondition(opts *cloudprovider.FilterOption) ([]c
 	params := map[string]interface{}{
 		// "scope":                 "system",
 		"show_fail_reason": "true",
-		"host_type":        opts.HostType,
 		"limit":            opts.Limit,
 		"enabled":          1,
-		"host_status":      "online",
 		"os_arch":          opts.OsArch,
 		//"field":       ,
 		// "server_id_for_network": "f13faa78-5a46-4236-80ee-f427defd947e",
 		// "project_domain":        "default",
 		//"filter":                "id.notin(7d09d25e-87ef-44db-8bf5-bf42b8554388,7096846e-4341-4267-874e-d047838e2c99)",
 		"details": false,
+	}
+	if opts.HostType != "" {
+		params["host_type"] = opts.HostType
+	}
+	if opts.HostStatus != "" {
+		params["host_status"] = opts.HostStatus
+	}
+	if opts.Status != "" {
+		params["status"] = opts.Status
 	}
 	if len(opts.FilterIds) > 0 {
 		params["filter"] = "id.notin(" + opts.FilterIds + ")"

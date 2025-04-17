@@ -156,6 +156,7 @@ type FilterOption struct {
 	HostType       string   `json:"host_type"`
 	Limit          int      `json:"limit"`
 	HostStatus     string   `json:"host_status"`
+	Status         string   `json:"status"`
 	OsArch         string   `json:"os_arch"`
 	Field          []string `json:"field"`
 	FilterIds      string   `json:"filter"`

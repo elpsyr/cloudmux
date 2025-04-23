@@ -207,6 +207,14 @@ func (self *SRegion) GetIHostsByCondition(opts *cloudprovider.FilterOption) ([]c
 	return res, err
 }
 
+// GetDiskById 根据id获取region下disk
+func (self *SRegion) GetDiskById(opts *cloudprovider.FilterOption) (cloudprovider.ICloudDisk, error) {
+	id := opts.FilterIds
+	var ret SDisk
+	err := self.cli.get(&modules.Disks, id, nil, &ret)
+	return &ret, err
+}
+
 func (self *SRegion) MigrateForecast(opts *cloudprovider.MigrateForecastOption) ([]cloudprovider.ICfelFilter, error) {
 	params := map[string]interface{}{
 		"live_migrate":      opts.LiveMigrate,

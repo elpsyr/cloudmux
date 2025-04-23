@@ -95,6 +95,10 @@ func (self *SRegion) MigrateForecast(*cloudprovider.MigrateForecastOption) ([]cl
 	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "MigrateForecast")
 }
 
+func (self *SRegion) CfelGetDiskById(opts *cloudprovider.FilterOption) (cloudprovider.ICloudDisk, error) {
+	return nil, errors.Wrapf(cloudprovider.ErrNotImplemented, "CfelGetDiskById")
+}
+
 // func (self *SRegion) GetMonitorData(vmId, start, end, interval string) ([]cloudprovider.ICfelMonitorData, []string, error) {
 // 	return nil, []string{}, errors.Wrapf(cloudprovider.ErrNotImplemented, "GetMonitorData")
 // }

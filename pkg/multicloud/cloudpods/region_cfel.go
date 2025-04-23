@@ -207,8 +207,9 @@ func (self *SRegion) GetIHostsByCondition(opts *cloudprovider.FilterOption) ([]c
 	return res, err
 }
 
-// GetDiskById 根据id获取region下disk
-func (self *SRegion) GetDiskById(opts *cloudprovider.FilterOption) (cloudprovider.ICloudDisk, error) {
+// CfelGetDiskById 根据id获取region下disk
+// 目前只有私有云实现
+func (self *SRegion) CfelGetDiskById(opts *cloudprovider.FilterOption) (cloudprovider.ICloudDisk, error) {
 	id := opts.FilterIds
 	var ret SDisk
 	err := self.cli.get(&modules.Disks, id, nil, &ret)

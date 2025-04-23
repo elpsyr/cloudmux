@@ -30,6 +30,7 @@ type ICfelCloudRegion interface {
 	CfelCreateDisk(params *CfelDiskCreateConfig) (ICloudDisk, error)
 	CfelAttachDisk(instanceId, diskId string) error
 	CfelDetachDisk(instanceId, diskId string) error
+	CfelGetDiskById(opts *FilterOption) (ICloudDisk, error)
 	CfelInstanceSettingChange(id string, params *CfelChangeSettingOption) error //虚拟机配置修改
 	CfelGetINetworks(*GetNetworkOptions) ([]ICloudNetwork, error)
 	GetIHostsByCondition(*FilterOption) ([]ICloudHost, error)
@@ -150,8 +151,8 @@ type ICfelLoadbalancerListener interface {
 type ICfelLoadbalancer interface {
 	ICloudLoadbalancer
 	CfelCreateILoadBalancerBackendGroup(*SCfelLoadbalancerBackendGroup) (ICloudLoadbalancerBackendGroup, error)
-	CfelSetLoadBalancerSecurityGroups(sgs []string) error // for qcloud only
-	CfelUnSetLoadBalancerSecurityGroups(sgs []string) error // for qcloud only
+	CfelSetLoadBalancerSecurityGroups(sgs []string) error            // for qcloud only
+	CfelUnSetLoadBalancerSecurityGroups(sgs []string) error          // for qcloud only
 	CfelModifyLoadBalancerAttributes(*SCfelModifyLbAttributes) error // for qcloud only
 }
 
